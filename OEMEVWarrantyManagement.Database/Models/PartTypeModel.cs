@@ -2,9 +2,9 @@
 {
     public class PartTypeModel
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
         public string Name { get; set; }
-        public int PartTypeId { get; set; }//FK
+        public string PartTypeId { get; set; }//FK
         public PartType PartType { get; set; }//Navigation property
         public ICollection<CarCondition> CarConditions { get; set; } = new List<CarCondition>();
         public ICollection<Parts> Parts { get; set; } = new List<Parts>();

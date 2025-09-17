@@ -2,8 +2,8 @@
 {
     public class WarrantyPolicy
     {
-        public int Id { get; set; }
-        public int PeriodInMonths { get; set; }
+        public string Id { get; set; }
+        public string PeriodInMonths { get; set; }
         public string Coverage { get; set; }
         public string Conditions { get; set; }
 

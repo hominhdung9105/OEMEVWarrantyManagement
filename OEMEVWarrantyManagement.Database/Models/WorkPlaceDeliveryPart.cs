@@ -2,9 +2,9 @@
 {
     public class WorkPlaceDeliveryPart
     {
-        public int WorkPlaceId { get; set; }
+        public string WorkPlaceId { get; set; }
         public WorkPlaces WorkPlace { get; set; }
-        public int DeliveryPartId { get; set; }
+        public string DeliveryPartId { get; set; }
         public DeliveryPart DeliveryPart { get; set; }
     }
 }

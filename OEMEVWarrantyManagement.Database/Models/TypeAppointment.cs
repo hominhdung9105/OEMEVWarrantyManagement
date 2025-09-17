@@ -2,7 +2,7 @@
 {
     public class TypeAppointment
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
         public string Name { get; set; }
 
         //N-N relationship with Appointment via AppointmentTypeAppointment

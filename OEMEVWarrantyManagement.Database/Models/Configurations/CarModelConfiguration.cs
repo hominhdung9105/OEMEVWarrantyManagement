@@ -9,8 +9,7 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
         {
             builder.HasKey(cm => cm.Id);
             builder.Property(cm => cm.Name)
-                   .IsRequired()
-                   .HasMaxLength(100);
+                   .IsRequired();
         }
     }
 }

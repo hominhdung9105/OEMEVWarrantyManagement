@@ -10,8 +10,7 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
             builder.ToTable("Techs");
             builder.HasKey(t => t.Id);
             builder.Property(t => t.EmployeeId)
-                   .IsRequired()
-                   .HasMaxLength(50);
+                   .IsRequired();
 
             builder.HasOne(t => t.Employee)
                    .WithMany(e => e.Teches)

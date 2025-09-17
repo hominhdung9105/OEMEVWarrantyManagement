@@ -24,34 +24,32 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Appointment", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("CustomerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("int");
+                    b.Property<DateTime>("DateTime")
+                        .HasColumnType("datetime2");
 
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
+                    b.Property<string>("EmployeeId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Note")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<TimeOnly>("Time")
-                        .HasColumnType("time");
+                    b.Property<string>("TypeAppointmentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("TypeAppointmentId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("VIN")
-                        .HasColumnType("int");
+                    b.Property<string>("VIN")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(17)");
 
                     b.HasKey("Id");
 
@@ -66,27 +64,27 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Assignment", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("AssignedEndDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("SCStaffId")
-                        .HasColumnType("int");
+                    b.Property<string>("SCStaffId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("SCTechID")
-                        .HasColumnType("int");
+                    b.Property<string>("SCTechID")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("TaskId")
-                        .HasColumnType("int");
+                    b.Property<string>("TaskId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -101,19 +99,17 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.CarCondition", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("PartTypeModelId")
-                        .HasColumnType("int");
+                    b.Property<string>("PartTypeModelId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -124,11 +120,11 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.CarConditionCarConditionCurrent", b =>
                 {
-                    b.Property<int>("CarConditionId")
-                        .HasColumnType("int");
+                    b.Property<string>("CarConditionId")
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("CarConditionCurrentId")
-                        .HasColumnType("int");
+                    b.Property<string>("CarConditionCurrentId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("CarConditionId", "CarConditionCurrentId");
 
@@ -139,11 +135,8 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.CarConditionCurrent", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Condition")
                         .IsRequired()
@@ -160,11 +153,13 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<int>("ImageId")
-                        .HasColumnType("int");
+                    b.Property<string>("ImageId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("TechnicianId")
-                        .HasColumnType("int");
+                    b.Property<string>("TechnicianId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -175,20 +170,17 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.CarInfo", b =>
                 {
-                    b.Property<int>("VIN")
-                        .ValueGeneratedOnAdd()
+                    b.Property<string>("VIN")
                         .HasMaxLength(17)
-                        .HasColumnType("int");
+                        .HasColumnType("nvarchar(17)");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VIN"));
+                    b.Property<string>("CustomerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("CustomerId")
-                        .HasMaxLength(50)
-                        .HasColumnType("int");
-
-                    b.Property<int>("ModelId")
-                        .HasMaxLength(50)
-                        .HasColumnType("int");
+                    b.Property<string>("ModelId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("VIN");
 
@@ -201,16 +193,12 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.CarModel", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -219,18 +207,16 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Customer", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
+                    b.Property<string>("EmployeeId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -251,11 +237,8 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.DeliveryPart", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("DateReceive")
                         .HasColumnType("datetime2");
@@ -263,18 +246,22 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     b.Property<DateTime>("DateSend")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("LocationId")
+                    b.Property<string>("LocationId")
+                        .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("int");
+                        .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("PartsID")
-                        .HasColumnType("int");
+                    b.Property<string>("PartsID")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("StaffReceive")
-                        .HasColumnType("int");
+                    b.Property<string>("StaffReceive")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("StaffSend")
-                        .HasColumnType("int");
+                    b.Property<string>("StaffSend")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -292,11 +279,8 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Employee", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -308,16 +292,18 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int>("WorkPlacesId")
-                        .HasColumnType("int");
+                    b.Property<string>("WorkPlacesId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -330,14 +316,12 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Image", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CarConditionCurrentId")
-                        .HasColumnType("int");
+                    b.Property<string>("CarConditionCurrentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("FilePath")
                         .IsRequired()
@@ -353,20 +337,20 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.PartReplacement", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("EmployeeId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
+                    b.Property<string>("PartTypeModelId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("PartTypeModelId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("VIN")
-                        .HasColumnType("int");
+                    b.Property<string>("VIN")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -379,11 +363,8 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.PartType", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -397,19 +378,17 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.PartTypeModel", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("PartTypeId")
-                        .HasColumnType("int");
+                    b.Property<string>("PartTypeId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -420,19 +399,17 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Parts", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Number")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("PartTypeModelId")
-                        .HasColumnType("int");
+                    b.Property<string>("PartTypeModelId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -443,14 +420,14 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.PartsDeliveryPart", b =>
                 {
-                    b.Property<int>("DeliveryPartId")
-                        .HasColumnType("int");
+                    b.Property<string>("DeliveryPartId")
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("PartsId")
-                        .HasColumnType("int");
+                    b.Property<string>("PartsId")
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("DeliveryPartId", "PartsId");
 
@@ -461,14 +438,14 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.PartsRequestPart", b =>
                 {
-                    b.Property<int>("RequestPartId")
-                        .HasColumnType("int");
+                    b.Property<string>("RequestPartId")
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("PartsId")
-                        .HasColumnType("int");
+                    b.Property<string>("PartsId")
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("RequestPartId", "PartsId");
 
@@ -479,20 +456,20 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.RequestPart", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("EVMStaffId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("EVMStaffId")
-                        .HasColumnType("int");
+                    b.Property<string>("PartTypeId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PartTypeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SCStaffId")
-                        .HasColumnType("int");
+                    b.Property<string>("SCStaffId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("status")
                         .IsRequired()
@@ -510,11 +487,8 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Role", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -528,11 +502,11 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.RoleEmployee", b =>
                 {
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                    b.Property<string>("RoleId")
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
+                    b.Property<string>("EmployeeId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("RoleId", "EmployeeId");
 
@@ -543,11 +517,8 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Task", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -566,15 +537,12 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Techs", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("EmployeeId")
-                        .HasMaxLength(50)
-                        .HasColumnType("int");
+                    b.Property<string>("EmployeeId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -585,11 +553,8 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.TypeAppointment", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -603,26 +568,27 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Warranty", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("EmployeeSCStaffId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("EmployeeSCStaffId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("EmployeeTechId")
-                        .HasColumnType("int");
+                    b.Property<string>("EmployeeTechId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("PartRereplacementId")
-                        .HasColumnType("int");
+                    b.Property<string>("PartRereplacementId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("RequestWarrantyId")
-                        .HasColumnType("int");
+                    b.Property<string>("RequestWarrantyId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
@@ -632,8 +598,9 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("WarrantyRecordId")
-                        .HasColumnType("int");
+                    b.Property<string>("WarrantyRecordId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -648,11 +615,8 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.WarrantyPolicy", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Conditions")
                         .IsRequired()
@@ -664,8 +628,9 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int>("PeriodInMonths")
-                        .HasColumnType("int");
+                    b.Property<string>("PeriodInMonths")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -674,23 +639,23 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.WarrantyRecord", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("CustomerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("int");
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
 
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
+                    b.Property<string>("VIN")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(17)");
 
-                    b.Property<int>("VIN")
-                        .HasColumnType("int");
-
-                    b.Property<int>("WarrantyPolicyId")
-                        .HasColumnType("int");
+                    b.Property<string>("WarrantyPolicyId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -705,17 +670,16 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.WarrantyRequest", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("CarConditionCurrentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("CarConditionCurrentId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("EVMStaffId")
-                        .HasColumnType("int");
+                    b.Property<string>("EVMStaffId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("RequestDate")
                         .HasColumnType("datetime2");
@@ -723,11 +687,13 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     b.Property<DateTime>("ResponseDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("SCStaffId")
-                        .HasColumnType("int");
+                    b.Property<string>("SCStaffId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("VIN")
-                        .HasColumnType("int");
+                    b.Property<string>("VIN")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(17)");
 
                     b.Property<string>("status")
                         .IsRequired()
@@ -749,11 +715,11 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.WorkPlaceDeliveryPart", b =>
                 {
-                    b.Property<int>("WorkPlaceId")
-                        .HasColumnType("int");
+                    b.Property<string>("WorkPlaceId")
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("DeliveryPartId")
-                        .HasColumnType("int");
+                    b.Property<string>("DeliveryPartId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("WorkPlaceId", "DeliveryPartId");
 
@@ -764,11 +730,11 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.WorkPlacePartTypeModel", b =>
                 {
-                    b.Property<int>("WorkPlacesId")
-                        .HasColumnType("int");
+                    b.Property<string>("WorkPlacesId")
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("PartTypeModelId")
-                        .HasColumnType("int");
+                    b.Property<string>("PartTypeModelId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("Number")
                         .HasColumnType("int");
@@ -782,11 +748,8 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.WorkPlaces", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Location")
                         .IsRequired()

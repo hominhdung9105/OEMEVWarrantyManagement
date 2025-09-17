@@ -2,10 +2,10 @@
 {
     public class PartsDeliveryPart
     {
-        public int Id { get; set; }
-        public int DeliveryPartId { get; set; } //FK
+        public string Id { get; set; }
+        public string DeliveryPartId { get; set; } //FK
         public DeliveryPart DeliveryPart { get; set; } // Navigation property
-        public int PartsId { get; set; } //FK
+        public string PartsId { get; set; } //FK
         public Parts Parts { get; set; } // Navigation property
     }
 }

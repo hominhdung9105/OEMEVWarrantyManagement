@@ -2,11 +2,11 @@
 {
     public class PartReplacement
     {
-        public int Id { get; set; }
-        public int PartTypeModelId { get; set; } //FK
+        public string Id { get; set; }
+        public string PartTypeModelId { get; set; } //FK
         public PartTypeModel PartTypeModel { get; set; } //Navigation property
-        public int VIN { get; set; }
-        public int EmployeeId { get; set; }//FK
+        public string VIN { get; set; }
+        public string EmployeeId { get; set; }//FK
         public Employee Employee { get; set; } //Navigation property
 
 

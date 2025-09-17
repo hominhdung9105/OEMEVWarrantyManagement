@@ -4,14 +4,14 @@ namespace OEMEVWarrantyManagement.Database.Models
 {
     public class Employee
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
-        public int RoleId { get; set; }     //FK
+        public string RoleId { get; set; }     //FK
         public Role Role { get; set; }      // Navigation property
         public string FullName { get; set; }
 
-        public int WorkPlacesId { get; set; } //FK
+        public string WorkPlacesId { get; set; } //FK
         public WorkPlaces WorkPlaces { get; set; } // Navigation property
         public ICollection<CarConditionCurrent> CarConditionCurrents { get; set; } = new List<CarConditionCurrent>();
         public ICollection<Assignment> AssignmentsAsSCStaff { get; set; } = new List<Assignment>();

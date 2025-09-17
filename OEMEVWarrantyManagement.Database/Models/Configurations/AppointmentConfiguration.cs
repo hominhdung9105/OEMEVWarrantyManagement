@@ -12,8 +12,7 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
             builder.Property(a => a.EmployeeId).IsRequired();
             builder.Property(a => a.CustomerId).IsRequired();
             builder.Property(a => a.Note).HasMaxLength(500);
-            builder.Property(a => a.Date).IsRequired();
-            builder.Property(a => a.Time).IsRequired();
+            builder.Property(a => a.DateTime).IsRequired();
             builder.Property(a => a.VIN).IsRequired();
 
             builder.HasOne(a => a.CarInfo)

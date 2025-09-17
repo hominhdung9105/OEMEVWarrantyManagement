@@ -2,10 +2,10 @@
 {
     public class CarInfo
     {
-        public int VIN { get; set; }
-        public int CustomerId { get; set; }//FK
+        public string VIN { get; set; }
+        public string CustomerId { get; set; }//FK
         public Customer Customer { get; set; }// Navigation property
-        public int ModelId { get; set; } //FK
+        public string ModelId { get; set; } //FK
         public CarModel CarModel { get; set; } // Navigation property
 
         public ICollection<WarrantyRecord> WarrantyRecords { get; set; } = new List<WarrantyRecord>();

@@ -10,8 +10,8 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
             builder.ToTable("CarInfo");
             builder.HasKey(ci => ci.VIN);
             builder.Property(ci => ci.VIN).IsRequired().HasMaxLength(17);
-            builder.Property(ci => ci.CustomerId).IsRequired().HasMaxLength(50);
-            builder.Property(ci => ci.ModelId).IsRequired().HasMaxLength(50);
+            builder.Property(ci => ci.CustomerId).IsRequired();
+            builder.Property(ci => ci.ModelId).IsRequired();
 
             builder.HasOne(ci => ci.CarModel)
                    .WithMany(cm => cm.CarInfos)
