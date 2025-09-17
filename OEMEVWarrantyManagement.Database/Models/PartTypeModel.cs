@@ -9,6 +9,7 @@
         public ICollection<CarCondition> CarConditions { get; set; } = new List<CarCondition>();
         public ICollection<Parts> Parts { get; set; } = new List<Parts>();
         public ICollection<WorkPlacePartTypeModel> WorkPlacePartTypeModels { get; set; } = new List<WorkPlacePartTypeModel>();
-        public ICollection<PartReplacement> PartReplacements { get; set; } = new List<PartReplacement>();
+        public ICollection<PartReplaced> PartReplaceds { get; set; } = new List<PartReplaced>();
+        public ICollection<PartsReplacement> PartsReplacements { get; set; } = new List<PartsReplacement>();
     }
 }

@@ -11,5 +11,6 @@
         public ICollection<WarrantyRecord> WarrantyRecords { get; set; } = new List<WarrantyRecord>();
         public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
         public ICollection<WarrantyRequest> WarrantyRequests { get; set; } = new List<WarrantyRequest>();
+        public ICollection<RecallHistory> RecallHistories { get; set; } = new List<RecallHistory>();
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace OEMEVWarrantyManagement.Database.Models
 {
-    public class PartReplacement
+    public class PartReplaced
     {
         public string Id { get; set; }
         public string PartTypeModelId { get; set; } //FK

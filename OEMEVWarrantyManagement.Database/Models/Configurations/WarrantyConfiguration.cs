@@ -35,12 +35,17 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
             builder.HasOne(w => w.RequestWarranty)
                    .WithMany(rw => rw.Warranties)
                    .HasForeignKey(w => w.RequestWarrantyId)
-                   .OnDelete(DeleteBehavior.Cascade);
+                   .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(w => w.EmployeeTech)
                    .WithMany(t => t.Warranties)
                    .HasForeignKey(w => w.EmployeeTechId)
                    .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(w => w.WarrantyRecord)
+                   .WithMany(wr => wr.Warrantys)
+                   .HasForeignKey(w => w.WarrantyRecordId)
+                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

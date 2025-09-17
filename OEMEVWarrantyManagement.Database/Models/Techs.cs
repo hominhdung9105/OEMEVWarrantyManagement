@@ -6,5 +6,6 @@
         public string EmployeeId { get; set; } //FK
         public Employee Employee { get; set; } // Navigation property
         public ICollection<Warranty> Warranties { get; set; } = new List<Warranty>();
+        public ICollection<RecallHistory> RecallHistoriesAsTechs { get; set; } = new List<RecallHistory>();
     }
 }

@@ -11,8 +11,9 @@
 
         public string WarrantyPolicyId { get; set; } //FK
         public WarrantyPolicy WarrantyPolicy { get; set; } // Navigation property
+        public ICollection<Warranty> Warrantys { get; set; } = new List<Warranty>();
 
-        
+
 
     }
 }

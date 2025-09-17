@@ -3,23 +3,18 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace OEMEVWarrantyManagement.Database.Models.Configurations
 {
-    public class PartReplacementConfiguration : IEntityTypeConfiguration<PartReplacement>
+    public class PartReplacementConfiguration : IEntityTypeConfiguration<PartsReplacement>
     {
-        public void Configure(EntityTypeBuilder<PartReplacement> builder)
+        public void Configure(EntityTypeBuilder<PartsReplacement> builder)
         {
-            builder.ToTable("PartReplacements");
+            builder.ToTable("PartsReplacement");
             builder.HasKey(pr => pr.Id);
-            builder.Property(pr => pr.PartTypeModelId).IsRequired();
-            builder.Property(pr => pr.VIN).IsRequired();
-            builder.Property(pr => pr.EmployeeId).IsRequired();
-
+            builder.Property(pr => pr.PartModelId).IsRequired();
+            // Relationships
             builder.HasOne(pr => pr.PartTypeModel)
-                   .WithMany(ptm => ptm.PartReplacements)
-                   .HasForeignKey(pr => pr.PartTypeModelId);
-
-            builder.HasOne(pr => pr.Employee)
-                   .WithMany(e => e.PartReplacements)
-                   .HasForeignKey(pr => pr.EmployeeId);
+                   .WithMany(ptm => ptm.PartsReplacements)
+                   .HasForeignKey(pr => pr.PartModelId)
+                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
