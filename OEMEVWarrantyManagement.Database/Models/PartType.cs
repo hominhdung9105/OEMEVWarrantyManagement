@@ -1,0 +1,10 @@
+﻿namespace OEMEVWarrantyManagement.Database.Models
+{
+    public class PartType
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public ICollection<PartTypeModel> PartTypeModels { get; set; } = new List<PartTypeModel>();
+       
+    }
+}
