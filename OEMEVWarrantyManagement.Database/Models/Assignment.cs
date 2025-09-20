@@ -2,10 +2,10 @@
 {
     public class Assignment
     {
-        public string Id { get; set; }
-        public string SCStaffId { get; set; } // Foreign key
+        public Guid Id { get; set; }
+        public Guid SCStaffId { get; set; } // Foreign key
         public Employee EmployeeSCStaff { get; set; } // Navigation property
-        public string SCTechID { get; set; } // Foreign key
+        public Guid SCTechID { get; set; } // Foreign key
         public Employee EmployeeSCTech { get; set; } // Navigation property
         public string Status { get; set; }
         public DateTime StartDate { get; set; }

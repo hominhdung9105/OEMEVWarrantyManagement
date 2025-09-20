@@ -9,6 +9,7 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
         {
             builder.ToTable("Appointments");
             builder.HasKey(a => a.Id);
+            builder.Property(a => a.Id).ValueGeneratedOnAdd();
             builder.Property(a => a.EmployeeId).IsRequired();
             builder.Property(a => a.CustomerId).IsRequired();
             builder.Property(a => a.Note).HasMaxLength(500);

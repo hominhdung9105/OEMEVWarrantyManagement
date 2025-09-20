@@ -9,6 +9,7 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
         {
             builder.ToTable("Employee");
             builder.HasKey(e => e.Id);
+            builder.Property(e => e.Id).ValueGeneratedOnAdd();
             builder.Property(e => e.Username).IsRequired().HasMaxLength(20);//need env variable
             builder.Property(e => e.Password).IsRequired().HasMaxLength(20);
             builder.Property(e => e.FullName).IsRequired().HasMaxLength(50);

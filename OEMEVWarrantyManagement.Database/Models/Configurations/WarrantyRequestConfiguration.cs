@@ -9,6 +9,7 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
         {
             builder.ToTable("WarrantyRequests");
             builder.HasKey(wr => wr.Id);
+            builder.Property(wr => wr.Id).ValueGeneratedOnAdd();
             builder.Property(wr => wr.RequestDate)
                    .IsRequired();
             builder.Property(wr => wr.ResponseDate);

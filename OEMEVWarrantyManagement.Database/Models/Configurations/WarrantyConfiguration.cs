@@ -10,7 +10,7 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
             builder.ToTable("Warranties");
             builder.HasKey(w => w.Id);
             builder.Property(w => w.Id)
-                   .HasMaxLength(100);
+                   .HasMaxLength(100).ValueGeneratedOnAdd();
             builder.Property(w => w.Status)
                    .IsRequired()
                    .HasMaxLength(50);

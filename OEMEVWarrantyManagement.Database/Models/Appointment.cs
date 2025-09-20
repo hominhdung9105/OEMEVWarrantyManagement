@@ -2,9 +2,9 @@
 {
     public class Appointment
     {
-        public string Id { get; set; }
-        public string EmployeeId { get; set; }
-        public string CustomerId { get; set; }//FK
+        public Guid Id { get; set; }
+        public Guid EmployeeId { get; set; }
+        public Guid CustomerId { get; set; }//FK
         public Customer Customer { get; set; } //Navigation property
         public string TypeAppointmentId { get; set; } //FK
         public TypeAppointment TypeAppointment { get; set; } // Navigation property

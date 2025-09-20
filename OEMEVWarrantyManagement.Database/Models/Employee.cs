@@ -4,7 +4,7 @@ namespace OEMEVWarrantyManagement.Database.Models
 {
     public class Employee
     {
-        public string Id { get; set; }
+        public Guid Id { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
         public string RoleId { get; set; }     //FK

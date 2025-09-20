@@ -126,7 +126,7 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 name: "Employee",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Username = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     Password = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false),
@@ -203,9 +203,9 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 name: "Assignment",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    SCStaffId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    SCTechID = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SCStaffId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SCTechID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -233,10 +233,10 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 name: "CarConditionCurrents",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Condition = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Detail = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    TechnicianId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    TechnicianId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -253,11 +253,11 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 name: "Customers",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FullName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    EmployeeId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    EmployeeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -274,9 +274,9 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 name: "DeliveryParts",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    StaffSend = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    StaffReceive = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    StaffSend = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    StaffReceive = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     LocationId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     DateSend = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -310,10 +310,10 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 name: "RequestParts",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    SCStaffId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    EVMStaffId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    SCStaffId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    EVMStaffId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -337,7 +337,7 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 columns: table => new
                 {
                     FilePath = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    CarConditionCurrentId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    CarConditionCurrentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -355,7 +355,7 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 columns: table => new
                 {
                     VIN = table.Column<string>(type: "nvarchar(17)", maxLength: 17, nullable: false),
-                    CustomerId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ModelId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
@@ -382,8 +382,8 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     PartTypeModelId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Number = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    RequestPartsId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    DeliveryPartId = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                    RequestPartsId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    DeliveryPartId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -410,9 +410,9 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 name: "Appointments",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    EmployeeId = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CustomerId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    EmployeeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     TypeAppointmentId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Note = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     DateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -445,11 +445,11 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 name: "RecallHistories",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     VIN = table.Column<string>(type: "nvarchar(17)", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     RecallId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    EmpoloyeeSCStaffId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    EmpoloyeeSCStaffId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     DateStart = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateEnd = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -480,8 +480,8 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 name: "WarrantyRecord",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    CustomerId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     VIN = table.Column<string>(type: "nvarchar(17)", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -514,12 +514,12 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 name: "WarrantyRequests",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     VIN = table.Column<string>(type: "nvarchar(17)", nullable: false),
-                    SCStaffId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    SCStaffId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    EVMStaffId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    CarConditionCurrentId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    EVMStaffId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CarConditionCurrentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     RequestDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ResponseDate = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -556,8 +556,8 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 name: "RecallHistoryEmployees",
                 columns: table => new
                 {
-                    RecallHistoryId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    EmployeeId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    RecallHistoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    EmployeeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -580,13 +580,13 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 name: "Warranties",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", maxLength: 100, nullable: false),
                     Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    RequestWarrantyId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    WarrantyRecordId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    RequestWarrantyId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    WarrantyRecordId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EmployeeSCStaffId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    EmployeeSCStaffId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -617,8 +617,8 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 {
                     SerialNumber = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     PartTypeModelId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    WarrantyId = table.Column<string>(type: "nvarchar(100)", nullable: true),
-                    RecallHistoryId = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                    WarrantyId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RecallHistoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -645,8 +645,8 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 name: "WarrantyEmployees",
                 columns: table => new
                 {
-                    WarrantyId = table.Column<string>(type: "nvarchar(100)", nullable: false),
-                    EmployeeId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    WarrantyId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    EmployeeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -669,7 +669,7 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 name: "WarrantyPartsReplacement",
                 columns: table => new
                 {
-                    WarrantyId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    WarrantyId = table.Column<Guid>(type: "uniqueidentifier", maxLength: 100, nullable: false),
                     PartsReplacementId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>

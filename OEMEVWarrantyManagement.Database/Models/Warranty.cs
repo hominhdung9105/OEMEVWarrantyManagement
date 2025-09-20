@@ -2,15 +2,15 @@
 {
     public class Warranty
     {
-        public string Id { get; set; }
+        public Guid Id { get; set; }
         public string Status { get; set; }
-        public string RequestWarrantyId { get; set; } //FK
+        public Guid RequestWarrantyId { get; set; } //FK
         public WarrantyRequest RequestWarranty { get; set; } // Navigation property
-        public string WarrantyRecordId { get; set; } //FK
+        public Guid WarrantyRecordId { get; set; } //FK
         public WarrantyRecord WarrantyRecord { get; set; } // Navigation property
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-        public string EmployeeSCStaffId { get; set; } //FK
+        public Guid EmployeeSCStaffId { get; set; } //FK
         public Employee EmployeeSCStaff { get; set; } // Navigation property
         public ICollection<WarrantyPartsReplacement> WarrantyPartReplacements { get; set; } = new List<WarrantyPartsReplacement>();
 
