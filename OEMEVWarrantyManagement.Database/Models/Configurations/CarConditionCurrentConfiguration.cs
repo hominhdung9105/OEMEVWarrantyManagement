@@ -9,16 +9,11 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
         {
             builder.ToTable("CarConditionCurrents");
             builder.HasKey(ccc => ccc.Id);
-            builder.Property(ccc => ccc.FilePath)
-                   .IsRequired()
-                   .HasMaxLength(200);
             builder.Property(ccc => ccc.Condition)
                    .IsRequired()
                    .HasMaxLength(100);
             builder.Property(ccc => ccc.Detail)
                    .HasMaxLength(1000);
-            builder.Property(ccc => ccc.ImageId)
-                   .IsRequired();
             builder.Property(ccc => ccc.TechnicianId)
                    .IsRequired();
 

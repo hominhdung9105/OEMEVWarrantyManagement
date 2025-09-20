@@ -19,33 +19,33 @@ public class AppDbContext : DbContext
     public DbSet<CarModel> CarModels { get; set; }
     public DbSet<PartType> PartTypes { get; set; }
     public DbSet<PartTypeModel> PartTypeModels { get; set; }
-    public DbSet<CarCondition> CarConditions { get; set; }
+
     public DbSet<CarConditionCurrent> CarConditionCurrents { get; set; }
-    public DbSet<CarConditionCarConditionCurrent> CarConditionCarConditionCurrents { get; set; }
+
     public DbSet<Image> Images { get; set; }
     public DbSet<WarrantyRequest> WarrantyRequests { get; set; }
     public DbSet<Assignment> Assignments { get; set; }
-    public DbSet<Task> Tasks { get; set; }
     public DbSet<RequestPart> RequestParts { get; set; }
     public DbSet<Parts> Parts { get; set; }
-    public DbSet<PartsRequestPart> PartsRequestParts { get; set; } //N-N relationship with Parts via PartsRequestPart
+
     public DbSet<DeliveryPart> DeliveryParts { get; set; }
-    public DbSet<PartsDeliveryPart> PartsDeliveryParts { get; set; }
-    public DbSet<WorkPlaceDeliveryPart> WorkPlaceDeliveryParts { get; set; }
-    public DbSet<RoleEmployee> RoleEmployees { get; set; } //N-N relationship with Role via RoleEmployee
+
+    //public DbSet<RoleEmployee> RoleEmployees { get; set; } //N-N relationship with Role via RoleEmployee
     public DbSet<WorkPlacePartTypeModel> WorkPlacePartTypeModels { get; set; } //N-N relationship with WorkPlaces via WorkPlacePartTypeModel
-    public DbSet<PartReplaced> PartReplaceds { get; set; }
+
     public DbSet<Warranty> Warrantys { get; set; }
-    public DbSet<Techs> Techs { get; set; }
+
     public DbSet<Customer> Customers { get; set; }
     public DbSet<PartsReplacement> PartsReplacements { get; set; }
     public DbSet<WarrantyPartsReplacement> WarrantyPartsReplacements { get; set; } 
     //N-N relationship with PartsInWarranty via WarrantyPartsInWarranty
     public DbSet<RecallHistory> RecallHistories { get; set; }
-    public DbSet<RecallHistoryPartsReplacement> RecallHistoryPartsReplacements { get; set; }
-    //N-N relationship with PartsReplacement via RecallHistoryPartsReplacement
+
     public DbSet<Recall> Recalls { get; set; }
-    public DbSet<RecallPartsReplacement> RecallPartsReplacements { get; set; }
+    public DbSet<RecallPartTypeModel> RecallPartsReplacements { get; set; }
+
+    public DbSet<WarrantyEmployee> WarrantyEmployees { get; set; }
+    public DbSet<RecallHistoryEmployee> RecallHistoryEmployees { get; set; }
 
 
 

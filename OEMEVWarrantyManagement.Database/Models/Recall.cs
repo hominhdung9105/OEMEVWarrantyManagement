@@ -10,8 +10,9 @@
         public string PartReplacementId { get; set; }
         public int NumberOfCars { get; set; }
         
-        public ICollection<RecallPartsReplacement> RecallPartsReplacements { get; set; } = new List<RecallPartsReplacement>();
         public ICollection<RecallHistory> RecallHistories { get; set; } = new List<RecallHistory>();
+
+        public ICollection<RecallPartTypeModel> RecallPartTypeModels { get; set; }
 
     }
 }

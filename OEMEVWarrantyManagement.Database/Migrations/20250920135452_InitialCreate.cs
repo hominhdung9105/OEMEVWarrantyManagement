@@ -65,19 +65,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Task",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Task", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "TypeAppointments",
                 columns: table => new
                 {
@@ -154,7 +141,7 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                         column: x => x.RoleId,
                         principalTable: "Roles",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Employee_WorkPlaces_WorkPlacesId",
                         column: x => x.WorkPlacesId,
@@ -164,59 +151,27 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CarConditions",
+                name: "RecallPartsReplacements",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    RecallId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     PartTypeModelId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CarConditions", x => x.Id);
+                    table.PrimaryKey("PK_RecallPartsReplacements", x => new { x.RecallId, x.PartTypeModelId });
                     table.ForeignKey(
-                        name: "FK_CarConditions_PartTypeModels_PartTypeModelId",
+                        name: "FK_RecallPartsReplacements_PartTypeModels_PartTypeModelId",
                         column: x => x.PartTypeModelId,
                         principalTable: "PartTypeModels",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Parts",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    PartTypeModelId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Number = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Parts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Parts_PartTypeModels_PartTypeModelId",
-                        column: x => x.PartTypeModelId,
-                        principalTable: "PartTypeModels",
+                        name: "FK_RecallPartsReplacements_Recall_RecallId",
+                        column: x => x.RecallId,
+                        principalTable: "Recall",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "PartsReplacement",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    PartModelId = table.Column<string>(type: "nvarchar(450)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PartsReplacement", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_PartsReplacement_PartTypeModels_PartModelId",
-                        column: x => x.PartModelId,
-                        principalTable: "PartTypeModels",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -251,9 +206,11 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     SCStaffId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     SCTechID = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    TaskId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AssignedEndDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    TaskName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    TaskDescription = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -270,12 +227,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                         principalTable: "Employee",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Assignment_Task_TaskId",
-                        column: x => x.TaskId,
-                        principalTable: "Task",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -283,10 +234,8 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    FilePath = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Condition = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Detail = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    ImageId = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     TechnicianId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
@@ -332,7 +281,7 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     LocationId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     DateSend = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateReceive = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    PartsID = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    WorkPlaceId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -349,32 +298,12 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                         principalTable: "Employee",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "PartReplaced",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    PartTypeModelId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    VIN = table.Column<string>(type: "nvarchar(17)", maxLength: 17, nullable: false),
-                    EmployeeId = table.Column<string>(type: "nvarchar(450)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PartReplaced", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PartReplaced_Employee_EmployeeId",
-                        column: x => x.EmployeeId,
-                        principalTable: "Employee",
+                        name: "FK_DeliveryParts_WorkPlaces_WorkPlaceId",
+                        column: x => x.WorkPlaceId,
+                        principalTable: "WorkPlaces",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_PartReplaced_PartTypeModels_PartTypeModelId",
-                        column: x => x.PartTypeModelId,
-                        principalTable: "PartTypeModels",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -382,7 +311,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    PartTypeId = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     SCStaffId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     EVMStaffId = table.Column<string>(type: "nvarchar(450)", nullable: false)
@@ -405,106 +333,15 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RoleEmployee",
-                columns: table => new
-                {
-                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    EmployeeId = table.Column<string>(type: "nvarchar(450)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_RoleEmployee", x => new { x.RoleId, x.EmployeeId });
-                    table.ForeignKey(
-                        name: "FK_RoleEmployee_Employee_EmployeeId",
-                        column: x => x.EmployeeId,
-                        principalTable: "Employee",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_RoleEmployee_Roles_RoleId",
-                        column: x => x.RoleId,
-                        principalTable: "Roles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Techs",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    EmployeeId = table.Column<string>(type: "nvarchar(450)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Techs", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Techs_Employee_EmployeeId",
-                        column: x => x.EmployeeId,
-                        principalTable: "Employee",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "RecallPartsReplacements",
-                columns: table => new
-                {
-                    RecallId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    PartsReplacementId = table.Column<string>(type: "nvarchar(450)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_RecallPartsReplacements", x => new { x.RecallId, x.PartsReplacementId });
-                    table.ForeignKey(
-                        name: "FK_RecallPartsReplacements_PartsReplacement_PartsReplacementId",
-                        column: x => x.PartsReplacementId,
-                        principalTable: "PartsReplacement",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_RecallPartsReplacements_Recall_RecallId",
-                        column: x => x.RecallId,
-                        principalTable: "Recall",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "CarConditionCarConditionCurrent",
-                columns: table => new
-                {
-                    CarConditionId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    CarConditionCurrentId = table.Column<string>(type: "nvarchar(450)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CarConditionCarConditionCurrent", x => new { x.CarConditionId, x.CarConditionCurrentId });
-                    table.ForeignKey(
-                        name: "FK_CarConditionCarConditionCurrent_CarConditionCurrents_CarConditionCurrentId",
-                        column: x => x.CarConditionCurrentId,
-                        principalTable: "CarConditionCurrents",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_CarConditionCarConditionCurrent_CarConditions_CarConditionId",
-                        column: x => x.CarConditionId,
-                        principalTable: "CarConditions",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Images",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     FilePath = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     CarConditionCurrentId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Images", x => x.Id);
+                    table.PrimaryKey("PK_Images", x => new { x.CarConditionCurrentId, x.FilePath });
                     table.ForeignKey(
                         name: "FK_Images_CarConditionCurrents_CarConditionCurrentId",
                         column: x => x.CarConditionCurrentId,
@@ -539,76 +376,34 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PartsDeliveryParts",
+                name: "Parts",
                 columns: table => new
                 {
-                    DeliveryPartId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    PartsId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    PartTypeModelId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Number = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    RequestPartsId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    DeliveryPartId = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PartsDeliveryParts", x => new { x.DeliveryPartId, x.PartsId });
+                    table.PrimaryKey("PK_Parts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PartsDeliveryParts_DeliveryParts_DeliveryPartId",
+                        name: "FK_Parts_DeliveryParts_DeliveryPartId",
                         column: x => x.DeliveryPartId,
                         principalTable: "DeliveryParts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_PartsDeliveryParts_Parts_PartsId",
-                        column: x => x.PartsId,
-                        principalTable: "Parts",
+                        name: "FK_Parts_PartTypeModels_PartTypeModelId",
+                        column: x => x.PartTypeModelId,
+                        principalTable: "PartTypeModels",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "WorkPlaceDeliveryParts",
-                columns: table => new
-                {
-                    WorkPlaceId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    DeliveryPartId = table.Column<string>(type: "nvarchar(450)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_WorkPlaceDeliveryParts", x => new { x.WorkPlaceId, x.DeliveryPartId });
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_WorkPlaceDeliveryParts_DeliveryParts_DeliveryPartId",
-                        column: x => x.DeliveryPartId,
-                        principalTable: "DeliveryParts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_WorkPlaceDeliveryParts_WorkPlaces_WorkPlaceId",
-                        column: x => x.WorkPlaceId,
-                        principalTable: "WorkPlaces",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "PartsRequestParts",
-                columns: table => new
-                {
-                    RequestPartId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    PartsId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Id = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PartsRequestParts", x => new { x.RequestPartId, x.PartsId });
-                    table.ForeignKey(
-                        name: "FK_PartsRequestParts_Parts_PartsId",
-                        column: x => x.PartsId,
-                        principalTable: "Parts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_PartsRequestParts_RequestParts_RequestPartId",
-                        column: x => x.RequestPartId,
+                        name: "FK_Parts_RequestParts_RequestPartsId",
+                        column: x => x.RequestPartsId,
                         principalTable: "RequestParts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -654,7 +449,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     VIN = table.Column<string>(type: "nvarchar(17)", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PartReplacementId = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    EmployeeSCTechId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     RecallId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     EmpoloyeeSCStaffId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     DateStart = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -681,12 +475,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                         principalTable: "Recall",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_RecallHistories_Techs_EmployeeSCTechId",
-                        column: x => x.EmployeeSCTechId,
-                        principalTable: "Techs",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -696,7 +484,8 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     CustomerId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     VIN = table.Column<string>(type: "nvarchar(17)", nullable: false),
-                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     WarrantyPolicyId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
@@ -765,23 +554,23 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RecallHistoryPartsReplacements",
+                name: "RecallHistoryEmployees",
                 columns: table => new
                 {
                     RecallHistoryId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    PartsReplacementId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    EmployeeId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RecallHistoryPartsReplacements", x => new { x.RecallHistoryId, x.PartsReplacementId });
+                    table.PrimaryKey("PK_RecallHistoryEmployees", x => new { x.RecallHistoryId, x.EmployeeId });
                     table.ForeignKey(
-                        name: "FK_RecallHistoryPartsReplacements_PartsReplacement_PartsReplacementId",
-                        column: x => x.PartsReplacementId,
-                        principalTable: "PartsReplacement",
+                        name: "FK_RecallHistoryEmployees_Employee_EmployeeId",
+                        column: x => x.EmployeeId,
+                        principalTable: "Employee",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_RecallHistoryPartsReplacements_RecallHistories_RecallHistoryId",
+                        name: "FK_RecallHistoryEmployees_RecallHistories_RecallHistoryId",
                         column: x => x.RecallHistoryId,
                         principalTable: "RecallHistories",
                         principalColumn: "Id",
@@ -792,8 +581,7 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 name: "Warranties",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    EmployeeTechId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     RequestWarrantyId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     PartRereplacementId = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -812,12 +600,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Warranties_Techs_EmployeeTechId",
-                        column: x => x.EmployeeTechId,
-                        principalTable: "Techs",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
                         name: "FK_Warranties_WarrantyRecord_WarrantyRecordId",
                         column: x => x.WarrantyRecordId,
                         principalTable: "WarrantyRecord",
@@ -832,27 +614,81 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "WarrantyPartsInWarranty",
+                name: "PartsReplacement",
                 columns: table => new
                 {
-                    WarrantyId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    PartsReplacementId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    SerialNumber = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    PartTypeModelId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    WarrantyId = table.Column<string>(type: "nvarchar(100)", nullable: true),
+                    RecallHistoryId = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_WarrantyPartsInWarranty", x => new { x.WarrantyId, x.PartsReplacementId });
+                    table.PrimaryKey("PK_PartsReplacement", x => x.SerialNumber);
                     table.ForeignKey(
-                        name: "FK_WarrantyPartsInWarranty_PartsReplacement_PartsReplacementId",
-                        column: x => x.PartsReplacementId,
-                        principalTable: "PartsReplacement",
+                        name: "FK_PartsReplacement_PartTypeModels_PartTypeModelId",
+                        column: x => x.PartTypeModelId,
+                        principalTable: "PartTypeModels",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_WarrantyPartsInWarranty_Warranties_WarrantyId",
+                        name: "FK_PartsReplacement_RecallHistories_RecallHistoryId",
+                        column: x => x.RecallHistoryId,
+                        principalTable: "RecallHistories",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_PartsReplacement_Warranties_WarrantyId",
+                        column: x => x.WarrantyId,
+                        principalTable: "Warranties",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WarrantyEmployees",
+                columns: table => new
+                {
+                    WarrantyId = table.Column<string>(type: "nvarchar(100)", nullable: false),
+                    EmployeeId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WarrantyEmployees", x => new { x.WarrantyId, x.EmployeeId });
+                    table.ForeignKey(
+                        name: "FK_WarrantyEmployees_Employee_EmployeeId",
+                        column: x => x.EmployeeId,
+                        principalTable: "Employee",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_WarrantyEmployees_Warranties_WarrantyId",
                         column: x => x.WarrantyId,
                         principalTable: "Warranties",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WarrantyPartsReplacement",
+                columns: table => new
+                {
+                    WarrantyId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    PartsReplacementId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WarrantyPartsReplacement", x => new { x.WarrantyId, x.PartsReplacementId });
+                    table.ForeignKey(
+                        name: "FK_WarrantyPartsReplacement_PartsReplacement_PartsReplacementId",
+                        column: x => x.PartsReplacementId,
+                        principalTable: "PartsReplacement",
+                        principalColumn: "SerialNumber",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_WarrantyPartsReplacement_Warranties_WarrantyId",
+                        column: x => x.WarrantyId,
+                        principalTable: "Warranties",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -881,24 +717,9 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 column: "SCTechID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Assignment_TaskId",
-                table: "Assignment",
-                column: "TaskId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CarConditionCarConditionCurrent_CarConditionCurrentId",
-                table: "CarConditionCarConditionCurrent",
-                column: "CarConditionCurrentId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_CarConditionCurrents_TechnicianId",
                 table: "CarConditionCurrents",
                 column: "TechnicianId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CarConditions_PartTypeModelId",
-                table: "CarConditions",
-                column: "PartTypeModelId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CarInfo_CustomerId",
@@ -926,6 +747,11 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 column: "StaffSend");
 
             migrationBuilder.CreateIndex(
+                name: "IX_DeliveryParts_WorkPlaceId",
+                table: "DeliveryParts",
+                column: "WorkPlaceId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Employee_RoleId",
                 table: "Employee",
                 column: "RoleId");
@@ -936,19 +762,9 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 column: "WorkPlacesId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Images_CarConditionCurrentId",
-                table: "Images",
-                column: "CarConditionCurrentId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PartReplaced_EmployeeId",
-                table: "PartReplaced",
-                column: "EmployeeId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PartReplaced_PartTypeModelId",
-                table: "PartReplaced",
-                column: "PartTypeModelId");
+                name: "IX_Parts_DeliveryPartId",
+                table: "Parts",
+                column: "DeliveryPartId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Parts_PartTypeModelId",
@@ -956,29 +772,29 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 column: "PartTypeModelId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PartsDeliveryParts_PartsId",
-                table: "PartsDeliveryParts",
-                column: "PartsId");
+                name: "IX_Parts_RequestPartsId",
+                table: "Parts",
+                column: "RequestPartsId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PartsReplacement_PartModelId",
+                name: "IX_PartsReplacement_PartTypeModelId",
                 table: "PartsReplacement",
-                column: "PartModelId");
+                column: "PartTypeModelId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PartsRequestParts_PartsId",
-                table: "PartsRequestParts",
-                column: "PartsId");
+                name: "IX_PartsReplacement_RecallHistoryId",
+                table: "PartsReplacement",
+                column: "RecallHistoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PartsReplacement_WarrantyId",
+                table: "PartsReplacement",
+                column: "WarrantyId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PartTypeModels_PartTypeId",
                 table: "PartTypeModels",
                 column: "PartTypeId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RecallHistories_EmployeeSCTechId",
-                table: "RecallHistories",
-                column: "EmployeeSCTechId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RecallHistories_EmpoloyeeSCStaffId",
@@ -996,14 +812,14 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 column: "VIN");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RecallHistoryPartsReplacements_PartsReplacementId",
-                table: "RecallHistoryPartsReplacements",
-                column: "PartsReplacementId");
+                name: "IX_RecallHistoryEmployees_EmployeeId",
+                table: "RecallHistoryEmployees",
+                column: "EmployeeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RecallPartsReplacements_PartsReplacementId",
+                name: "IX_RecallPartsReplacements_PartTypeModelId",
                 table: "RecallPartsReplacements",
-                column: "PartsReplacementId");
+                column: "PartTypeModelId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RequestParts_EVMStaffId",
@@ -1016,24 +832,9 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 column: "SCStaffId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RoleEmployee_EmployeeId",
-                table: "RoleEmployee",
-                column: "EmployeeId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Techs_EmployeeId",
-                table: "Techs",
-                column: "EmployeeId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Warranties_EmployeeSCStaffId",
                 table: "Warranties",
                 column: "EmployeeSCStaffId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Warranties_EmployeeTechId",
-                table: "Warranties",
-                column: "EmployeeTechId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Warranties_RequestWarrantyId",
@@ -1046,8 +847,13 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 column: "WarrantyRecordId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WarrantyPartsInWarranty_PartsReplacementId",
-                table: "WarrantyPartsInWarranty",
+                name: "IX_WarrantyEmployees_EmployeeId",
+                table: "WarrantyEmployees",
+                column: "EmployeeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WarrantyPartsReplacement_PartsReplacementId",
+                table: "WarrantyPartsReplacement",
                 column: "PartsReplacementId");
 
             migrationBuilder.CreateIndex(
@@ -1086,11 +892,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 column: "VIN");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WorkPlaceDeliveryParts_DeliveryPartId",
-                table: "WorkPlaceDeliveryParts",
-                column: "DeliveryPartId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_WorkPlacePartTypeModels(PartInStock)_PartTypeModelId",
                 table: "WorkPlacePartTypeModels(PartInStock)",
                 column: "PartTypeModelId");
@@ -1106,34 +907,22 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 name: "Assignment");
 
             migrationBuilder.DropTable(
-                name: "CarConditionCarConditionCurrent");
-
-            migrationBuilder.DropTable(
                 name: "Images");
 
             migrationBuilder.DropTable(
-                name: "PartReplaced");
+                name: "Parts");
 
             migrationBuilder.DropTable(
-                name: "PartsDeliveryParts");
-
-            migrationBuilder.DropTable(
-                name: "PartsRequestParts");
-
-            migrationBuilder.DropTable(
-                name: "RecallHistoryPartsReplacements");
+                name: "RecallHistoryEmployees");
 
             migrationBuilder.DropTable(
                 name: "RecallPartsReplacements");
 
             migrationBuilder.DropTable(
-                name: "RoleEmployee");
+                name: "WarrantyEmployees");
 
             migrationBuilder.DropTable(
-                name: "WarrantyPartsInWarranty");
-
-            migrationBuilder.DropTable(
-                name: "WorkPlaceDeliveryParts");
+                name: "WarrantyPartsReplacement");
 
             migrationBuilder.DropTable(
                 name: "WorkPlacePartTypeModels(PartInStock)");
@@ -1142,46 +931,34 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                 name: "TypeAppointments");
 
             migrationBuilder.DropTable(
-                name: "Task");
-
-            migrationBuilder.DropTable(
-                name: "CarConditions");
-
-            migrationBuilder.DropTable(
-                name: "Parts");
+                name: "DeliveryParts");
 
             migrationBuilder.DropTable(
                 name: "RequestParts");
 
             migrationBuilder.DropTable(
-                name: "RecallHistories");
-
-            migrationBuilder.DropTable(
                 name: "PartsReplacement");
-
-            migrationBuilder.DropTable(
-                name: "Warranties");
-
-            migrationBuilder.DropTable(
-                name: "DeliveryParts");
-
-            migrationBuilder.DropTable(
-                name: "Recall");
 
             migrationBuilder.DropTable(
                 name: "PartTypeModels");
 
             migrationBuilder.DropTable(
-                name: "Techs");
+                name: "RecallHistories");
+
+            migrationBuilder.DropTable(
+                name: "Warranties");
+
+            migrationBuilder.DropTable(
+                name: "PartTypes");
+
+            migrationBuilder.DropTable(
+                name: "Recall");
 
             migrationBuilder.DropTable(
                 name: "WarrantyRecord");
 
             migrationBuilder.DropTable(
                 name: "WarrantyRequests");
-
-            migrationBuilder.DropTable(
-                name: "PartTypes");
 
             migrationBuilder.DropTable(
                 name: "WarrantyPolicies");

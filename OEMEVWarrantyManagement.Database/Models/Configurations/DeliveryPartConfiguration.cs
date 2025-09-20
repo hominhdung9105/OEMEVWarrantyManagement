@@ -23,8 +23,6 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
                    .IsRequired();
             builder.Property(dp => dp.DateReceive)
                    .IsRequired();
-            builder.Property(dp => dp.PartsID)
-                   .IsRequired();
 
             //relationship StaffSend - Employee
             builder.HasOne(dp => dp.StaffSendEmployee)
@@ -36,6 +34,10 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
                    .WithMany(e => e.DeliveryPartsReceive)
                    .HasForeignKey(dp => dp.StaffReceive)
                    .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(dp => dp.WorkPlaces)
+                   .WithMany(wp => wp.DeliveryParts) // Trỏ đến collection trong WorkPlace
+                   .HasForeignKey(dp => dp.WorkPlaceId)
+                   .IsRequired();
         }
     }
 

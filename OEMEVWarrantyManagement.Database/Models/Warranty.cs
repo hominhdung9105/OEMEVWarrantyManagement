@@ -3,8 +3,6 @@
     public class Warranty
     {
         public string Id { get; set; }
-        public string EmployeeTechId { get; set; } //FK
-        public Techs EmployeeTech { get; set; } // Navigation property
         public string Status { get; set; }
         public string RequestWarrantyId { get; set; } //FK
         public WarrantyRequest RequestWarranty { get; set; } // Navigation property
@@ -16,6 +14,10 @@
         public string EmployeeSCStaffId { get; set; } //FK
         public Employee EmployeeSCStaff { get; set; } // Navigation property
         public ICollection<WarrantyPartsReplacement> WarrantyPartReplacements { get; set; } = new List<WarrantyPartsReplacement>();
+
+        public ICollection<PartsReplacement> PartsReplacements { get; set; }
+
+        public ICollection<WarrantyEmployee> WarrantyEmployees { get; set; } = new List<WarrantyEmployee>();
 
     }
 }

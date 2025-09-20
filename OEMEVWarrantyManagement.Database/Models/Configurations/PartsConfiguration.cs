@@ -19,6 +19,16 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
                    .WithMany(pm => pm.Parts)
                    .HasForeignKey(p => p.PartTypeModelId)
                    .OnDelete(DeleteBehavior.Restrict);
+
+
+            builder.HasOne(p => p.RequestPart)
+                   .WithMany(rp => rp.Parts)
+                   .HasForeignKey(p => p.RequestPartsId);
+
+
+            builder.HasOne(p => p.DeliveryPart)
+                   .WithMany(dp => dp.Parts)
+                   .HasForeignKey(p => p.DeliveryPartId);
         }
     }
     

@@ -9,9 +9,11 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
         {
             builder.ToTable("Assignment");
             builder.HasKey(a => a.Id);
-            builder.Property(a => a.TaskId).IsRequired();
             builder.Property(a => a.Status).IsRequired();
-            builder.Property(a => a.AssignedEndDate).IsRequired();
+            builder.Property(a => a.TaskName).IsRequired().HasMaxLength(200);
+            builder.Property(a => a.TaskDescription).HasMaxLength(1000);
+            builder.Property(a => a.StartDate).IsRequired();
+            builder.Property(a => a.EndDate).IsRequired();
 
             builder.HasOne(a => a.EmployeeSCStaff)
                    .WithMany(e => e.AssignmentsAsSCStaff)
@@ -22,10 +24,6 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
                    .WithMany(e => e.AssignmentsAsSCTech)
                    .HasForeignKey(a => a.SCTechID)
                    .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasOne(a => a.Task)
-                   .WithMany(t => t.Assignments)
-                   .HasForeignKey(a => a.TaskId);
         }
     }
 }

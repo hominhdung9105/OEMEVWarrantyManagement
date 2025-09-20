@@ -11,9 +11,10 @@
         public string LocationId { get; set; }
         public DateTime DateSend { get; set; }
         public DateTime DateReceive { get; set; }
-        public string PartsID { get; set; } //FK
-        public ICollection<PartsDeliveryPart> PartsDeliveryParts { get; set; } = new List<PartsDeliveryPart>();
-        public ICollection<WorkPlaceDeliveryPart> WorkPlaceDeliveryParts { get; set; } = new List<WorkPlaceDeliveryPart>();
+        public ICollection<Parts> Parts { get; set; }
+
+        public string WorkPlaceId { get; set; }
+        public  WorkPlaces WorkPlaces { get; set; }
 
     }
 }

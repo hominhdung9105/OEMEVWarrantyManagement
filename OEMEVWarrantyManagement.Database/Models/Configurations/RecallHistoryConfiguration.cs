@@ -15,11 +15,6 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
             builder.Property(rh => rh.DateStart).IsRequired();
             builder.Property(rh => rh.DateEnd).IsRequired();
 
-            builder.HasOne(rh => rh.EmployeeTechs)
-                   .WithMany(t => t.RecallHistoriesAsTechs)
-                   .HasForeignKey(rh => rh.EmployeeSCTechId)
-                   .OnDelete(DeleteBehavior.Restrict);
-
             builder.HasOne(rh => rh.EmployeeStaffs)
                    .WithMany(e => e.RecallHistoriesAsSCStaff)
                    .HasForeignKey(rh => rh.EmpoloyeeSCStaffId)

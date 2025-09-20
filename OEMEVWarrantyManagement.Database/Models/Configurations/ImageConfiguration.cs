@@ -8,7 +8,7 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
         public void Configure(EntityTypeBuilder<Image> builder)
         {
             builder.ToTable("Images");
-            builder.HasKey(i => i.Id);
+            builder.HasKey(i => new { i.CarConditionCurrentId, i.FilePath });
             builder.Property(i => i.FilePath)
                    .IsRequired()
                    .HasMaxLength(200);

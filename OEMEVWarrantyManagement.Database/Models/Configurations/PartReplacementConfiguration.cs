@@ -8,13 +8,21 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
         public void Configure(EntityTypeBuilder<PartsReplacement> builder)
         {
             builder.ToTable("PartsReplacement");
-            builder.HasKey(pr => pr.Id);
-            builder.Property(pr => pr.PartModelId).IsRequired();
+            builder.HasKey(p => p.SerialNumber);
+            builder.Property(p => p.SerialNumber).HasMaxLength(100);
             // Relationships
-            builder.HasOne(pr => pr.PartTypeModel)
+            builder.HasOne(p => p.PartTypeModel)
                    .WithMany(ptm => ptm.PartsReplacements)
-                   .HasForeignKey(pr => pr.PartModelId)
-                   .OnDelete(DeleteBehavior.Restrict);
+                   .HasForeignKey(p => p.PartTypeModelId)
+                   .IsRequired();
+
+            builder.HasOne(p => p.Warranty)
+                   .WithMany(w => w.PartsReplacements)
+                   .HasForeignKey(p => p.WarrantyId);
+
+            builder.HasOne(p => p.RecallHistory)
+                   .WithMany(rh => rh.PartsReplacements)
+                   .HasForeignKey(p => p.RecallHistoryId);
         }
     }
 }

@@ -17,6 +17,11 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
             builder.HasOne(e => e.WorkPlaces)
                    .WithMany(wp => wp.Employees)
                    .HasForeignKey(e => e.WorkPlacesId);
+
+            builder.HasOne(e => e.Role) 
+                   .WithMany(r => r.Employees)
+                   .HasForeignKey(e => e.RoleId)
+                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

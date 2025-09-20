@@ -67,7 +67,7 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime>("AssignedEndDate")
+                    b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("SCStaffId")
@@ -78,13 +78,22 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("TaskId")
+                    b.Property<string>("TaskDescription")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("TaskName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
 
@@ -92,45 +101,7 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
                     b.HasIndex("SCTechID");
 
-                    b.HasIndex("TaskId");
-
                     b.ToTable("Assignment", (string)null);
-                });
-
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.CarCondition", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("PartTypeModelId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PartTypeModelId");
-
-                    b.ToTable("CarConditions", (string)null);
-                });
-
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.CarConditionCarConditionCurrent", b =>
-                {
-                    b.Property<string>("CarConditionId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("CarConditionCurrentId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("CarConditionId", "CarConditionCurrentId");
-
-                    b.HasIndex("CarConditionCurrentId");
-
-                    b.ToTable("CarConditionCarConditionCurrent", (string)null);
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.CarConditionCurrent", b =>
@@ -147,15 +118,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
-
-                    b.Property<string>("FilePath")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("ImageId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TechnicianId")
                         .IsRequired()
@@ -251,10 +213,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("PartsID")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("StaffReceive")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -268,11 +226,17 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("WorkPlaceId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("StaffReceive");
 
                     b.HasIndex("StaffSend");
+
+                    b.HasIndex("WorkPlaceId");
 
                     b.ToTable("DeliveryParts", (string)null);
                 });
@@ -316,50 +280,16 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Image", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("CarConditionCurrentId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("FilePath")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("CarConditionCurrentId");
+                    b.HasKey("CarConditionCurrentId", "FilePath");
 
                     b.ToTable("Images", (string)null);
-                });
-
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.PartReplaced", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("EmployeeId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("PartTypeModelId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("VIN")
-                        .IsRequired()
-                        .HasMaxLength(17)
-                        .HasColumnType("nvarchar(17)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.HasIndex("PartTypeModelId");
-
-                    b.ToTable("PartReplaced", (string)null);
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.PartType", b =>
@@ -403,6 +333,9 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("DeliveryPartId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("Number")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -412,60 +345,45 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("RequestPartsId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("DeliveryPartId");
+
                     b.HasIndex("PartTypeModelId");
+
+                    b.HasIndex("RequestPartsId");
 
                     b.ToTable("Parts", (string)null);
                 });
 
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.PartsDeliveryPart", b =>
-                {
-                    b.Property<string>("DeliveryPartId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("PartsId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("DeliveryPartId", "PartsId");
-
-                    b.HasIndex("PartsId");
-
-                    b.ToTable("PartsDeliveryParts", (string)null);
-                });
-
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.PartsReplacement", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("SerialNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("PartModelId")
+                    b.Property<string>("PartTypeModelId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("Id");
+                    b.Property<string>("RecallHistoryId")
+                        .HasColumnType("nvarchar(450)");
 
-                    b.HasIndex("PartModelId");
+                    b.Property<string>("WarrantyId")
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("SerialNumber");
+
+                    b.HasIndex("PartTypeModelId");
+
+                    b.HasIndex("RecallHistoryId");
+
+                    b.HasIndex("WarrantyId");
 
                     b.ToTable("PartsReplacement", (string)null);
-                });
-
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.PartsRequestPart", b =>
-                {
-                    b.Property<string>("RequestPartId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("PartsId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("RequestPartId", "PartsId");
-
-                    b.HasIndex("PartsId");
-
-                    b.ToTable("PartsRequestParts", (string)null);
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Recall", b =>
@@ -512,10 +430,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     b.Property<DateTime>("DateStart")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("EmployeeSCTechId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("EmpoloyeeSCStaffId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -538,8 +452,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EmployeeSCTechId");
-
                     b.HasIndex("EmpoloyeeSCStaffId");
 
                     b.HasIndex("RecallId");
@@ -549,32 +461,32 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     b.ToTable("RecallHistories", (string)null);
                 });
 
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.RecallHistoryPartsReplacement", b =>
+            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.RecallHistoryEmployee", b =>
                 {
                     b.Property<string>("RecallHistoryId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("PartsReplacementId")
+                    b.Property<string>("EmployeeId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("RecallHistoryId", "PartsReplacementId");
+                    b.HasKey("RecallHistoryId", "EmployeeId");
 
-                    b.HasIndex("PartsReplacementId");
+                    b.HasIndex("EmployeeId");
 
-                    b.ToTable("RecallHistoryPartsReplacements", (string)null);
+                    b.ToTable("RecallHistoryEmployees");
                 });
 
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.RecallPartsReplacement", b =>
+            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.RecallPartTypeModel", b =>
                 {
                     b.Property<string>("RecallId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("PartsReplacementId")
+                    b.Property<string>("PartTypeModelId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("RecallId", "PartsReplacementId");
+                    b.HasKey("RecallId", "PartTypeModelId");
 
-                    b.HasIndex("PartsReplacementId");
+                    b.HasIndex("PartTypeModelId");
 
                     b.ToTable("RecallPartsReplacements", (string)null);
                 });
@@ -587,10 +499,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     b.Property<string>("EVMStaffId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("PartTypeId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SCStaffId")
                         .IsRequired()
@@ -625,57 +533,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     b.ToTable("Roles", (string)null);
                 });
 
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.RoleEmployee", b =>
-                {
-                    b.Property<string>("RoleId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("EmployeeId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("RoleId", "EmployeeId");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.ToTable("RoleEmployee", (string)null);
-                });
-
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Task", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Task", (string)null);
-                });
-
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Techs", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("EmployeeId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.ToTable("Techs", (string)null);
-                });
-
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.TypeAppointment", b =>
                 {
                     b.Property<string>("Id")
@@ -694,13 +551,10 @@ namespace OEMEVWarrantyManagement.Database.Migrations
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Warranty", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("EmployeeSCStaffId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("EmployeeTechId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
@@ -731,8 +585,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
                     b.HasIndex("EmployeeSCStaffId");
 
-                    b.HasIndex("EmployeeTechId");
-
                     b.HasIndex("RequestWarrantyId");
 
                     b.HasIndex("WarrantyRecordId");
@@ -740,19 +592,36 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     b.ToTable("Warranties", (string)null);
                 });
 
+            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.WarrantyEmployee", b =>
+                {
+                    b.Property<string>("WarrantyId")
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("EmployeeId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("WarrantyId", "EmployeeId");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("WarrantyEmployees");
+                });
+
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.WarrantyPartsReplacement", b =>
                 {
                     b.Property<string>("WarrantyId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("PartsReplacementId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("WarrantyId", "PartsReplacementId");
 
                     b.HasIndex("PartsReplacementId");
 
-                    b.ToTable("WarrantyPartsInWarranty", (string)null);
+                    b.ToTable("WarrantyPartsReplacement", (string)null);
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.WarrantyPolicy", b =>
@@ -788,7 +657,10 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime>("Date")
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("VIN")
@@ -853,21 +725,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     b.HasIndex("VIN");
 
                     b.ToTable("WarrantyRequests", (string)null);
-                });
-
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.WorkPlaceDeliveryPart", b =>
-                {
-                    b.Property<string>("WorkPlaceId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("DeliveryPartId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("WorkPlaceId", "DeliveryPartId");
-
-                    b.HasIndex("DeliveryPartId");
-
-                    b.ToTable("WorkPlaceDeliveryParts", (string)null);
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.WorkPlacePartTypeModel", b =>
@@ -949,47 +806,9 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.Task", "Task")
-                        .WithMany("Assignments")
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("EmployeeSCStaff");
 
                     b.Navigation("EmployeeSCTech");
-
-                    b.Navigation("Task");
-                });
-
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.CarCondition", b =>
-                {
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.PartTypeModel", "PartTypeModel")
-                        .WithMany("CarConditions")
-                        .HasForeignKey("PartTypeModelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("PartTypeModel");
-                });
-
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.CarConditionCarConditionCurrent", b =>
-                {
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.CarConditionCurrent", "CarConditionCurrent")
-                        .WithMany("CarConditionCarConditionCurrents")
-                        .HasForeignKey("CarConditionCurrentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.CarCondition", "CarCondition")
-                        .WithMany("CarConditionCarConditionCurrents")
-                        .HasForeignKey("CarConditionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CarCondition");
-
-                    b.Navigation("CarConditionCurrent");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.CarConditionCurrent", b =>
@@ -1047,17 +866,25 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("OEMEVWarrantyManagement.Database.Models.WorkPlaces", "WorkPlaces")
+                        .WithMany("DeliveryParts")
+                        .HasForeignKey("WorkPlaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("StaffReceiveEmployee");
 
                     b.Navigation("StaffSendEmployee");
+
+                    b.Navigation("WorkPlaces");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Employee", b =>
                 {
                     b.HasOne("OEMEVWarrantyManagement.Database.Models.Role", "Role")
-                        .WithMany()
+                        .WithMany("Employees")
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OEMEVWarrantyManagement.Database.Models.WorkPlaces", "WorkPlaces")
@@ -1082,25 +909,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     b.Navigation("CarConditionCurrent");
                 });
 
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.PartReplaced", b =>
-                {
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.Employee", "Employee")
-                        .WithMany("PartReplaceds")
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.PartTypeModel", "PartTypeModel")
-                        .WithMany("PartReplaceds")
-                        .HasForeignKey("PartTypeModelId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("PartTypeModel");
-                });
-
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.PartTypeModel", b =>
                 {
                     b.HasOne("OEMEVWarrantyManagement.Database.Models.PartType", "PartType")
@@ -1114,72 +922,52 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Parts", b =>
                 {
+                    b.HasOne("OEMEVWarrantyManagement.Database.Models.DeliveryPart", "DeliveryPart")
+                        .WithMany("Parts")
+                        .HasForeignKey("DeliveryPartId");
+
                     b.HasOne("OEMEVWarrantyManagement.Database.Models.PartTypeModel", "PartTypeModels")
                         .WithMany("Parts")
                         .HasForeignKey("PartTypeModelId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("PartTypeModels");
-                });
-
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.PartsDeliveryPart", b =>
-                {
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.DeliveryPart", "DeliveryPart")
-                        .WithMany("PartsDeliveryParts")
-                        .HasForeignKey("DeliveryPartId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.Parts", "Parts")
-                        .WithMany("PartsDeliveryParts")
-                        .HasForeignKey("PartsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("OEMEVWarrantyManagement.Database.Models.RequestPart", "RequestPart")
+                        .WithMany("Parts")
+                        .HasForeignKey("RequestPartsId");
 
                     b.Navigation("DeliveryPart");
 
-                    b.Navigation("Parts");
+                    b.Navigation("PartTypeModels");
+
+                    b.Navigation("RequestPart");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.PartsReplacement", b =>
                 {
                     b.HasOne("OEMEVWarrantyManagement.Database.Models.PartTypeModel", "PartTypeModel")
                         .WithMany("PartsReplacements")
-                        .HasForeignKey("PartModelId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasForeignKey("PartTypeModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("OEMEVWarrantyManagement.Database.Models.RecallHistory", "RecallHistory")
+                        .WithMany("PartsReplacements")
+                        .HasForeignKey("RecallHistoryId");
+
+                    b.HasOne("OEMEVWarrantyManagement.Database.Models.Warranty", "Warranty")
+                        .WithMany("PartsReplacements")
+                        .HasForeignKey("WarrantyId");
 
                     b.Navigation("PartTypeModel");
-                });
 
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.PartsRequestPart", b =>
-                {
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.Parts", "Parts")
-                        .WithMany("PartsRequestParts")
-                        .HasForeignKey("PartsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("RecallHistory");
 
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.RequestPart", "RequestPart")
-                        .WithMany("PartsRequestParts")
-                        .HasForeignKey("RequestPartId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Parts");
-
-                    b.Navigation("RequestPart");
+                    b.Navigation("Warranty");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.RecallHistory", b =>
                 {
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.Techs", "EmployeeTechs")
-                        .WithMany("RecallHistoriesAsTechs")
-                        .HasForeignKey("EmployeeSCTechId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("OEMEVWarrantyManagement.Database.Models.Employee", "EmployeeStaffs")
                         .WithMany("RecallHistoriesAsSCStaff")
                         .HasForeignKey("EmpoloyeeSCStaffId")
@@ -1202,45 +990,43 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
                     b.Navigation("EmployeeStaffs");
 
-                    b.Navigation("EmployeeTechs");
-
                     b.Navigation("Recall");
                 });
 
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.RecallHistoryPartsReplacement", b =>
+            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.RecallHistoryEmployee", b =>
                 {
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.PartsReplacement", "PartsReplacement")
-                        .WithMany("RecallHistoryPartsReplacements")
-                        .HasForeignKey("PartsReplacementId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("OEMEVWarrantyManagement.Database.Models.Employee", "Employee")
+                        .WithMany("RecallHistoryEmployees")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OEMEVWarrantyManagement.Database.Models.RecallHistory", "RecallHistory")
-                        .WithMany("RecallHistoryPartsReplacements")
+                        .WithMany("RecallHistoryEmployees")
                         .HasForeignKey("RecallHistoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("PartsReplacement");
+                    b.Navigation("Employee");
 
                     b.Navigation("RecallHistory");
                 });
 
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.RecallPartsReplacement", b =>
+            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.RecallPartTypeModel", b =>
                 {
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.PartsReplacement", "PartsReplacement")
-                        .WithMany("RecallPartsReplacements")
-                        .HasForeignKey("PartsReplacementId")
+                    b.HasOne("OEMEVWarrantyManagement.Database.Models.PartTypeModel", "PartTypeModel")
+                        .WithMany("RecallPartTypeModels")
+                        .HasForeignKey("PartTypeModelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("OEMEVWarrantyManagement.Database.Models.Recall", "Recall")
-                        .WithMany("RecallPartsReplacements")
+                        .WithMany("RecallPartTypeModels")
                         .HasForeignKey("RecallId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("PartsReplacement");
+                    b.Navigation("PartTypeModel");
 
                     b.Navigation("Recall");
                 });
@@ -1264,47 +1050,11 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     b.Navigation("SCStaff");
                 });
 
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.RoleEmployee", b =>
-                {
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.Employee", "Employee")
-                        .WithMany("RoleEmployees")
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.Role", "Role")
-                        .WithMany("RoleEmployees")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("Role");
-                });
-
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Techs", b =>
-                {
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.Employee", "Employee")
-                        .WithMany("Teches")
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-                });
-
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Warranty", b =>
                 {
                     b.HasOne("OEMEVWarrantyManagement.Database.Models.Employee", "EmployeeSCStaff")
                         .WithMany("WarrantiesAsSCTech")
                         .HasForeignKey("EmployeeSCStaffId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.Techs", "EmployeeTech")
-                        .WithMany("Warranties")
-                        .HasForeignKey("EmployeeTechId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -1322,17 +1072,34 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
                     b.Navigation("EmployeeSCStaff");
 
-                    b.Navigation("EmployeeTech");
-
                     b.Navigation("RequestWarranty");
 
                     b.Navigation("WarrantyRecord");
                 });
 
+            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.WarrantyEmployee", b =>
+                {
+                    b.HasOne("OEMEVWarrantyManagement.Database.Models.Employee", "Employee")
+                        .WithMany("WarrantyEmployees")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OEMEVWarrantyManagement.Database.Models.Warranty", "Warranty")
+                        .WithMany("WarrantyEmployees")
+                        .HasForeignKey("WarrantyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Warranty");
+                });
+
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.WarrantyPartsReplacement", b =>
                 {
                     b.HasOne("OEMEVWarrantyManagement.Database.Models.PartsReplacement", "PartsReplacement")
-                        .WithMany("WarrantyPartsInWarranties")
+                        .WithMany("WarrantyPartReplacements")
                         .HasForeignKey("PartsReplacementId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1340,7 +1107,7 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     b.HasOne("OEMEVWarrantyManagement.Database.Models.Warranty", "Warranty")
                         .WithMany("WarrantyPartReplacements")
                         .HasForeignKey("WarrantyId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("PartsReplacement");
@@ -1410,25 +1177,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     b.Navigation("SCStaff");
                 });
 
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.WorkPlaceDeliveryPart", b =>
-                {
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.DeliveryPart", "DeliveryPart")
-                        .WithMany("WorkPlaceDeliveryParts")
-                        .HasForeignKey("DeliveryPartId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("OEMEVWarrantyManagement.Database.Models.WorkPlaces", "WorkPlace")
-                        .WithMany("WorkPlaceDeliveryParts")
-                        .HasForeignKey("WorkPlaceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DeliveryPart");
-
-                    b.Navigation("WorkPlace");
-                });
-
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.WorkPlacePartTypeModel", b =>
                 {
                     b.HasOne("OEMEVWarrantyManagement.Database.Models.PartTypeModel", "PartTypeModel")
@@ -1448,15 +1196,8 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                     b.Navigation("WorkPlaces");
                 });
 
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.CarCondition", b =>
-                {
-                    b.Navigation("CarConditionCarConditionCurrents");
-                });
-
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.CarConditionCurrent", b =>
                 {
-                    b.Navigation("CarConditionCarConditionCurrents");
-
                     b.Navigation("Images");
 
                     b.Navigation("WarrantyRequests");
@@ -1489,9 +1230,7 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.DeliveryPart", b =>
                 {
-                    b.Navigation("PartsDeliveryParts");
-
-                    b.Navigation("WorkPlaceDeliveryParts");
+                    b.Navigation("Parts");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Employee", b =>
@@ -1508,17 +1247,15 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
                     b.Navigation("DeliveryPartsSend");
 
-                    b.Navigation("PartReplaceds");
-
                     b.Navigation("RecallHistoriesAsSCStaff");
+
+                    b.Navigation("RecallHistoryEmployees");
 
                     b.Navigation("RequestParts");
 
-                    b.Navigation("RoleEmployees");
-
-                    b.Navigation("Teches");
-
                     b.Navigation("WarrantiesAsSCTech");
+
+                    b.Navigation("WarrantyEmployees");
 
                     b.Navigation("WarrantyRequestsAsEVMStaff");
 
@@ -1532,65 +1269,42 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.PartTypeModel", b =>
                 {
-                    b.Navigation("CarConditions");
-
-                    b.Navigation("PartReplaceds");
-
                     b.Navigation("Parts");
 
                     b.Navigation("PartsReplacements");
 
+                    b.Navigation("RecallPartTypeModels");
+
                     b.Navigation("WorkPlacePartTypeModels");
-                });
-
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Parts", b =>
-                {
-                    b.Navigation("PartsDeliveryParts");
-
-                    b.Navigation("PartsRequestParts");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.PartsReplacement", b =>
                 {
-                    b.Navigation("RecallHistoryPartsReplacements");
-
-                    b.Navigation("RecallPartsReplacements");
-
-                    b.Navigation("WarrantyPartsInWarranties");
+                    b.Navigation("WarrantyPartReplacements");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Recall", b =>
                 {
                     b.Navigation("RecallHistories");
 
-                    b.Navigation("RecallPartsReplacements");
+                    b.Navigation("RecallPartTypeModels");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.RecallHistory", b =>
                 {
-                    b.Navigation("RecallHistoryPartsReplacements");
+                    b.Navigation("PartsReplacements");
+
+                    b.Navigation("RecallHistoryEmployees");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.RequestPart", b =>
                 {
-                    b.Navigation("PartsRequestParts");
+                    b.Navigation("Parts");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Role", b =>
                 {
-                    b.Navigation("RoleEmployees");
-                });
-
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Task", b =>
-                {
-                    b.Navigation("Assignments");
-                });
-
-            modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Techs", b =>
-                {
-                    b.Navigation("RecallHistoriesAsTechs");
-
-                    b.Navigation("Warranties");
+                    b.Navigation("Employees");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.TypeAppointment", b =>
@@ -1600,6 +1314,10 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.Warranty", b =>
                 {
+                    b.Navigation("PartsReplacements");
+
+                    b.Navigation("WarrantyEmployees");
+
                     b.Navigation("WarrantyPartReplacements");
                 });
 
@@ -1620,9 +1338,9 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Database.Models.WorkPlaces", b =>
                 {
-                    b.Navigation("Employees");
+                    b.Navigation("DeliveryParts");
 
-                    b.Navigation("WorkPlaceDeliveryParts");
+                    b.Navigation("Employees");
 
                     b.Navigation("WorkPlacePartTypeModels");
                 });

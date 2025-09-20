@@ -9,7 +9,8 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
             {
             builder.ToTable("WarrantyRecord");
             builder.HasKey(wr => wr.Id);
-            builder.Property(wr => wr.Date).IsRequired();
+            builder.Property(wr => wr.StartDate).IsRequired();
+            builder.Property(wr => wr.EndDate).IsRequired();
             builder.Property(wr => wr.CustomerId).IsRequired();
             builder.Property(wr => wr.VIN).IsRequired();
             builder.Property(wr => wr.WarrantyPolicyId).IsRequired();

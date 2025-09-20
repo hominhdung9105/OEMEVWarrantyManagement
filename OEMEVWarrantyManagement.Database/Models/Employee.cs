@@ -17,16 +17,18 @@ namespace OEMEVWarrantyManagement.Database.Models
         public ICollection<Assignment> AssignmentsAsSCStaff { get; set; } = new List<Assignment>();
         public ICollection<Assignment> AssignmentsAsSCTech { get; set; } = new List<Assignment>();
         public ICollection<RequestPart> RequestParts { get; set; } = new List<RequestPart>();
-        public ICollection<RoleEmployee> RoleEmployees { get; set; } = new List<RoleEmployee>();
+        //public ICollection<RoleEmployee> RoleEmployees { get; set; } = new List<RoleEmployee>();
         public ICollection<DeliveryPart> DeliveryPartsSend { get; set; } = new List<DeliveryPart>();
         public ICollection<DeliveryPart> DeliveryPartsReceive { get; set; } = new List<DeliveryPart>();
-        public ICollection<PartReplaced> PartReplaceds { get; set; } = new List<PartReplaced>();
         public ICollection<WarrantyRequest> WarrantyRequestsAsEVMStaff { get; set; } = new List<WarrantyRequest>();
         public ICollection<WarrantyRequest> WarrantyRequestsAsSCStaff { get; set; } = new List<WarrantyRequest>();
         public ICollection<Warranty> WarrantiesAsSCTech { get; set; } = new List<Warranty>();
-        public ICollection<Techs> Teches { get; set; } = new List<Techs>();
-        public ICollection<Customer> Customer { get; set; }
+        public ICollection<Customer> Customer { get; set; } = new List<Customer>();
         public ICollection<RecallHistory> RecallHistoriesAsSCStaff { get; set; } = new List<RecallHistory>();
+
+        public ICollection<WarrantyEmployee> WarrantyEmployees { get; set; } = new List<WarrantyEmployee>();
+
+        public ICollection<RecallHistoryEmployee> RecallHistoryEmployees { get; set; } = new List<RecallHistoryEmployee>();
 
     }
 }

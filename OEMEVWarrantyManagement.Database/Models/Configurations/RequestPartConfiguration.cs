@@ -12,8 +12,6 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
             builder.Property(rp => rp.status)
                    .IsRequired()
                    .HasMaxLength(50);
-            builder.Property(rp => rp.PartTypeId)
-                   .IsRequired();
             builder.Property(rp => rp.SCStaffId)
                      .IsRequired();
             builder.Property(rp => rp.EVMStaffId)

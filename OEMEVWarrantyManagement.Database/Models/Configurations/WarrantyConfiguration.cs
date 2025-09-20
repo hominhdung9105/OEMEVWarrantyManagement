@@ -9,11 +9,11 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
         {
             builder.ToTable("Warranties");
             builder.HasKey(w => w.Id);
+            builder.Property(w => w.Id)
+                   .HasMaxLength(100);
             builder.Property(w => w.Status)
                    .IsRequired()
                    .HasMaxLength(50);
-            builder.Property(w => w.EmployeeTechId)
-                   .IsRequired();
             builder.Property(w => w.RequestWarrantyId)
                    .IsRequired();
             builder.Property(w => w.StartDate)
@@ -35,11 +35,6 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
             builder.HasOne(w => w.RequestWarranty)
                    .WithMany(rw => rw.Warranties)
                    .HasForeignKey(w => w.RequestWarrantyId)
-                   .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasOne(w => w.EmployeeTech)
-                   .WithMany(t => t.Warranties)
-                   .HasForeignKey(w => w.EmployeeTechId)
                    .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(w => w.WarrantyRecord)
