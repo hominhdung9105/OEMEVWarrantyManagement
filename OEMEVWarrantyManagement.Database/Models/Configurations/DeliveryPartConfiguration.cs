@@ -9,6 +9,7 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
         {
             builder.ToTable("DeliveryParts");
             builder.HasKey(dp => dp.Id);
+            builder.Property(dp => dp.Id).ValueGeneratedOnAdd();
             builder.Property(dp => dp.StaffSend)
                    .IsRequired();
             builder.Property(dp => dp.StaffReceive)

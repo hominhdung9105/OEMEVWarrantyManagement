@@ -9,6 +9,7 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
         {
             builder.ToTable("RequestParts");
             builder.HasKey(rp => rp.Id);
+            builder.Property(rp => rp.Id).ValueGeneratedOnAdd();
             builder.Property(rp => rp.status)
                    .IsRequired()
                    .HasMaxLength(50);

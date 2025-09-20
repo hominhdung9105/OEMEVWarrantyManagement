@@ -8,10 +8,10 @@ namespace OEMEVWarrantyManagement.Database.Models
 {
     public class RecallHistoryEmployee
     {
-        public string RecallHistoryId { get; set; }
+        public Guid RecallHistoryId { get; set; }
         public RecallHistory RecallHistory { get; set; }
 
-        public string EmployeeId { get; set; }
+        public Guid EmployeeId { get; set; }
         public Employee Employee { get; set; }
     }
 }

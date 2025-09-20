@@ -8,10 +8,10 @@ namespace OEMEVWarrantyManagement.Database.Models
 {
     public class WarrantyEmployee
     {
-        public string WarrantyId { get; set; }
+        public Guid WarrantyId { get; set; }
         public Warranty Warranty { get; set; }
 
-        public string EmployeeId { get; set; }
+        public Guid EmployeeId { get; set; }
         public Employee Employee { get; set; }
     }
 }

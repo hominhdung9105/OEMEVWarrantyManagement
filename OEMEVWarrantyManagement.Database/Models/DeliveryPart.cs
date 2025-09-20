@@ -2,10 +2,10 @@
 {
     public class DeliveryPart
     {
-        public string Id { get; set; }
-        public string StaffSend { get; set; } //FK
+        public Guid Id { get; set; }
+        public Guid StaffSend { get; set; } //FK
         public Employee StaffSendEmployee { get; set; } // Navigation property
-        public string StaffReceive { get; set; } //FK
+        public Guid StaffReceive { get; set; } //FK
         public Employee StaffReceiveEmployee { get; set; } // Navigation property
         public string Status { get; set; }
         public string LocationId { get; set; }

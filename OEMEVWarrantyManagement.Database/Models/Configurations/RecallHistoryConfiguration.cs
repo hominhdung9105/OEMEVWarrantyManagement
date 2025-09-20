@@ -9,7 +9,7 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
         {
             builder.ToTable("RecallHistories");
             builder.HasKey(rh => rh.Id);
-            builder.Property(rh => rh.Id).IsRequired();
+            builder.Property(rh => rh.Id).IsRequired().ValueGeneratedOnAdd();
             builder.Property(rh => rh.VIN).IsRequired();
             builder.Property(rh => rh.Status).IsRequired();
             builder.Property(rh => rh.DateStart).IsRequired();

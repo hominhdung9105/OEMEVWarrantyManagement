@@ -3,7 +3,7 @@
     public class CarInfo
     {
         public string VIN { get; set; }
-        public string CustomerId { get; set; }//FK
+        public Guid CustomerId { get; set; }//FK
         public Customer Customer { get; set; }// Navigation property
         public string ModelId { get; set; } //FK
         public CarModel CarModel { get; set; } // Navigation property

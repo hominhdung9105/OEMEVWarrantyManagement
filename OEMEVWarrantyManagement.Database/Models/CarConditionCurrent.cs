@@ -2,12 +2,12 @@
 {
     public class CarConditionCurrent
     {
-        public string Id { set; get; }
+        public Guid Id { set; get; }
 
         public string Condition { set; get; }
         public string Detail { set; get; }
 
-        public string TechnicianId { set; get; }//FK
+        public Guid TechnicianId { set; get; }//FK
         public Employee EmployeeTechnician { set; get; } // Navigation property
         public ICollection<Image> Images { set; get; } = new List<Image>();
         public ICollection<WarrantyRequest> WarrantyRequests { set; get; } = new List<WarrantyRequest>();

@@ -9,6 +9,7 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
         {
             builder.ToTable("Assignment");
             builder.HasKey(a => a.Id);
+            builder.Property(a => a.Id).ValueGeneratedOnAdd();
             builder.Property(a => a.Status).IsRequired();
             builder.Property(a => a.TaskName).IsRequired().HasMaxLength(200);
             builder.Property(a => a.TaskDescription).HasMaxLength(1000);

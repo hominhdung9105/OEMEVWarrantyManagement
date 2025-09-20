@@ -1,7 +1,14 @@
 
-using Microsoft.EntityFrameworkCore;
 using System;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using OEMEVWarrantyManagement.API.Policy.Role;
 using OEMEVWarrantyManagement.Database.Data;
+using OEMEVWarrantyManagement.Services;
+using Scalar.AspNetCore;
 
 namespace OEMEVWarrantyManagement.API
 {
@@ -18,8 +25,41 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = builder.Configuration.GetValue<string>("AppSettings:Issuer"),
+                    ValidateAudience = true,
+                    ValidAudience = builder.Configuration.GetValue<string>("AppSettings:Audience"),
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("AppSettings:Token")!))
+                };
+            });
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("RequireAdmin", policy =>
+                    policy.Requirements.Add(new RoleRequirement("ROL-ADMIN")));
+
+                options.AddPolicy("RequireScStaff", policy =>
+                    policy.Requirements.Add(new RoleRequirement("ROL-STAFF")));
+
+                options.AddPolicy("RequireScTech", policy =>
+                    policy.Requirements.Add(new RoleRequirement("ROL-TECH")));
+
+                options.AddPolicy("RequireEvmStaff", policy =>
+                    policy.Requirements.Add(new RoleRequirement("ROL-EVM")));
+            });
+
+            builder.Services.AddSingleton<IAuthorizationHandler, RoleHandler>();
+
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
+
+            builder.Services.AddScoped<IAuthService, AuthService>();
 
             var app = builder.Build();
 
@@ -27,12 +67,13 @@ namespace OEMEVWarrantyManagement.API
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
+                app.MapScalarApiReference();
             }
 
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
             app.UseAuthorization();
-
 
             app.MapControllers();
 

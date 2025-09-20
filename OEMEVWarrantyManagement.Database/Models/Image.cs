@@ -3,7 +3,7 @@
     public class Image
     {
         public string FilePath { get; set; }
-        public string CarConditionCurrentId { get; set; } // Foreign key
+        public Guid CarConditionCurrentId { get; set; } // Foreign key
         public CarConditionCurrent CarConditionCurrent { get; set; } // Navigation property
     }
 }
