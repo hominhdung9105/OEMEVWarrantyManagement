@@ -22,8 +22,6 @@ namespace OEMEVWarrantyManagement.Database.Models.Configurations
                    .IsRequired();
             builder.Property(w => w.EmployeeSCStaffId)
                    .IsRequired();
-            builder.Property(w => w.PartRereplacementId)
-                   .IsRequired();
             builder.Property(w => w.WarrantyRecordId)
                    .IsRequired();
 

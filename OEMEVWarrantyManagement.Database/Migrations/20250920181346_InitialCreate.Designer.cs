@@ -12,7 +12,7 @@ using OEMEVWarrantyManagement.Database.Data;
 namespace OEMEVWarrantyManagement.Database.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250920135452_InitialCreate")]
+    [Migration("20250920181346_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -437,10 +437,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("PartReplacementId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("RecallId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -563,10 +559,6 @@ namespace OEMEVWarrantyManagement.Database.Migrations
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("PartRereplacementId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RequestWarrantyId")
                         .IsRequired()

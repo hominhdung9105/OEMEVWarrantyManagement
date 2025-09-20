@@ -6,7 +6,6 @@
         public string Status { get; set; }
         public string RequestWarrantyId { get; set; } //FK
         public WarrantyRequest RequestWarranty { get; set; } // Navigation property
-        public string PartRereplacementId { get; set; } //FK
         public string WarrantyRecordId { get; set; } //FK
         public WarrantyRecord WarrantyRecord { get; set; } // Navigation property
         public DateTime StartDate { get; set; }

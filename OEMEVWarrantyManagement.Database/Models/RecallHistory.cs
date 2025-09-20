@@ -6,7 +6,6 @@
         public string VIN { get; set; }//FK
         public CarInfo CarInfo { get; set; } //Navigation property
         public string Status { get; set; }
-        public string PartReplacementId { get; set; }
         public string RecallId { get; set; } //FK
         public Recall Recall { get; set; } //Navigation property
         public string EmpoloyeeSCStaffId { get; set; } //FK
