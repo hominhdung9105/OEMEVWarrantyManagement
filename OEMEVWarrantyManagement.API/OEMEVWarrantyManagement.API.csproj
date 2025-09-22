@@ -27,4 +27,8 @@
     <ProjectReference Include="..\OEMEVWarrantyManagement.Database\OEMEVWarrantyManagement.Database.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Repository\" />
+  </ItemGroup>
+
 </Project>

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OEMEVWarrantyManagement.API.Policy.Role;
+using OEMEVWarrantyManagement.API.Services;
 using OEMEVWarrantyManagement.Database.Data;
 using OEMEVWarrantyManagement.Services;
 using Scalar.AspNetCore;
@@ -60,6 +61,7 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddOpenApi();
 
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IWarrantyRecordService, WarrantyRecordService>();
 
             var app = builder.Build();
 
