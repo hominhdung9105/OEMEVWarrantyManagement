@@ -24,11 +24,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\OEMEVWarrantyManagement.Database\OEMEVWarrantyManagement.Database.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Repository\" />
+    <ProjectReference Include="..\OEMEVWarrantyManagement.Application\OEMEVWarrantyManagement.Application.csproj" />
+    <ProjectReference Include="..\OEMEVWarrantyManagement.Domain\OEMEVWarrantyManagement.Domain.csproj" />
+    <ProjectReference Include="..\OEMEVWarrantyManagement.Infrastructure\OEMEVWarrantyManagement.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

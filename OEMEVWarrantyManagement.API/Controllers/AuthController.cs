@@ -1,29 +1,36 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using OEMEVWarrantyManagement.API.Models.Request;
-using OEMEVWarrantyManagement.Database.Models;
-using OEMEVWarrantyManagement.Models;
-using OEMEVWarrantyManagement.Services;
+using OEMEVWarrantyManagement.Application.Dtos;
+using OEMEVWarrantyManagement.Application.Dtos.Request;
+using OEMEVWarrantyManagement.Application.IRepository;
+using OEMEVWarrantyManagement.Application.IServices;
+using OEMEVWarrantyManagement.Application.Services;
+using OEMEVWarrantyManagement.Domain.Entities;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace OEMEVWM.Controllers
+namespace OEMEVWarrantyManagement.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController(IAuthService authService) : ControllerBase
+    public class AuthController : ControllerBase
     {
-        private static Employee employee = new Employee();
+        private readonly IAuthService _authService;
+
+        public AuthController(IAuthService authService)
+        {
+            _authService = authService;
+        }
 
         [HttpPost("create")]
         public async Task<ActionResult<Employee>> Create(EmployeeDto request)
         {
-            var employee = await authService.CreateAsync(request);
+            var employee = await _authService.CreateAsync(request);
             if (employee is null)
                 return BadRequest("Username already exists.");
 
@@ -34,7 +41,7 @@ namespace OEMEVWM.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<TokenResponseDto>> Login(LoginRequestDto request)
         {
-            var result = await authService.LoginAsync(request);
+            var result = await _authService.LoginAsync(request);
 
             if(result is null)
                 return BadRequest("Invalid username or password.");
@@ -45,7 +52,7 @@ namespace OEMEVWM.Controllers
         [HttpPost("refresh-token")]
         public async Task<ActionResult<TokenResponseDto>> RefreshToken(RefreshTokenRequestDto request)
         {
-            var result = await authService.RefreshTokenAsync(request);
+            var result = await _authService.RefreshTokenAsync(request);
             if (result is null || result.AccessToken is null || result.RefreshToken is null)
                 return Unauthorized("Invalid refresh token.");
 

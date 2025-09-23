@@ -1,22 +1,27 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
-using OEMEVWarrantyManagement.API.Models;
-using OEMEVWarrantyManagement.API.Services;
-using OEMEVWarrantyManagement.Database.Models;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using OEMEVWarrantyManagement.Application.Dtos;
+using OEMEVWarrantyManagement.Application.IServices;
+using OEMEVWarrantyManagement.Domain.Entities;
 
 namespace OEMEVWarrantyManagement.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class WarrantyRecordController(IWarrantyRecordService warrantyRecordService) : ControllerBase
+    public class WarrantyRecordController : ControllerBase
     {
-        [HttpGet("warranty-records")]
-        public async Task<ActionResult<IEnumerable<WarrantyRecordDto>>> GetAll()
-        //public async Task<IActionResult> GetAll()
+        private readonly IWarrantyRecordService _warrantyRecordService;
+
+        public WarrantyRecordController(IWarrantyRecordService warrantyRecordService)
         {
-            var warrantyRecord = await warrantyRecordService.GetAllAsync();
+            _warrantyRecordService = warrantyRecordService;
+        }
+
+        [HttpGet("warranty-records")]
+        public async Task<IActionResult> GetAll()
+        {
+            var warrantyRecord = await _warrantyRecordService.GetAllAsync();
             return Ok(new
             {
                 success = true,
@@ -29,7 +34,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         [HttpGet("{VIN}")]
         public async Task<IActionResult> GetByVIN(string VIN)
         {
-            var warrantyRecordByVIN = await warrantyRecordService.GetByVINAsync(VIN);
+            var warrantyRecordByVIN = await _warrantyRecordService.GetByVINAsync(VIN);
             return Ok(new
             {
                 success = true,
