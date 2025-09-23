@@ -5,7 +5,9 @@ using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using OEMEVWarrantyManagement.API;
 using OEMEVWarrantyManagement.API.Models.Request;
+using OEMEVWarrantyManagement.API.Models.Response;
 using OEMEVWarrantyManagement.Database.Data;
 using OEMEVWarrantyManagement.Database.Models;
 using OEMEVWarrantyManagement.Models;
@@ -54,7 +56,8 @@ namespace OEMEVWarrantyManagement.Services
             return new TokenResponseDto
             {
                 AccessToken = CreateToken(employee),
-                RefreshToken = await GenerateRefreshTokenAsync(employee)
+                RefreshToken = await GenerateRefreshTokenAsync(employee),
+                EmployeeId = employee.Id.ToString()
             };
         }
 
@@ -69,7 +72,7 @@ namespace OEMEVWarrantyManagement.Services
 
         private async Task<Employee?> ValidateRefreshTokenAsync(Guid userId, String refreshToken)
         {
-            var employee = await context.Employees.FindAsync(userId);
+            var employee = await context.Employees.FindAsync(userId) ?? throw new ApiException(ResponseError.InvalidUserId);
 
             if (employee is null || employee.RefreshToken != refreshToken || employee.RefreshTokenExpiryTime <= DateTime.UtcNow)
                 return null;

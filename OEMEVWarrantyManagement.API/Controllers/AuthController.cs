@@ -1,13 +1,8 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
+using OEMEVWarrantyManagement.API;
 using OEMEVWarrantyManagement.API.Models.Request;
+using OEMEVWarrantyManagement.API.Models.Response;
 using OEMEVWarrantyManagement.Database.Models;
 using OEMEVWarrantyManagement.Models;
 using OEMEVWarrantyManagement.Services;
@@ -18,8 +13,6 @@ namespace OEMEVWM.Controllers
     [ApiController]
     public class AuthController(IAuthService authService) : ControllerBase
     {
-        private static Employee employee = new Employee();
-
         [HttpPost("create")]
         public async Task<ActionResult<Employee>> Create(EmployeeDto request)
         {
@@ -30,19 +23,19 @@ namespace OEMEVWM.Controllers
             return Ok(employee);
         }
 
+        //public async Task<ActionResult<TokenResponseDto>> Login(LoginRequestDto request)
         [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<ActionResult<TokenResponseDto>> Login(LoginRequestDto request)
+        public async Task<IActionResult> Login(LoginRequestDto request)
         {
-            var result = await authService.LoginAsync(request);
+            var result = await authService.LoginAsync(request) ?? throw new ApiException(ResponseError.InvalidAccount);
+            //return BadRequest("Invalid username or password.");
 
-            if(result is null)
-                return BadRequest("Invalid username or password.");
-
-            return Ok(result);
+            return Ok(ApiResponse<TokenResponseDto>.SuccessResponse(result, "Login successfully"));
         }
 
         [HttpPost("refresh-token")]
+        [AllowAnonymous]
         public async Task<ActionResult<TokenResponseDto>> RefreshToken(RefreshTokenRequestDto request)
         {
             var result = await authService.RefreshTokenAsync(request);
