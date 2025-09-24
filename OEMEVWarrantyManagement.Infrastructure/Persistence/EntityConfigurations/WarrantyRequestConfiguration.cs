@@ -21,11 +21,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.Property(wr => wr.SCStaffId)
                    .IsRequired();
             builder.Property(wr => wr.EVMStaffId);
-            builder.Property(wr => wr.CarConditionCurrentId);
 
             builder.HasOne(wr => wr.CarConditionCurrent)
-                   .WithMany(ccc => ccc.WarrantyRequests)
-                   .HasForeignKey(wr => wr.CarConditionCurrentId);
+                   .WithOne(ccc => ccc.WarrantyRequest)
+                   .HasForeignKey<CarConditionCurrent>(ccc => ccc.WarrantyRequestId)
+                   .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(wr => wr.EVMStaff)
                    .WithMany(e => e.WarrantyRequestsAsEVMStaff)

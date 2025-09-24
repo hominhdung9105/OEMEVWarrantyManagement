@@ -10,7 +10,6 @@
         public string Status { get; set; }
         public Guid? EVMStaffId { get; set; }//FK
         public Employee? EVMStaff { get; set; } // Navigation property
-        public Guid? CarConditionCurrentId { get; set; }//FK
         public CarConditionCurrent? CarConditionCurrent { get; set; } // Navigation property
         public DateTime? RequestDate { get; set; }
         public DateTime? ResponseDate { get; set; }

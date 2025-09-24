@@ -46,9 +46,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         public async Task<WarrantyRequest> UpdateAsync(WarrantyRequest request)
         {
-            _context.WarrantyRequests.Update(request);
+            var entity = await _context.WarrantyRequests.FindAsync(request.Id);
+            if (entity == null) return null;
+            _context.WarrantyRequests.Update(entity);
             await _context.SaveChangesAsync(); 
-            return request;
+            return entity;
         }
        
     }

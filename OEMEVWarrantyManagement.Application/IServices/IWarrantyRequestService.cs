@@ -12,6 +12,7 @@ namespace OEMEVWarrantyManagement.Application.IServices
     {
         Task<WarrantyRequestDto> CreateAsync(WarrantyRequestDto request);
         Task<IEnumerable<WarrantyRequestDto>> GetAllAsync();
+        Task<IEnumerable<WarrantyRequest>> GetAllEntieiesAsync(); 
         Task<WarrantyRequestDto> GetByIdAsync(Guid id);
         Task<WarrantyRequestDto> UpdateAsync(WarrantyRequestDto Request);
         Task<bool> DeleteAsync(Guid id);

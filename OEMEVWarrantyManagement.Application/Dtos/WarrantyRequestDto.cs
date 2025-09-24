@@ -10,7 +10,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
     public class WarrantyRequestDto
     {
         public Guid Id { get; set; }
-        public string VIN { get; set; }
+        public string? VIN { get; set; }
         public Guid? SCStaffId { get; set; }
         public string Status { get; set; }
         public Guid? EVMStaffId { get; set; }

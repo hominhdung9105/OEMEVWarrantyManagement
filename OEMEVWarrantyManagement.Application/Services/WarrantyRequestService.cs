@@ -47,6 +47,12 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<IEnumerable<WarrantyRequestDto>>(entities);
         }
 
+        public async Task<IEnumerable<WarrantyRequest>> GetAllEntieiesAsync()
+        {
+            var entities = await _warrantyRequestRepository.GetAllAsync();
+            return entities;
+        }
+
         public async Task<WarrantyRequestDto> GetByIdAsync(Guid id)
         {
             var entity = await _warrantyRequestRepository.GetByIdAsync(id);
@@ -56,8 +62,8 @@ namespace OEMEVWarrantyManagement.Application.Services
         public async Task<WarrantyRequestDto> UpdateAsync(WarrantyRequestDto dto)
         {
             var entity = _mapper.Map<WarrantyRequest>(dto);
-            var update = await _warrantyRequestRepository.UpdateAsync(entity);
-            return _mapper.Map<WarrantyRequestDto>(update);
+            var updated = await _warrantyRequestRepository.UpdateAsync(entity);
+            return _mapper.Map<WarrantyRequestDto>(updated);
         }
     }
 }

@@ -232,26 +232,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CarConditionCurrents",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Condition = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Detail = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    TechnicianId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CarConditionCurrents", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_CarConditionCurrents_Employee_TechnicianId",
-                        column: x => x.TechnicianId,
-                        principalTable: "Employee",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Customers",
                 columns: table => new
                 {
@@ -332,24 +312,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         principalTable: "Employee",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Images",
-                columns: table => new
-                {
-                    FilePath = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    CarConditionCurrentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Images", x => new { x.CarConditionCurrentId, x.FilePath });
-                    table.ForeignKey(
-                        name: "FK_Images_CarConditionCurrents_CarConditionCurrentId",
-                        column: x => x.CarConditionCurrentId,
-                        principalTable: "CarConditionCurrents",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -521,18 +483,12 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     SCStaffId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     EVMStaffId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    CarConditionCurrentId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     RequestDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ResponseDate = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_WarrantyRequests", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_WarrantyRequests_CarConditionCurrents_CarConditionCurrentId",
-                        column: x => x.CarConditionCurrentId,
-                        principalTable: "CarConditionCurrents",
-                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_WarrantyRequests_CarInfo_VIN",
                         column: x => x.VIN,
@@ -578,6 +534,32 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CarConditionCurrents",
+                columns: table => new
+                {
+                    WarrantyRequestId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Condition = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Detail = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    TechnicianId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CarConditionCurrents", x => x.WarrantyRequestId);
+                    table.ForeignKey(
+                        name: "FK_CarConditionCurrents_Employee_TechnicianId",
+                        column: x => x.TechnicianId,
+                        principalTable: "Employee",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_CarConditionCurrents_WarrantyRequests_WarrantyRequestId",
+                        column: x => x.WarrantyRequestId,
+                        principalTable: "WarrantyRequests",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Warranties",
                 columns: table => new
                 {
@@ -610,6 +592,25 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         principalTable: "WarrantyRequests",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Images",
+                columns: table => new
+                {
+                    FilePath = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    CarConditionCurrentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Images", x => new { x.CarConditionCurrentId, x.FilePath });
+                    table.ForeignKey(
+                        name: "FK_Images_CarConditionCurrents_CarConditionCurrentId",
+                        column: x => x.CarConditionCurrentId,
+                        principalTable: "CarConditionCurrents",
+                        principalColumn: "WarrantyRequestId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -871,11 +872,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 column: "WarrantyPolicyId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WarrantyRequests_CarConditionCurrentId",
-                table: "WarrantyRequests",
-                column: "CarConditionCurrentId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_WarrantyRequests_EVMStaffId",
                 table: "WarrantyRequests",
                 column: "EVMStaffId");
@@ -930,6 +926,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 name: "TypeAppointments");
 
             migrationBuilder.DropTable(
+                name: "CarConditionCurrents");
+
+            migrationBuilder.DropTable(
                 name: "DeliveryParts");
 
             migrationBuilder.DropTable(
@@ -961,9 +960,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "WarrantyPolicies");
-
-            migrationBuilder.DropTable(
-                name: "CarConditionCurrents");
 
             migrationBuilder.DropTable(
                 name: "CarInfo");

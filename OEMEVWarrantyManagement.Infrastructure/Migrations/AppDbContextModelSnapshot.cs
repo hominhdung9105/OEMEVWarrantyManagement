@@ -104,7 +104,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.CarConditionCurrent", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("WarrantyRequestId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
@@ -121,7 +121,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<Guid>("TechnicianId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("Id");
+                    b.HasKey("WarrantyRequestId");
 
                     b.HasIndex("TechnicianId");
 
@@ -289,6 +289,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<string>("FilePath")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("CarConditionCurrentId", "FilePath");
 
@@ -680,9 +683,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("CarConditionCurrentId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid?>("EVMStaffId")
                         .HasColumnType("uniqueidentifier");
 
@@ -705,8 +705,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .HasColumnType("nvarchar(17)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CarConditionCurrentId");
 
                     b.HasIndex("EVMStaffId");
 
@@ -806,10 +804,18 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Employee", "EmployeeTechnician")
                         .WithMany("CarConditionCurrents")
                         .HasForeignKey("TechnicianId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.WarrantyRequest", "WarrantyRequest")
+                        .WithOne("CarConditionCurrent")
+                        .HasForeignKey("OEMEVWarrantyManagement.Domain.Entities.CarConditionCurrent", "WarrantyRequestId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("EmployeeTechnician");
+
+                    b.Navigation("WarrantyRequest");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.CarInfo", b =>
@@ -1134,10 +1140,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.WarrantyRequest", b =>
                 {
-                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.CarConditionCurrent", "CarConditionCurrent")
-                        .WithMany("WarrantyRequests")
-                        .HasForeignKey("CarConditionCurrentId");
-
                     b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Employee", "EVMStaff")
                         .WithMany("WarrantyRequestsAsEVMStaff")
                         .HasForeignKey("EVMStaffId")
@@ -1154,8 +1156,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .HasForeignKey("VIN")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("CarConditionCurrent");
 
                     b.Navigation("CarInfo");
 
@@ -1186,8 +1186,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.CarConditionCurrent", b =>
                 {
                     b.Navigation("Images");
-
-                    b.Navigation("WarrantyRequests");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.CarInfo", b =>
@@ -1320,6 +1318,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.WarrantyRequest", b =>
                 {
+                    b.Navigation("CarConditionCurrent");
+
                     b.Navigation("Warranties");
                 });
 

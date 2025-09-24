@@ -28,7 +28,10 @@ namespace OEMEVWarrantyManagement.API
                 builder.Configuration.GetSection("AppSettings"));
 
             // Add services to the container.
-            builder.Services.AddControllers();
+            //builder.Services.AddControllers();
+
+            //
+            builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull);
 
             //Auto Mapper
             builder.Services.AddAutoMapper(typeof(AutoMapperProfile));

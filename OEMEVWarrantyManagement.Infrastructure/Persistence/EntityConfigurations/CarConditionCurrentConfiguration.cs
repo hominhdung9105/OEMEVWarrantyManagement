@@ -9,8 +9,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
         public void Configure(EntityTypeBuilder<CarConditionCurrent> builder)
         {
             builder.ToTable("CarConditionCurrents");
-            builder.HasKey(ccc => ccc.Id);
-            builder.Property(ccc => ccc.Id).ValueGeneratedOnAdd();
+            builder.HasKey(ccc => ccc.WarrantyRequestId);
+            builder.Property(ccc => ccc.WarrantyRequestId).ValueGeneratedOnAdd();
             builder.Property(ccc => ccc.Condition)
                    .IsRequired()
                    .HasMaxLength(100);
@@ -21,7 +21,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
 
             builder.HasOne(ccc => ccc.EmployeeTechnician)
                    .WithMany(e => e.CarConditionCurrents)
-                   .HasForeignKey(ccc => ccc.TechnicianId);
+                   .HasForeignKey(ccc => ccc.TechnicianId)
+                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
