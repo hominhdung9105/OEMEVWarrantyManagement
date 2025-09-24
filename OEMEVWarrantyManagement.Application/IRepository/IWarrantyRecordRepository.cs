@@ -6,5 +6,6 @@ namespace OEMEVWarrantyManagement.Application.IRepository
     {
         Task<IEnumerable<WarrantyRecordDto>> GetAllAsync();
         Task<IEnumerable<WarrantyRecordDto>> GetByVINAsync(string VIN);
+        Task<bool> CheckIfVINExistAsync(string VIN);
     }
 }

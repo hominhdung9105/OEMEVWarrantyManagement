@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using OEMEVWarrantyManagement.API.Policy.Role;
 using OEMEVWarrantyManagement.Application.Dtos.Config;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
+using OEMEVWarrantyManagement.Application.Mapping;
 using OEMEVWarrantyManagement.Application.Services;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
 using OEMEVWarrantyManagement.Infrastructure.Repositories;
@@ -27,6 +29,9 @@ namespace OEMEVWarrantyManagement.API
 
             // Add services to the container.
             builder.Services.AddControllers();
+
+            //Auto Mapper
+            builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 
             // Add DbContext
             builder.Services.AddDbContext<AppDbContext>(options =>
@@ -67,9 +72,11 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddOpenApi();
 
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IAuthRepository, AuthRepository>();
             builder.Services.AddScoped<IWarrantyRecordService, WarrantyRecordService>();
             builder.Services.AddScoped<IWarrantyRecordRepository, WarrantyRecordRepository>();
-            builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+            builder.Services.AddScoped<IWarrantyRequestRepository, WarrantyRequestRepository>();
+            builder.Services.AddScoped<IWarrantyRequestService, WarrantyRequestService>();
 
 
             var app = builder.Build();

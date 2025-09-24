@@ -5,11 +5,18 @@ using OEMEVWarrantyManagement.Infrastructure.Persistence;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 {
-    public class WarrantyRecordRepository(AppDbContext context) : IWarrantyRecordRepository
+    public class WarrantyRecordRepository : IWarrantyRecordRepository
     {
+
+        private readonly AppDbContext _context;
+        public WarrantyRecordRepository(AppDbContext context)
+        {
+            _context = context;
+        }
+
         public async Task<IEnumerable<WarrantyRecordDto>> GetAllAsync()
         {
-            var records = await context.WarrantyRecords
+            var records = await _context.WarrantyRecords
             .Include(w => w.WarrantyPolicy)
             .Include(w => w.Customer)
             .Select(w => new WarrantyRecordDto
@@ -29,7 +36,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         public async Task<IEnumerable<WarrantyRecordDto>> GetByVINAsync(string VIN)
         {
-            var record = await context.WarrantyRecords
+            var record = await _context.WarrantyRecords
                 .Include(w => w.Customer)
                 .Include(w => w.WarrantyPolicy)
                 .Where(w => w.VIN == VIN)
@@ -47,6 +54,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                  .ToListAsync();
 
             return record;
+        }
+        public async Task<bool> CheckIfVINExistAsync(string VIN)
+        {
+            return await _context.WarrantyRecords.AnyAsync(w => w.VIN == VIN);
         }
     }
 }
