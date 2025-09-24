@@ -71,7 +71,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return new TokenResponseDto
             {
                 AccessToken = CreateToken(employee),
-                RefreshToken = await GenerateRefreshTokenAsync(employee)
+                RefreshToken = await GenerateRefreshTokenAsync(employee),
+                EmployeeId = employee.Id.ToString()
             };
         }
 

@@ -1,3 +1,5 @@
+
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +36,31 @@ namespace OEMEVWarrantyManagement.API
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {
+                options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        context.NoResult(); // ngan asp .net xu ly mac dinh
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        context.Response.ContentType = "application/json";
+
+                        var response = ApiResponse<object>.ErrorResponse(ResponseError.AuthenticationFailed);
+
+                        return context.Response.WriteAsJsonAsync(response);
+                    },
+
+                    OnChallenge = context =>
+                    {
+                        context.HandleResponse(); // chan challenge mac dinh
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        context.Response.ContentType = "application/json";
+
+                        var response = ApiResponse<object>.ErrorResponse(ResponseError.AuthenticationFailed);
+
+                        return context.Response.WriteAsJsonAsync(response);
+                    }
+                };
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -82,6 +109,8 @@ namespace OEMEVWarrantyManagement.API
             }
 
             app.UseHttpsRedirection();
+
+            app.UseMiddleware<ApiExceptionMiddleware>();
 
             app.UseAuthentication();
             app.UseAuthorization();

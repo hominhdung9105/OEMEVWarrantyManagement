@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using OEMEVWarrantyManagement.Application.Dtos;
@@ -30,26 +28,27 @@ namespace OEMEVWarrantyManagement.API.Controllers
         [HttpPost("create")]
         public async Task<ActionResult<Employee>> Create(EmployeeDto request)
         {
-            var employee = await _authService.CreateAsync(request);
-            if (employee is null)
-                return BadRequest("Username already exists.");
+            //var employee = await _authService.CreateAsync(request);
+            //if (employee is null)
+            //    return BadRequest("Username already exists.");
 
-            return Ok(employee);
+            //return Ok(employee);
+
+            throw new NotImplementedException();
         }
 
+        //public async Task<ActionResult<TokenResponseDto>> Login(LoginRequestDto request)
         [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<ActionResult<TokenResponseDto>> Login(LoginRequestDto request)
+        public async Task<IActionResult> Login(LoginRequestDto request)
         {
-            var result = await _authService.LoginAsync(request);
+            var result = await _authService.LoginAsync(request) ?? throw new ApiException(ResponseError.InvalidAccount);
 
-            if(result is null)
-                return BadRequest("Invalid username or password.");
-
-            return Ok(result);
+            return Ok(ApiResponse<TokenResponseDto>.SuccessResponse(result, "Login successfully"));
         }
 
         [HttpPost("refresh-token")]
+        [AllowAnonymous]
         public async Task<ActionResult<TokenResponseDto>> RefreshToken(RefreshTokenRequestDto request)
         {
             var result = await _authService.RefreshTokenAsync(request);
