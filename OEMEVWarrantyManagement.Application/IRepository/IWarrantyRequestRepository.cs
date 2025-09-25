@@ -14,8 +14,6 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<IEnumerable<WarrantyRequest>> GetAllAsync();
         Task<WarrantyRequest> GetByIdAsync(Guid id);
         Task<WarrantyRequest> UpdateAsync(WarrantyRequest Request);
-        Task<bool> DeleteAsync(Guid id);
-
-
+        Task<WarrantyRequest> DeleteAsync(Guid id);
     }
 }

@@ -9,6 +9,8 @@ using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Application.Services;
 using OEMEVWarrantyManagement.Domain.Entities;
+using OEMEVWarrantyManagement.Share.Exceptions;
+using OEMEVWarrantyManagement.Share.Models.Response;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -30,23 +32,18 @@ namespace OEMEVWarrantyManagement.API.Controllers
         [HttpPost("create")]
         public async Task<ActionResult<Employee>> Create(EmployeeDto request)
         {
-            var employee = await _authService.CreateAsync(request);
-            if (employee is null)
-                return BadRequest("Username already exists.");
-
+            var employee = await _authService.CreateAsync(request) ?? throw new ApiException(ResponseError.UsernameAlreadyExists);
             return Ok(employee);
         }
 
         [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<ActionResult<TokenResponseDto>> Login(LoginRequestDto request)
+        public async Task<IActionResult> Login(LoginRequestDto request)
         {
-            var result = await _authService.LoginAsync(request);
+            var result = await _authService.LoginAsync(request) ?? throw new ApiException(ResponseError.InvalidAccount);
+            //return BadRequest("Invalid username or password.");
 
-            if(result is null)
-                return BadRequest("Invalid username or password.");
-
-            return Ok(result);
+            return Ok(ApiResponse<TokenResponseDto>.SuccessResponse(result, "Login successfully"));
         }
 
         [HttpPost("refresh-token")]

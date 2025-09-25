@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using OEMEVWarrantyManagement.API.Policy.Role;
 using OEMEVWarrantyManagement.Application.Dtos.Config;
@@ -11,6 +10,8 @@ using OEMEVWarrantyManagement.Application.Mapping;
 using OEMEVWarrantyManagement.Application.Services;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
 using OEMEVWarrantyManagement.Infrastructure.Repositories;
+using OEMEVWarrantyManagement.Share.Exceptions;
+using OEMEVWarrantyManagement.Share.Models.Response;
 using Scalar.AspNetCore;
 using System;
 using System.Text;
@@ -30,7 +31,7 @@ namespace OEMEVWarrantyManagement.API
             // Add services to the container.
             //builder.Services.AddControllers();
 
-            //
+            //Ignore Null
             builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull);
 
             //Auto Mapper
@@ -42,6 +43,31 @@ namespace OEMEVWarrantyManagement.API
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {
+                options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        context.NoResult(); // ngan asp .net xu ly mac dinh
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        context.Response.ContentType = "application/json";
+
+                        var response = ApiResponse<object>.ErrorResponse(ResponseError.AuthenticationFailed);
+
+                        return context.Response.WriteAsJsonAsync(response);
+                    },
+
+                    OnChallenge = context =>
+                    {
+                        context.HandleResponse(); // chan challenge mac dinh
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        context.Response.ContentType = "application/json";
+
+                        var response = ApiResponse<object>.ErrorResponse(ResponseError.AuthenticationFailed);
+
+                        return context.Response.WriteAsJsonAsync(response);
+                    }
+                };
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -90,6 +116,8 @@ namespace OEMEVWarrantyManagement.API
                 app.MapOpenApi();
                 app.MapScalarApiReference();
             }
+
+            app.UseMiddleware<ApiExceptionMiddleware>();
 
             app.UseHttpsRedirection();
 

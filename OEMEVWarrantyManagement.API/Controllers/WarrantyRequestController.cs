@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IServices;
-
+using OEMEVWarrantyManagement.Share.Exceptions;
+using OEMEVWarrantyManagement.Share.Models.Response;
 namespace OEMEVWarrantyManagement.API.Controllers
 {
     [Route("api/[controller]")]
@@ -18,23 +20,17 @@ namespace OEMEVWarrantyManagement.API.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> Create(WarrantyRequestDto dto)
         {
-            try
-            {
-                var created = await _service.CreateAsync(dto);
-                return Ok(created);
-            }
-            catch (Exception ex)
-            {
-                return NotFound(new { message = ex.Message + " - " + ex.InnerException });
-            }
+            var result = await _service.CreateAsync(dto) ?? throw new ApiException(ResponseError.NotfoundVIN);
+            return Ok(ApiResponse<WarrantyRequestDto>.SuccessResponse(result, "Create Successfully!"));
 
         }
-        //get all by staff
+        //Get all by Admin
+        //[Authorize(Policy = "RequireAdmin")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var GetAll = await _service.GetAllAsync();
-            return Ok(GetAll);
+            var result = await _service.GetAllAsync();
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Get all!"));
         }
 
         //TODO - tim show ra theo staffID coi tk staff do co hs nao, get all cho admin,
@@ -49,25 +45,19 @@ namespace OEMEVWarrantyManagement.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteById(Guid id)
         {
-            var Delete = await _service.DeleteAsync(id);
-            return Ok(true);
+            var result = await _service.DeleteAsync(id) ?? throw new ApiException(ResponseError.NotfoundWarrantyRequest);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Delete Successfully"));
         }
 
-        //TODO - Change status
-        [HttpPost]
-        [Route("/deny_wr/{id}")]
-        public async Task<IActionResult> Deny(Guid id)
-        {
-            var Delete = await _service.DeleteAsync(id);
-            return Ok(true);
-        }
-
+        //TODO - yeu cau quyen scstaff or evmstaff moi dc update --DONE
+        //[Authorize(Policy = "RequireAdmin")]
+        //[Authorize(Policy = "RequireScStaff")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, WarrantyRequestDto dto)
         {
-            if (id != dto.Id) return BadRequest("Id mismatch");
-            var updated = await _service.UpdateAsync(dto);
-            return Ok(updated);
+                dto.Id = id;
+                var result = await _service.UpdateAsync(dto) ?? throw new ApiException(ResponseError.NotfoundWarrantyRequest);
+                return Ok(ApiResponse<WarrantyRequestDto>.SuccessResponse(result, "Update Successfully!"));
         }
 
     }

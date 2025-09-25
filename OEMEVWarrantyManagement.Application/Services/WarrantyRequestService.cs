@@ -25,32 +25,24 @@ namespace OEMEVWarrantyManagement.Application.Services
 
         public async Task<WarrantyRequestDto> CreateAsync(WarrantyRequestDto Dtos)
         {
-            var exits = await _warrantyRecordRepository.CheckIfVINExistAsync(Dtos.VIN);
-            if (!exits)
-            {
-                throw new Exception("Co cai con acc"); // TODO - throw api exception
-            }
             var entity = _mapper.Map<WarrantyRequest>(Dtos);
             var create = await _warrantyRequestRepository.CreateAsync(entity);
+            if (create == null) return null;
             return _mapper.Map<WarrantyRequestDto>(create);
         }
 
 
-        public async Task<bool> DeleteAsync(Guid id)
+        public async Task<WarrantyRequestDto> DeleteAsync(Guid id)
         {
-            return await _warrantyRequestRepository.DeleteAsync(id);
+            var entity = await _warrantyRequestRepository.DeleteAsync(id);
+            if (entity == null) return null;
+            return _mapper.Map<WarrantyRequestDto>(entity);
         }
 
         public async Task<IEnumerable<WarrantyRequestDto>> GetAllAsync()
         {
             var entities = await _warrantyRequestRepository.GetAllAsync();
             return _mapper.Map<IEnumerable<WarrantyRequestDto>>(entities);
-        }
-
-        public async Task<IEnumerable<WarrantyRequest>> GetAllEntieiesAsync()
-        {
-            var entities = await _warrantyRequestRepository.GetAllAsync();
-            return entities;
         }
 
         public async Task<WarrantyRequestDto> GetByIdAsync(Guid id)
@@ -63,6 +55,7 @@ namespace OEMEVWarrantyManagement.Application.Services
         {
             var entity = _mapper.Map<WarrantyRequest>(dto);
             var updated = await _warrantyRequestRepository.UpdateAsync(entity);
+            if (updated == null) return null;
             return _mapper.Map<WarrantyRequestDto>(updated);
         }
     }

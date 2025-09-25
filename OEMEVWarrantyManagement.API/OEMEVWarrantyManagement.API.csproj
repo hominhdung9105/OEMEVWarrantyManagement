@@ -27,6 +27,7 @@
     <ProjectReference Include="..\OEMEVWarrantyManagement.Application\OEMEVWarrantyManagement.Application.csproj" />
     <ProjectReference Include="..\OEMEVWarrantyManagement.Domain\OEMEVWarrantyManagement.Domain.csproj" />
     <ProjectReference Include="..\OEMEVWarrantyManagement.Infrastructure\OEMEVWarrantyManagement.Infrastructure.csproj" />
+    <ProjectReference Include="..\OEMEVWarrantyManagement.Share\OEMEVWarrantyManagement.Share.csproj" />
   </ItemGroup>
 
 </Project>

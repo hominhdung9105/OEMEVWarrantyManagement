@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OEMEVWarrantyManagement.Domain\OEMEVWarrantyManagement.Domain.csproj" />
+    <ProjectReference Include="..\OEMEVWarrantyManagement.Share\OEMEVWarrantyManagement.Share.csproj" />
   </ItemGroup>
 
 </Project>

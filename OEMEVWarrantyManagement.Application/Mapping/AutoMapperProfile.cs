@@ -17,6 +17,8 @@ namespace OEMEVWarrantyManagement.Application.Mapping
             //Warranty Request
             CreateMap<WarrantyRequest, WarrantyRequestDto>();
             CreateMap<WarrantyRequestDto, WarrantyRequest>(); 
+            CreateMap<WarrantyRecord, WarrantyRecordDto>();
+            CreateMap<WarrantyRecordDto, WarrantyRecord>();
         }
     }
 }

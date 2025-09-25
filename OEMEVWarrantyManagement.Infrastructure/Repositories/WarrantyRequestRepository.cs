@@ -20,18 +20,20 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         public async Task<WarrantyRequest> CreateAsync(WarrantyRequest request)
         {
+            var exist = await _context.WarrantyRecords.FirstOrDefaultAsync(w => w.VIN ==request.VIN);
+            if (exist == null) return null;
             _context.WarrantyRequests.Add(request);
             await _context.SaveChangesAsync();
             return request;
         }
 
-        public async Task<bool> DeleteAsync(Guid id)
+        public async Task<WarrantyRequest> DeleteAsync(Guid id)
         {
             var entity = await _context.WarrantyRequests.FindAsync(id);
-            if (entity == null) return false;
+            if (entity == null) return null;
             _context.WarrantyRequests.Remove(entity);
             await _context.SaveChangesAsync();
-            return true;
+            return entity;
         }
 
         public async Task<IEnumerable<WarrantyRequest>> GetAllAsync()
@@ -48,10 +50,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         {
             var entity = await _context.WarrantyRequests.FindAsync(request.Id);
             if (entity == null) return null;
+            entity.Status = request.Status;
             _context.WarrantyRequests.Update(entity);
-            await _context.SaveChangesAsync(); 
+            await _context.SaveChangesAsync();
             return entity;
         }
-       
+
     }
 }

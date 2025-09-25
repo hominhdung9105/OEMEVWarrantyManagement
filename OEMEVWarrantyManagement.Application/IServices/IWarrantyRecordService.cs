@@ -1,4 +1,5 @@
 ﻿using OEMEVWarrantyManagement.Application.Dtos;
+using OEMEVWarrantyManagement.Domain.Entities;
 
 namespace OEMEVWarrantyManagement.Application.IServices
 {
