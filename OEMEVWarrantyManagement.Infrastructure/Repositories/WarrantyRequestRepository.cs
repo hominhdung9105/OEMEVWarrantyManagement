@@ -51,6 +51,14 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             var entity = await _context.WarrantyRequests.FindAsync(request.Id);
             if (entity == null) return null;
             entity.Status = request.Status;
+
+            if(request.EVMStaffId != null)
+                entity.EVMStaffId = request.EVMStaffId;
+            if (request.RequestDate != null)
+                entity.RequestDate = request.RequestDate;
+            if (request.ResponseDate != null)
+                entity.ResponseDate = request.ResponseDate;
+            
             _context.WarrantyRequests.Update(entity);
             await _context.SaveChangesAsync();
             return entity;

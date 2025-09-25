@@ -119,7 +119,7 @@ namespace OEMEVWarrantyManagement.API
 
             app.UseMiddleware<ApiExceptionMiddleware>();
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseAuthentication();
             app.UseAuthorization();
