@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IServices;
+using OEMEVWarrantyManagement.Share.Models.Response;
 using OEMEVWarrantyManagement.Domain.Entities;
+using OEMEVWarrantyManagement.Share.Exceptions;
 
 namespace OEMEVWarrantyManagement.API.Controllers
 {
@@ -18,30 +20,19 @@ namespace OEMEVWarrantyManagement.API.Controllers
             _warrantyRecordService = warrantyRecordService;
         }
 
-        [HttpGet("warranty-records")]
+        [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var warrantyRecord = await _warrantyRecordService.GetAllAsync();
-            return Ok(new
-            {
-                success = true,
-                code = 0,
-                message = "Get warranty records successful",
-                data = warrantyRecord
-            });
+            var result = await _warrantyRecordService.GetAllAsync() ?? throw new ApiException(ResponseError.NotfoundWarrantyRecord); //Bug
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Get all Successfully!"));
         }
+        
 
         [HttpGet("{VIN}")]
         public async Task<IActionResult> GetByVIN(string VIN)
         {
-            var warrantyRecordByVIN = await _warrantyRecordService.GetByVINAsync(VIN);
-            return Ok(new
-            {
-                success = true,
-                code = 0,
-                message = "Get warranty records successful",
-                data = warrantyRecordByVIN
-            });
+            var result = await _warrantyRecordService.GetByVINAsync(VIN) ?? throw new ApiException(ResponseError.NotfoundVIN);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Get by Id Successfully!"));
         }
     }
 }

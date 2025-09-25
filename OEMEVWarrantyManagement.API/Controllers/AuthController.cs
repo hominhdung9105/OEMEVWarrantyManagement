@@ -1,16 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.Dtos.Request;
-using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
-using OEMEVWarrantyManagement.Application.Services;
 using OEMEVWarrantyManagement.Domain.Entities;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
+using OEMEVWarrantyManagement.Share.Models.Response;
 
 namespace OEMEVWarrantyManagement.API.Controllers
 {
@@ -28,10 +22,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         [HttpPost("create")]
         public async Task<ActionResult<Employee>> Create(EmployeeDto request)
         {
-            //var employee = await _authService.CreateAsync(request);
-            //if (employee is null)
-            //    return BadRequest("Username already exists.");
-
+            //var employee = await _authService.CreateAsync(request) ?? throw new ApiException(ResponseError.UsernameAlreadyExists);
             //return Ok(employee);
 
             throw new NotImplementedException();
@@ -42,7 +33,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequestDto request)
         {
-            var result = await _authService.LoginAsync(request) ?? throw new ApiException(ResponseError.InvalidAccount);
+            var result = await _authService.LoginAsync(request);
 
             return Ok(ApiResponse<TokenResponseDto>.SuccessResponse(result, "Login successfully"));
         }
@@ -52,10 +43,8 @@ namespace OEMEVWarrantyManagement.API.Controllers
         public async Task<ActionResult<TokenResponseDto>> RefreshToken(RefreshTokenRequestDto request)
         {
             var result = await _authService.RefreshTokenAsync(request);
-            if (result is null || result.AccessToken is null || result.RefreshToken is null)
-                return Unauthorized("Invalid refresh token.");
 
-            return Ok(result);
+            return Ok(ApiResponse<TokenResponseDto>.SuccessResponse(result, "Refresh Token successfully"));
         }
 
         [Authorize]

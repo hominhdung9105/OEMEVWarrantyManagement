@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OEMEVWarrantyManagement.Dom
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OEMEVWarrantyManagement.Infrastructure", "OEMEVWarrantyManagement.Infrastructure\OEMEVWarrantyManagement.Infrastructure.csproj", "{E3CEA164-475F-4707-8E65-3E6DD7A56CCB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OEMEVWarrantyManagement.Share", "OEMEVWarrantyManagement.Share\OEMEVWarrantyManagement.Share.csproj", "{A88DFF1A-45E2-4437-BAC2-7582A28EC20F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{E3CEA164-475F-4707-8E65-3E6DD7A56CCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E3CEA164-475F-4707-8E65-3E6DD7A56CCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E3CEA164-475F-4707-8E65-3E6DD7A56CCB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A88DFF1A-45E2-4437-BAC2-7582A28EC20F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A88DFF1A-45E2-4437-BAC2-7582A28EC20F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A88DFF1A-45E2-4437-BAC2-7582A28EC20F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A88DFF1A-45E2-4437-BAC2-7582A28EC20F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

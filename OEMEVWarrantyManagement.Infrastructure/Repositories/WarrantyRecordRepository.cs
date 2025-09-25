@@ -1,52 +1,34 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
+using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 {
-    public class WarrantyRecordRepository(AppDbContext context) : IWarrantyRecordRepository
+    public class WarrantyRecordRepository : IWarrantyRecordRepository
     {
-        public async Task<IEnumerable<WarrantyRecordDto>> GetAllAsync()
+        private readonly AppDbContext _context;
+        public WarrantyRecordRepository(AppDbContext appDbContext)
         {
-            var records = await context.WarrantyRecords
-            .Include(w => w.WarrantyPolicy)
-            .Include(w => w.Customer)
-            .Select(w => new WarrantyRecordDto
-            {
-                Id = w.Id,
-                CustomerId = w.CustomerId,
-                CustomerName = w.Customer.FullName,
-                VIN = w.VIN,
-                StartDate = w.StartDate,
-                EndDate = w.EndDate,
-                WarrantyPolicyId = w.WarrantyPolicyId,
-                WarrantyPolicyName = w.WarrantyPolicy.Conditions
-            })
-            .ToListAsync();
-            return records;
+            _context = appDbContext;
+        }
+        public async Task<IEnumerable<WarrantyRecord>> GetAllAsync()
+        {
+            var entities = await _context.WarrantyRecords.ToListAsync();
+            if (entities == null) return null;
+            return entities;
         }
 
-        public async Task<IEnumerable<WarrantyRecordDto>> GetByVINAsync(string VIN)
+        public async Task<IEnumerable<WarrantyRecord>> GetByVINAsync(string VIN)
         {
-            var record = await context.WarrantyRecords
-                .Include(w => w.Customer)
-                .Include(w => w.WarrantyPolicy)
-                .Where(w => w.VIN == VIN)
-                .Select(w => new WarrantyRecordDto
-                {
-                    Id = w.Id,
-                    CustomerId = w.CustomerId,
-                    CustomerName = w.Customer.FullName,
-                    VIN = w.VIN,
-                    StartDate = w.StartDate,
-                    EndDate = w.EndDate,
-                    WarrantyPolicyId = w.WarrantyPolicyId,
-                    WarrantyPolicyName = w.WarrantyPolicy.Conditions
-                })
-                 .ToListAsync();
-
-            return record;
+            var entities = await _context.WarrantyRecords.Where(wr => wr.VIN == VIN).ToListAsync();
+            if (entities == null) return null;
+            return entities;
         }
     }
 }

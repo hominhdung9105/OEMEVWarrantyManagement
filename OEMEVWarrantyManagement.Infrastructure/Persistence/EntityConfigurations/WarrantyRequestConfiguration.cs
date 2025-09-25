@@ -11,29 +11,27 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.ToTable("WarrantyRequests");
             builder.HasKey(wr => wr.Id);
             builder.Property(wr => wr.Id).ValueGeneratedOnAdd();
-            builder.Property(wr => wr.RequestDate)
-                   .IsRequired();
+            builder.Property(wr => wr.RequestDate);
             builder.Property(wr => wr.ResponseDate);
-            builder.Property(wr => wr.status)
+            builder.Property(wr => wr.Status)
                    .IsRequired()
                    .HasMaxLength(50);
             builder.Property(wr => wr.VIN)
                    .IsRequired();
             builder.Property(wr => wr.SCStaffId)
                    .IsRequired();
-            builder.Property(wr => wr.EVMStaffId)
-                   .IsRequired();
-            builder.Property(wr => wr.CarConditionCurrentId)
-                   .IsRequired();
+            builder.Property(wr => wr.EVMStaffId);
 
             builder.HasOne(wr => wr.CarConditionCurrent)
-                   .WithMany(ccc => ccc.WarrantyRequests)
-                   .HasForeignKey(wr => wr.CarConditionCurrentId);
+                   .WithOne(ccc => ccc.WarrantyRequest)
+                   .HasForeignKey<CarConditionCurrent>(ccc => ccc.WarrantyRequestId)
+                   .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(wr => wr.EVMStaff)
                    .WithMany(e => e.WarrantyRequestsAsEVMStaff)
                    .HasForeignKey(wr => wr.EVMStaffId)
                    .OnDelete(DeleteBehavior.Restrict);
+                   //.IsRequired(false);
 
             builder.HasOne(wr => wr.SCStaff)
                    .WithMany(e => e.WarrantyRequestsAsSCStaff)

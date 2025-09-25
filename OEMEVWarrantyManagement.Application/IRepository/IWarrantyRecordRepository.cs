@@ -1,10 +1,10 @@
-﻿using OEMEVWarrantyManagement.Application.Dtos;
+﻿using OEMEVWarrantyManagement.Domain.Entities;
 
 namespace OEMEVWarrantyManagement.Application.IRepository
 {
     public interface IWarrantyRecordRepository
     {
-        Task<IEnumerable<WarrantyRecordDto>> GetAllAsync();
-        Task<IEnumerable<WarrantyRecordDto>> GetByVINAsync(string VIN);
+        Task<IEnumerable<WarrantyRecord>> GetAllAsync();
+        Task<IEnumerable<WarrantyRecord>> GetByVINAsync(string VIN);
     }
 }

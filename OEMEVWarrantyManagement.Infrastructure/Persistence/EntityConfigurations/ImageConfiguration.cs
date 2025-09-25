@@ -18,7 +18,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
 
             builder.HasOne(i => i.CarConditionCurrent)
                    .WithMany(ccc => ccc.Images)
-                   .HasForeignKey(i => i.CarConditionCurrentId);
+                   .HasForeignKey(i => i.CarConditionCurrentId)
+                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
