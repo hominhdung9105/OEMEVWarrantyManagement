@@ -85,9 +85,9 @@ namespace OEMEVWarrantyManagement.Application.Services
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, employee.Username),
-                new Claim(ClaimTypes.NameIdentifier, employee.Id.ToString()),
-                new Claim("role_id", employee.RoleId)
+                new(ClaimTypes.Name, employee.Username),
+                new(ClaimTypes.NameIdentifier, employee.Id.ToString()),
+                new(ClaimTypes.Role, employee.RoleId)
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appSettings.Token));

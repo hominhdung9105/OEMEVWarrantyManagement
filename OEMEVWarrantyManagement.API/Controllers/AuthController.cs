@@ -35,7 +35,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         {
             var result = await _authService.LoginAsync(request);
 
-            return Ok(ApiResponse<TokenResponseDto>.SuccessResponse(result, "Login successfully"));
+            return Ok(ApiResponse<TokenResponseDto>.Ok(result, "Login successfully"));
         }
 
         [HttpPost("refresh-token")]
@@ -44,7 +44,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         {
             var result = await _authService.RefreshTokenAsync(request);
 
-            return Ok(ApiResponse<TokenResponseDto>.SuccessResponse(result, "Refresh Token successfully"));
+            return Ok(ApiResponse<TokenResponseDto>.Ok(result, "Refresh Token successfully"));
         }
 
         [Authorize]

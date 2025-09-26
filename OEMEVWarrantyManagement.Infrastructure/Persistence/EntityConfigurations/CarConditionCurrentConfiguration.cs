@@ -12,12 +12,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.HasKey(ccc => ccc.WarrantyRequestId);
             builder.Property(ccc => ccc.WarrantyRequestId).ValueGeneratedOnAdd();
             builder.Property(ccc => ccc.Condition)
-                   .IsRequired()
                    .HasMaxLength(100);
             builder.Property(ccc => ccc.Detail)
                    .HasMaxLength(1000);
-            builder.Property(ccc => ccc.TechnicianId)
-                   .IsRequired();
+            builder.Property(ccc => ccc.TechnicianId);
 
             builder.HasOne(ccc => ccc.EmployeeTechnician)
                    .WithMany(e => e.CarConditionCurrents)

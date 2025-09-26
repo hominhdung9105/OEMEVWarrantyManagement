@@ -12,7 +12,7 @@ using OEMEVWarrantyManagement.Infrastructure.Persistence;
 namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250924200140_InitialCreate")]
+    [Migration("20250926173939_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -112,16 +112,14 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Condition")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Detail")
-                        .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<Guid>("TechnicianId")
+                    b.Property<Guid?>("TechnicianId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("WarrantyRequestId");
@@ -807,8 +805,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Employee", "EmployeeTechnician")
                         .WithMany("CarConditionCurrents")
                         .HasForeignKey("TechnicianId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OEMEVWarrantyManagement.Domain.Entities.WarrantyRequest", "WarrantyRequest")
                         .WithOne("CarConditionCurrent")

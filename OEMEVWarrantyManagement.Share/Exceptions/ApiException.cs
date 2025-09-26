@@ -2,12 +2,11 @@
 
 namespace OEMEVWarrantyManagement.Share.Exceptions
 {
-    public class ApiException : System.Exception
+    public class ApiException : Exception
     {
         public ResponseError Error { get; }
 
-        public ApiException(ResponseError error)
-            : base(error.GetAttribute<MessageAttribute>()?.Message ?? error.ToString())
+        public ApiException(ResponseError error) : base(error.GetAttr().Message)
         {
             Error = error;
         }

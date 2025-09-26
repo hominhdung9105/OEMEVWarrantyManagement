@@ -1,10 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
+
 namespace OEMEVWarrantyManagement.API.Controllers
 {
     [Route("api/[controller]")]
@@ -21,7 +20,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         public async Task<IActionResult> Create(WarrantyRequestDto dto)
         {
             var result = await _service.CreateAsync(dto) ?? throw new ApiException(ResponseError.NotfoundVIN);
-            return Ok(ApiResponse<WarrantyRequestDto>.SuccessResponse(result, "Create Successfully!"));
+            return Ok(ApiResponse<WarrantyRequestDto>.Ok(result, "Create Successfully!"));
         }
 
         //Get all by Admin
@@ -30,7 +29,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         public async Task<IActionResult> GetAll()
         {
             var result = await _service.GetAllAsync();
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Get all!"));
+            return Ok(ApiResponse<object>.Ok(result, "Get all!"));
         }
 
         //TODO - tim show ra theo staffID coi tk staff do co hs nao, get all cho admin,
@@ -46,7 +45,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         public async Task<IActionResult> DeleteById(Guid id)
         {
             var result = await _service.DeleteAsync(id) ?? throw new ApiException(ResponseError.NotfoundWarrantyRequest);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Delete Successfully"));
+            return Ok(ApiResponse<object>.Ok(result, "Delete Successfully"));
         }
 
         //TODO - yeu cau quyen scstaff or evmstaff moi dc update --DONE
@@ -57,7 +56,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         {
                 dto.Id = id;
                 var result = await _service.UpdateAsync(dto) ?? throw new ApiException(ResponseError.NotfoundWarrantyRequest);
-                return Ok(ApiResponse<WarrantyRequestDto>.SuccessResponse(result, "Update Successfully!"));
+                return Ok(ApiResponse<WarrantyRequestDto>.Ok(result, "Update Successfully!"));
         }
 
     }

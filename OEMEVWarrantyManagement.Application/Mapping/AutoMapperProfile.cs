@@ -1,12 +1,6 @@
 ﻿using AutoMapper;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OEMEVWarrantyManagement.Application.Mapping
 {
@@ -19,6 +13,8 @@ namespace OEMEVWarrantyManagement.Application.Mapping
             CreateMap<WarrantyRequestDto, WarrantyRequest>(); 
             CreateMap<WarrantyRecord, WarrantyRecordDto>();
             CreateMap<WarrantyRecordDto, WarrantyRecord>();
+            CreateMap<CarConditionCurrent, CarConditionCurrentDto>();
+            CreateMap<CarConditionCurrentDto, CarConditionCurrent>();
         }
     }
 }

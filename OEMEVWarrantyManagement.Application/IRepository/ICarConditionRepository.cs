@@ -6,7 +6,7 @@ namespace OEMEVWarrantyManagement.Application.IRepository
     {
         Task<IEnumerable<CarConditionCurrent?>> GetAllAsync();
         Task<IEnumerable<CarConditionCurrent?>> GetAllAsync(string staffId);
-        Task<CarConditionCurrent?> GetByIdAsync(string id);
+        Task<CarConditionCurrent?> GetByIdAsync(Guid id);
         Task<CarConditionCurrent?> CreateAsync(string warrantyRequestId);
         Task SaveChangeAsync();
     }

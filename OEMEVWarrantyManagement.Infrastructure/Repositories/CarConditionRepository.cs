@@ -1,12 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 {
-    internal class CarConditionRepository (AppDbContext context) : ICarConditionRepository
+    public class CarConditionRepository (AppDbContext context) : ICarConditionRepository
     {
         public async Task<CarConditionCurrent?> CreateAsync(string warrantyRequestId)
         {
@@ -32,7 +31,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<CarConditionCurrent?> GetByIdAsync(string id)
+        public async Task<CarConditionCurrent?> GetByIdAsync(Guid id)
         {
             return await context.CarConditionCurrents.FindAsync(id);
         }

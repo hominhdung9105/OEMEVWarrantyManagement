@@ -538,9 +538,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 columns: table => new
                 {
                     WarrantyRequestId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Condition = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Detail = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    TechnicianId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    Condition = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Detail = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    TechnicianId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {

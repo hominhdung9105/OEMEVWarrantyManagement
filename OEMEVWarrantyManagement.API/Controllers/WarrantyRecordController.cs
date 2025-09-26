@@ -24,7 +24,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         public async Task<IActionResult> GetAll()
         {
             var result = await _warrantyRecordService.GetAllAsync() ?? throw new ApiException(ResponseError.NotfoundWarrantyRecord); //Bug
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Get all Successfully!"));
+            return Ok(ApiResponse<object>.Ok(result, "Get all Successfully!"));
         }
         
 
@@ -32,7 +32,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         public async Task<IActionResult> GetByVIN(string VIN)
         {
             var result = await _warrantyRecordService.GetByVINAsync(VIN) ?? throw new ApiException(ResponseError.NotfoundVIN);
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Get by Id Successfully!"));
+            return Ok(ApiResponse<object>.Ok(result, "Get by Id Successfully!"));
         }
     }
 }
