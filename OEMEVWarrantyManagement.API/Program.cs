@@ -6,10 +6,10 @@ using OEMEVWarrantyManagement.API.Policy.Role;
 using OEMEVWarrantyManagement.Application.Dtos.Config;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
-using OEMEVWarrantyManagement.Application.Mapping;
+//using OEMEVWarrantyManagement.Application.Mapping;
 using OEMEVWarrantyManagement.Application.Services;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
-using OEMEVWarrantyManagement.Infrastructure.Repositories;
+//using OEMEVWarrantyManagement.Infrastructure.Repositories;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
 using Scalar.AspNetCore;
@@ -35,7 +35,7 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull);
 
             //Auto Mapper
-            builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
+            //builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 
             // Add DbContext
             builder.Services.AddDbContext<AppDbContext>(options =>
@@ -100,12 +100,12 @@ namespace OEMEVWarrantyManagement.API
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
-            builder.Services.AddScoped<IAuthService, AuthService>();
-            builder.Services.AddScoped<IAuthRepository, AuthRepository>();
-            builder.Services.AddScoped<IWarrantyRecordService, WarrantyRecordService>();
-            builder.Services.AddScoped<IWarrantyRecordRepository, WarrantyRecordRepository>();
-            builder.Services.AddScoped<IWarrantyRequestRepository, WarrantyRequestRepository>();
-            builder.Services.AddScoped<IWarrantyRequestService, WarrantyRequestService>();
+            //builder.Services.AddScoped<IAuthService, AuthService>();
+            //builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+            //builder.Services.AddScoped<IWarrantyRecordService, WarrantyRecordService>();
+            //builder.Services.AddScoped<IWarrantyRecordRepository, WarrantyRecordRepository>();
+            //builder.Services.AddScoped<IWarrantyRequestRepository, WarrantyRequestRepository>();
+            //builder.Services.AddScoped<IWarrantyRequestService, WarrantyRequestService>();
 
 
             var app = builder.Build();

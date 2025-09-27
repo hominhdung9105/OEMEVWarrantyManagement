@@ -9,20 +9,23 @@ using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfigurations
 {
-    public class WarrantyPolicyConfiguration : IEntityTypeConfiguration<WarrantyPolicy>
+    public class PartConfiguration : IEntityTypeConfiguration<Part>
     {
-        public void Configure(EntityTypeBuilder<WarrantyPolicy> builder)
+        public void Configure(EntityTypeBuilder<Part> builder)
         {
-            builder.ToTable("WarrantyPolicies");
-            builder.HasKey(p => p.PolicyId);
-            builder.Property(p => p.PolicyId).ValueGeneratedOnAdd();
+            builder.ToTable("Parts");
+            builder.HasKey(p => p.PartId);
+            builder.HasIndex(p => p.PartNumber).IsUnique();
+
+            builder.Property(p => p.PartId).ValueGeneratedOnAdd();
+            builder.Property(p => p.PartNumber).IsRequired();
             builder.Property(p => p.Name).IsRequired();
-            builder.Property(p => p.CoveragePeriodMonths);
-            builder.Property(p => p.Conditions);
+            builder.Property(p => p.Category);
+            builder.Property(p => p.StockQuantity);
             builder.Property(p => p.OrgId);
 
             builder.HasOne(p => p.Organization)
-                   .WithMany(o => o.WarrantyPolicies)
+                   .WithMany(o => o.Parts)
                    .HasForeignKey(p => p.OrgId)
                    .OnDelete(DeleteBehavior.Restrict);
         }
