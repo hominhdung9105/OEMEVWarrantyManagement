@@ -34,7 +34,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.HasOne(w => w.RequestWarranty)
                    .WithMany(rw => rw.Warranties)
                    .HasForeignKey(w => w.RequestWarrantyId)
-                   .OnDelete(DeleteBehavior.Restrict);
+                   .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(w => w.WarrantyRecord)
                    .WithMany(wr => wr.Warrantys)
