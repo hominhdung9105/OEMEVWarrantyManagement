@@ -68,6 +68,13 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<IEnumerable<WarrantyClaimDto>>(entities);
         }
 
+        public async Task<bool> IsHaveWarrantyClaim(Guid warrantyClaimId)
+        {
+            var entitie = await _warrantyClaimRepository.GetWarrantyClaimByIdAsync(warrantyClaimId);
+
+            return entitie != null ? true : false;
+        }
+
         public async Task<WarrantyClaimDto> UpdateAsync(WarrantyClaimDto dto)
         {
             var exist = await _warrantyClaimRepository

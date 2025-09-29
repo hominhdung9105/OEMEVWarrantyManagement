@@ -12,7 +12,7 @@ using OEMEVWarrantyManagement.Infrastructure.Persistence;
 namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250928224704_InitialCreate")]
+    [Migration("20250929170025_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -126,9 +126,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.ClaimAttachment", b =>
                 {
-                    b.Property<Guid>("AttachmentId")
+                    b.Property<string>("AttachmentId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<Guid>("ClaimId")
                         .HasColumnType("uniqueidentifier");
@@ -477,7 +477,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("ServiceCenterId")

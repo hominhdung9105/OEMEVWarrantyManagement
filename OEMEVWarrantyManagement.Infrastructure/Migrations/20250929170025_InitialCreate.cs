@@ -301,7 +301,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ApprovedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     ApprovedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -365,7 +365,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 name: "ClaimAttachments",
                 columns: table => new
                 {
-                    AttachmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AttachmentId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ClaimId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     URL = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UploadedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false)

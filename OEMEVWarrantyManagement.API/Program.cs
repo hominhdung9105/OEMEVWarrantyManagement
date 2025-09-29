@@ -108,6 +108,8 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddScoped<IWarrantyClaimService, WarrantyClaimService>();
             builder.Services.AddScoped<IWarrantyClaimRepository, WarrantyClaimRepository>();
             builder.Services.AddScoped<IVehicleRepository, VehicelRepository>();
+            builder.Services.AddScoped<IImageService, ImageService>();
+            builder.Services.AddScoped<IImageRepository, ImageRepository>();
 
             var app = builder.Build();
 
