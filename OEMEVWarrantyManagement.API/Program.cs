@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -10,11 +11,10 @@ using OEMEVWarrantyManagement.Application.Mapping;
 using OEMEVWarrantyManagement.Application.Services;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
 using OEMEVWarrantyManagement.Infrastructure.Repositories;
+using OEMEVWarrantyManagement.Share.Enum;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
 using Scalar.AspNetCore;
-using System;
-using System.Text;
 
 namespace OEMEVWarrantyManagement.API
 {
@@ -51,7 +51,7 @@ namespace OEMEVWarrantyManagement.API
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                         context.Response.ContentType = "application/json";
 
-                        var response = ApiResponse<object>.ErrorResponse(ResponseError.AuthenticationFailed);
+                        var response = ApiResponse<object>.Fail(ResponseError.AuthenticationFailed);
 
                         return context.Response.WriteAsJsonAsync(response);
                     },
@@ -62,7 +62,7 @@ namespace OEMEVWarrantyManagement.API
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                         context.Response.ContentType = "application/json";
 
-                        var response = ApiResponse<object>.ErrorResponse(ResponseError.AuthenticationFailed);
+                        var response = ApiResponse<object>.Fail(ResponseError.AuthenticationFailed);
 
                         return context.Response.WriteAsJsonAsync(response);
                     }
@@ -83,16 +83,19 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddAuthorization(options =>
             {
                 options.AddPolicy("RequireAdmin", policy =>
-                    policy.Requirements.Add(new RoleRequirement("ROL-ADMIN")));
+                    policy.RequireRole(RoleIdEnum.Admin.GetRoleId()));
 
                 options.AddPolicy("RequireScStaff", policy =>
-                    policy.Requirements.Add(new RoleRequirement("ROL-STAFF")));
+                    policy.RequireRole(RoleIdEnum.ScStaff.GetRoleId()));
 
                 options.AddPolicy("RequireScTech", policy =>
-                    policy.Requirements.Add(new RoleRequirement("ROL-TECH")));
+                    policy.RequireRole(RoleIdEnum.Technician.GetRoleId()));
 
                 options.AddPolicy("RequireEvmStaff", policy =>
-                    policy.Requirements.Add(new RoleRequirement("ROL-EVM")));
+                    policy.RequireRole(RoleIdEnum.EvmStaff.GetRoleId()));
+
+                options.AddPolicy("RequireScTechOrScStaff", policy =>
+                    policy.RequireRole(RoleIdEnum.Technician.GetRoleId(), RoleIdEnum.ScStaff.GetRoleId()));
             });
 
             builder.Services.AddSingleton<IAuthorizationHandler, RoleHandler>();
@@ -102,11 +105,9 @@ namespace OEMEVWarrantyManagement.API
 
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
-            builder.Services.AddScoped<IWarrantyRecordService, WarrantyRecordService>();
-            builder.Services.AddScoped<IWarrantyRecordRepository, WarrantyRecordRepository>();
-            builder.Services.AddScoped<IWarrantyRequestRepository, WarrantyRequestRepository>();
-            builder.Services.AddScoped<IWarrantyRequestService, WarrantyRequestService>();
-
+            builder.Services.AddScoped<IWarrantyClaimService, WarrantyClaimService>();
+            builder.Services.AddScoped<IWarrantyClaimRepository, WarrantyClaimRepository>();
+            builder.Services.AddScoped<IVehicleRepository, VehicelRepository>();
 
             var app = builder.Build();
 
@@ -119,7 +120,7 @@ namespace OEMEVWarrantyManagement.API
 
             app.UseMiddleware<ApiExceptionMiddleware>();
 
-            //app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
 
             app.UseAuthentication();
             app.UseAuthorization();

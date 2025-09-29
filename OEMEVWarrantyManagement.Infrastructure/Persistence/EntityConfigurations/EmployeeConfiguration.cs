@@ -1,28 +1,29 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OEMEVWarrantyManagement.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfigurations
 {
-    public class EmployeeConfiguration : IEntityTypeConfiguration <Employee>
+    public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
     {
         public void Configure(EntityTypeBuilder<Employee> builder)
         {
             builder.ToTable("Employee");
-            builder.HasKey(e => e.Id);
-            builder.Property(e => e.Id).ValueGeneratedOnAdd();
-            builder.Property(e => e.Username).IsRequired().HasMaxLength(20);//need env variable
-            builder.Property(e => e.Password).IsRequired().HasMaxLength(20);
-            builder.Property(e => e.FullName).IsRequired().HasMaxLength(50);
+            builder.HasKey(e => e.UserId);
+            builder.Property(e => e.UserId).ValueGeneratedOnAdd();
+            builder.Property(e => e.Email).IsRequired();
+            builder.Property(e => e.PasswordHash).IsRequired();
+            builder.Property(e => e.Role).IsRequired();
+            builder.Property(e => e.OrgId);
 
-            // Relationship with WorkPlace 1-N
-            builder.HasOne(e => e.WorkPlaces)
-                   .WithMany(wp => wp.Employees)
-                   .HasForeignKey(e => e.WorkPlacesId);
-
-            builder.HasOne(e => e.Role) 
-                   .WithMany(r => r.Employees)
-                   .HasForeignKey(e => e.RoleId)
+            builder.HasOne(e => e.Organization)
+                   .WithMany(o => o.Employees)
+                   .HasForeignKey(e => e.OrgId)
                    .OnDelete(DeleteBehavior.Restrict);
         }
     }

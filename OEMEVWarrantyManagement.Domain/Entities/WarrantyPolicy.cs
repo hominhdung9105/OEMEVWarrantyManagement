@@ -1,11 +1,23 @@
-﻿namespace OEMEVWarrantyManagement.Domain.Entities
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+
+namespace OEMEVWarrantyManagement.Domain.Entities
 {
     public class WarrantyPolicy
     {
-        public string Id { get; set; }
-        public string PeriodInMonths { get; set; }
-        public string Coverage { get; set; }
+        public Guid PolicyId { get; set; }
+        public string Name { get; set; }
+        public int CoveragePeriodMonths { get; set; }
         public string Conditions { get; set; }
-        public ICollection<WarrantyRecord> WarrantyRecords { get; set; } = new List<WarrantyRecord>();
+
+        // Navigation Properties
+        [JsonIgnore]
+        public Organization Organization { get; set; }
+        [JsonIgnore]
+        public ICollection<VehicleWarrantyPolicy> VehicleWarrantyPolicies { get; set; } = new List<VehicleWarrantyPolicy>();
     }
 }

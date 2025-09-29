@@ -1,15 +1,24 @@
-﻿namespace OEMEVWarrantyManagement.Domain.Entities
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+
+namespace OEMEVWarrantyManagement.Domain.Entities
 {
     public class Customer
     {
-        public Guid Id { get; set; }
-        public string FullName { get; set; }
-        public string PhoneNumber { get; set; }
+        public Guid CustomerId { get; set; }
+        public string Name { get; set; }
+        public string Phone { get; set; }
         public string Email { get; set; }
-        public Guid EmployeeId { get; set; }//FK
-        public Employee Employee { get; set; }//Navigation property
-        public ICollection<CarInfo> CarInfos { get; set; } = new List<CarInfo>();
-        public ICollection<WarrantyRecord> WarrantyRecords { get; set; } = new List<WarrantyRecord>();
-        public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+        public string Address { get; set; }
+
+        // Navigation Properties
+        [JsonIgnore]
+        public Organization Organization { get; set; }
+        [JsonIgnore]
+        public ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
     }
 }

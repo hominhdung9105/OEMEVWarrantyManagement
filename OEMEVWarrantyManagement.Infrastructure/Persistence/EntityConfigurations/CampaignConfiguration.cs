@@ -9,21 +9,22 @@ using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfigurations
 {
-    public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
+    public class CampaignConfiguration : IEntityTypeConfiguration<Campaign>
     {
-        public void Configure(EntityTypeBuilder<Customer> builder)
+        public void Configure(EntityTypeBuilder<Campaign> builder)
         {
-            builder.ToTable("Customers");
-            builder.HasKey(c => c.CustomerId);
-            builder.Property(c => c.CustomerId).ValueGeneratedOnAdd();
+            builder.ToTable("Campaigns");
+            builder.HasKey(c => c.CampaignId);
+            builder.Property(c => c.CampaignId).ValueGeneratedOnAdd();
             builder.Property(c => c.Name).IsRequired();
-            builder.Property(c => c.Phone);
-            builder.Property(c => c.Email);
-            builder.Property(c => c.Address);
-            //builder.Property(c => c.OrgId);
+            builder.Property(c => c.Type);
+            builder.Property(c => c.Description);
+            builder.Property(c => c.StartDate);
+            builder.Property(c => c.EndDate);
+            builder.Property(c => c.Status);
 
             //builder.HasOne(c => c.Organization)
-            //       .WithMany(o => o.Customers)
+            //       .WithMany(o => o.Campaigns)
             //       .HasForeignKey(c => c.OrgId)
             //       .OnDelete(DeleteBehavior.Restrict);
         }

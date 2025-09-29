@@ -19,34 +19,42 @@ namespace OEMEVWarrantyManagement.Share.Exceptions
             {
                 await _next(context);
             }
-            catch (Exception ex)
+            catch (ApiException ex)
             {
-                await HandleExceptionAsync(context, ex);
+                var attr = ex.Error.GetAttr();
+
+                context.Response.StatusCode = attr.HttpStatus;
+                context.Response.ContentType = "application/json";
+
+                var response = new ApiResponse<object>
+                {
+                    Success = false,
+                    Code = attr.Code,
+                    Message = attr.Message,
+                    Data = null
+                };
+
+                var json = JsonSerializer.Serialize(response);
+                await context.Response.WriteAsync(json);
             }
-        }
-
-        private static Task HandleExceptionAsync(HttpContext context, Exception ex)
-        {
-            ResponseError error;
-
-            if (ex is ApiException apiEx)
+            catch (Exception)
             {
-                error = apiEx.Error;
-                context.Response.StatusCode = error.GetAttribute<HttpStatusAttribute>()?.Status ?? 500;
+                var attr = ResponseError.InternalServerError.GetAttr();
+
+                context.Response.StatusCode = attr.HttpStatus;
+                context.Response.ContentType = "application/json";
+
+                var response = new ApiResponse<object>
+                {
+                    Success = false,
+                    Code = attr.Code,
+                    Message = attr.Message,
+                    Data = null
+                };
+
+                var json = JsonSerializer.Serialize(response);
+                await context.Response.WriteAsync(json);
             }
-            else
-            {
-                error = ResponseError.InternalServerError;
-                context.Response.StatusCode = 500; // Internal Server Error
-            }
-
-            var response = ApiResponse<object>.ErrorResponse(error);
-
-
-            //context.Response.ContentType = "application/json";
-            //return context.Response.WriteAsJsonAsync(response);
-            context.Response.ContentType = "application/json";
-            return context.Response.WriteAsync(JsonSerializer.Serialize(response));
         }
     }
 }
