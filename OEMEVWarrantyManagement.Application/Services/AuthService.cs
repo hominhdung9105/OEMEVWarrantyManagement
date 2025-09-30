@@ -51,12 +51,12 @@ namespace OEMEVWarrantyManagement.Application.Services
 
         public async Task<TokenResponseDto?> RefreshTokenAsync(RefreshTokenRequestDto request)
         {
-            if (!await _authRepository.IsHaveEmployeeById(request.UserId.ToString()))
+            if (!await _authRepository.IsHaveEmployeeById(request.UserId))
             {
                 throw new ApiException(ResponseError.NotFoundEmployee);
             }
 
-            var employee = await _authRepository.GetEmployeeById(request.UserId.ToString());
+            var employee = await _authRepository.GetEmployeeById(request.UserId);
 
             if (employee.RefreshToken != request.RefreshToken || employee.RefreshTokenExpiryTime <= DateTime.UtcNow)
             {

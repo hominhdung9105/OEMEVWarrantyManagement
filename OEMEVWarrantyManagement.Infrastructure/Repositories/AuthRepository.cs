@@ -56,9 +56,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return await _context.Employees.AnyAsync(e => e.Email == username);
         }
 
-        public async Task<bool> IsHaveEmployeeById(string id)
+        public async Task<bool> IsHaveEmployeeById(Guid id)
         {
-            return await _context.Employees.AnyAsync(e => e.UserId.ToString() == id);
+            return await _context.Employees.AnyAsync(e => e.UserId == id);
         }
 
         public async Task<Employee?> GetEmployeeByUsername(string username)
@@ -68,7 +68,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         public async Task<Employee?> GetEmployeeById(Guid id)
         {
-            return await _context.Employees.FirstAsync(e => e.UserId.ToString() == id);
+            return await _context.Employees.FirstAsync(e => e.UserId == id);
         }
 
         public async Task SaveRefreshToken(string id, string refreshToken, DateTime expiryTime)

@@ -1,11 +1,5 @@
 ﻿using OEMEVWarrantyManagement.Application.Dtos;
-using OEMEVWarrantyManagement.Application.Dtos.Request;
 using OEMEVWarrantyManagement.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.Application.IRepository
 {
@@ -16,9 +10,9 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         //Task<TokenResponseDto?> RefreshTokenAsync(RefreshTokenRequestDto request);
 
         Task<bool> IsHaveEmployeeByUsername(string username);
-        Task<bool> IsHaveEmployeeById(string id);
+        Task<bool> IsHaveEmployeeById(Guid id);
         Task<Employee?> GetEmployeeByUsername(string username);
-        Task<Employee?> GetEmployeeById(string id);
+        Task<Employee?> GetEmployeeById(Guid id);
         Task SaveRefreshToken(string id, string refreshToken, DateTime expiryTime);
         Task SaveChangesAsync();
     }

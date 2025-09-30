@@ -8,7 +8,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
     {
         public async Task<Employee> GetEmployeeById(Guid id)
         {
-            return await _context.Employees.FindAsync(id);
+            return await context.Employees.FindAsync(id);
         }
     }
 }
