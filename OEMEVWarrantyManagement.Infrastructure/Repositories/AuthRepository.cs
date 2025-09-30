@@ -66,7 +66,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return await _context.Employees.FirstAsync(e => e.Email == username);
         }
 
-        public async Task<Employee?> GetEmployeeById(string id)
+        public async Task<Employee?> GetEmployeeById(Guid id)
         {
             return await _context.Employees.FirstAsync(e => e.UserId.ToString() == id);
         }

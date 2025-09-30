@@ -20,7 +20,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             _employeeService = employeeService;
             _mapper = mapper;
         }
-        public async Task<EmployeeDto> GetEmployeeById(string userId)
+        public async Task<EmployeeDto> GetEmployeeById(Guid userId)
         {
             return await _employeeService.GetEmployeeById(userId) ?? throw new ApiException(ResponseError.NotFoundEmployee);
 

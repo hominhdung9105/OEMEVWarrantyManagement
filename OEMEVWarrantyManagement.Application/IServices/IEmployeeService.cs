@@ -9,6 +9,6 @@ namespace OEMEVWarrantyManagement.Application.IServices
 {
     public interface IEmployeeService
     {
-        Task<EmployeeDto> GetEmployeeById(string userId);
+        Task<EmployeeDto> GetEmployeeById(Guid userId);
     }
 }
