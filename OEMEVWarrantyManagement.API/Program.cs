@@ -14,6 +14,7 @@ using OEMEVWarrantyManagement.Infrastructure.Repositories;
 using OEMEVWarrantyManagement.Share.Enum;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
+using Scalar.AspNetCore;
 
 namespace OEMEVWarrantyManagement.API
 {
@@ -104,14 +105,11 @@ namespace OEMEVWarrantyManagement.API
 
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
-            builder.Services.AddScoped<IWarrantyRecordService, WarrantyRecordService>();
-            builder.Services.AddScoped<IWarrantyRecordRepository, WarrantyRecordRepository>();
-            builder.Services.AddScoped<IWarrantyRequestRepository, WarrantyRequestRepository>();
-            builder.Services.AddScoped<IWarrantyRequestService, WarrantyRequestService>();
-            builder.Services.AddScoped<ICarConditionService, CarConditionService>();
-            builder.Services.AddScoped<ICarConditionRepository, CarConditionRepository>();
-            builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
-
+            builder.Services.AddScoped<IWarrantyClaimService, WarrantyClaimService>();
+            builder.Services.AddScoped<IWarrantyClaimRepository, WarrantyClaimRepository>();
+            builder.Services.AddScoped<IVehicleRepository, VehicelRepository>();
+            builder.Services.AddScoped<IImageService, ImageService>();
+            builder.Services.AddScoped<IImageRepository, ImageRepository>();
 
             var app = builder.Build();
 

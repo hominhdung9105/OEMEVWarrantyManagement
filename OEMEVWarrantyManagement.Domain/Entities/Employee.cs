@@ -1,32 +1,34 @@
-﻿namespace OEMEVWarrantyManagement.Domain.Entities
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+
+namespace OEMEVWarrantyManagement.Domain.Entities
 {
     public class Employee
     {
-        public Guid Id { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
-        public string RoleId { get; set; }     //FK
-        public Role Role { get; set; }      // Navigation property
-        public string FullName { get; set; }
+        public Guid UserId { get; set; }
+        public string Email { get; set; }
+        public string PasswordHash { get; set; }
+        public string Role { get; set; }
+        public Guid OrgId { get; set; }
+        public string RefreshToken { get; set; }
+        public DateTime RefreshTokenExpiryTime { get; set; }
 
-        public string? RefreshToken { get; set; }
-        public DateTime? RefreshTokenExpiryTime { get; set; }
-
-        public string WorkPlacesId { get; set; } //FK
-        public WorkPlaces WorkPlaces { get; set; } // Navigation property
-        public ICollection<CarConditionCurrent> CarConditionCurrents { get; set; } = new List<CarConditionCurrent>();
-        public ICollection<Assignment> AssignmentsAsSCStaff { get; set; } = new List<Assignment>();
-        public ICollection<Assignment> AssignmentsAsSCTech { get; set; } = new List<Assignment>();
-        public ICollection<RequestPart> RequestParts { get; set; } = new List<RequestPart>();
-        public ICollection<DeliveryPart> DeliveryPartsSend { get; set; } = new List<DeliveryPart>();
-        public ICollection<DeliveryPart> DeliveryPartsReceive { get; set; } = new List<DeliveryPart>();
-        public ICollection<WarrantyRequest> WarrantyRequestsAsEVMStaff { get; set; } = new List<WarrantyRequest>();
-        public ICollection<WarrantyRequest> WarrantyRequestsAsSCStaff { get; set; } = new List<WarrantyRequest>();
-        public ICollection<Warranty> WarrantiesAsSCTech { get; set; } = new List<Warranty>();
-        public ICollection<Customer> Customer { get; set; } = new List<Customer>();
-        public ICollection<RecallHistory> RecallHistoriesAsSCStaff { get; set; } = new List<RecallHistory>();
-        public ICollection<WarrantyEmployee> WarrantyEmployees { get; set; } = new List<WarrantyEmployee>();
-        public ICollection<RecallHistoryEmployee> RecallHistoryEmployees { get; set; } = new List<RecallHistoryEmployee>();
-
+        // Navigation Properties
+        [JsonIgnore]
+        public Organization Organization { get; set; }
+        [JsonIgnore]
+        public ICollection<WarrantyClaim> CreatedClaims { get; set; } = new List<WarrantyClaim>();
+        [JsonIgnore]
+        public ICollection<WarrantyClaim> ApprovedClaims { get; set; } = new List<WarrantyClaim>();
+        [JsonIgnore]
+        public ICollection<ClaimAttachment> UploadedAttachments { get; set; } = new List<ClaimAttachment>();
+        [JsonIgnore]
+        public ICollection<WorkOrder> AssignedWorkOrders { get; set; } = new List<WorkOrder>();
+        [JsonIgnore]
+        public ICollection<PartOrder> CreatedPartOrders { get; set; } = new List<PartOrder>();
     }
 }

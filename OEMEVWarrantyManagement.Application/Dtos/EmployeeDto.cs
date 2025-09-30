@@ -2,13 +2,22 @@
 {
     public class EmployeeDto
     {
-        public Guid Id { get; set; }
-        public string Username { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-        public string FullName { get; set; } = string.Empty;
-        public string RoleId { get; set; } = string.Empty;
+        //public Guid Id { get; set; }
+        //public string Username { get; set; } = string.Empty;
+        //public string Password { get; set; } = string.Empty;
+        //public string FullName { get; set; } = string.Empty;
+        //public string RoleId { get; set; } = string.Empty;
+        //public string? RefreshToken { get; set; }
+        //public DateTime? RefreshTokenExpiryTime { get; set; }
+        //public string WorkPlacesId { get; set; } = string.Empty;
+
+
+        public Guid UserId { get; set; }
+        public string Email { get; set; }
+        public string PasswordHash { get; set; }
+        public string Role { get; set; }
+        public Guid OrgId { get; set; }
         public string? RefreshToken { get; set; }
         public DateTime? RefreshTokenExpiryTime { get; set; }
-        public string WorkPlacesId { get; set; } = string.Empty;
     }
 }

@@ -1,6 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OEMEVWarrantyManagement.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfigurations
 {
@@ -9,23 +14,18 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
         public void Configure(EntityTypeBuilder<Customer> builder)
         {
             builder.ToTable("Customers");
-            builder.HasKey(c => c.Id);
-            builder.Property(c => c.Id).ValueGeneratedOnAdd();
-            builder.Property(c => c.FullName)
-                   .IsRequired()
-                   .HasMaxLength(100);
-            builder.Property(c => c.PhoneNumber)
-                   .IsRequired()
-                   .HasMaxLength(15);
-            builder.Property(c => c.Email)
-                   .IsRequired();
-            builder.Property(c => c.EmployeeId)
-                   .IsRequired();
+            builder.HasKey(c => c.CustomerId);
+            builder.Property(c => c.CustomerId).ValueGeneratedOnAdd();
+            builder.Property(c => c.Name).IsRequired();
+            builder.Property(c => c.Phone);
+            builder.Property(c => c.Email);
+            builder.Property(c => c.Address);
+            //builder.Property(c => c.OrgId);
 
-            builder.HasOne(c => c.Employee)
-                   .WithMany(e => e.Customer)
-                   .HasForeignKey(c => c.EmployeeId);
-                    
+            //builder.HasOne(c => c.Organization)
+            //       .WithMany(o => o.Customers)
+            //       .HasForeignKey(c => c.OrgId)
+            //       .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

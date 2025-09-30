@@ -6,9 +6,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 {
     public class EmployeeRepository(AppDbContext context) : IEmployeeRepository
     {
-        public async Task<Employee> GetByIdAsync(Guid id)
+        public async Task<Employee> GetEmployeeById(Guid id)
         {
-            return await context.Employees.FindAsync(id);
+            return await _context.Employees.FindAsync(id);
         }
     }
 }

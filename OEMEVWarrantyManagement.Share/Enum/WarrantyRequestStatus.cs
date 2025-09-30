@@ -1,6 +1,6 @@
 ﻿namespace OEMEVWarrantyManagement.Share.Enum
 {
-    public enum WarrantyRequestStatus
+    public enum WarrantyClaimStatus
     {
         [StatusAttr("waiting for unassigned")]
         WaitingForUnassigned, // Chưa phân công kỹ thuật viên
@@ -18,9 +18,9 @@
 
     public static class WarrantyRequestStatusExtensions
     {
-        public static string GetWarrantyRequestStatus(this WarrantyRequestStatus error)
+        public static string GetWarrantyRequestStatus(this WarrantyClaimStatus error)
         {
-            var memberInfo = typeof(WarrantyRequestStatus).GetField(error.ToString());
+            var memberInfo = typeof(WarrantyClaimStatus).GetField(error.ToString());
             return ((StatusAttr)Attribute.GetCustomAttribute(memberInfo, typeof(StatusAttr))).Status;
         }
     }

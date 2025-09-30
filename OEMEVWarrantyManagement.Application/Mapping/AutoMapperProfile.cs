@@ -9,12 +9,8 @@ namespace OEMEVWarrantyManagement.Application.Mapping
         public AutoMapperProfile()
         {
             //Warranty Request
-            CreateMap<WarrantyRequest, WarrantyRequestDto>();
-            CreateMap<WarrantyRequestDto, WarrantyRequest>(); 
-            CreateMap<WarrantyRecord, WarrantyRecordDto>();
-            CreateMap<WarrantyRecordDto, WarrantyRecord>();
-            CreateMap<CarConditionCurrent, CarConditionCurrentDto>();
-            CreateMap<CarConditionCurrentDto, CarConditionCurrent>();
+            CreateMap<WarrantyClaim, WarrantyClaimDto>().ReverseMap();
+            CreateMap<ClaimAttachment, ImageDto>().ReverseMap();
         }
     }
 }

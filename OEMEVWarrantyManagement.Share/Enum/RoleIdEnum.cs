@@ -2,13 +2,13 @@
 {
     public enum RoleIdEnum
     {
-        [RoleIdAttr("ROL-ADMIN")]
+        [RoleIdAttr("ADMIN")]
         Admin,
-        [RoleIdAttr("ROL-STAFF")]
+        [RoleIdAttr("SC_STAFF")]
         ScStaff,
-        [RoleIdAttr("ROL-TECH")]
+        [RoleIdAttr("SC_TECH")]
         Technician,
-        [RoleIdAttr("ROL-EVM")]
+        [RoleIdAttr("EVM_STAFF")]
         EvmStaff
     }
 

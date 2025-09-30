@@ -37,7 +37,7 @@ namespace OEMEVWarrantyManagement.Share.Exceptions
                 var json = JsonSerializer.Serialize(response);
                 await context.Response.WriteAsync(json);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 var attr = ResponseError.InternalServerError.GetAttr();
 
@@ -48,7 +48,7 @@ namespace OEMEVWarrantyManagement.Share.Exceptions
                 {
                     Success = false,
                     Code = attr.Code,
-                    Message = attr.Message,
+                    Message = e.Message,
                     Data = null
                 };
 

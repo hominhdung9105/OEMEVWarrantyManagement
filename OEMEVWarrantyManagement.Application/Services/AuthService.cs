@@ -15,7 +15,7 @@ using OEMEVWarrantyManagement.Share.Models.Response;
 
 namespace OEMEVWarrantyManagement.Application.Services
 {
-    public class AuthService: IAuthService
+    public class AuthService : IAuthService
     {
         private readonly IAuthRepository _authRepository;
         private readonly AppSettings _appSettings;
@@ -33,14 +33,14 @@ namespace OEMEVWarrantyManagement.Application.Services
 
         public async Task<TokenResponseDto?> LoginAsync(LoginRequestDto request)
         {
-            if(!await _authRepository.IsHaveEmployeeByUsername(request.Username))
+            if (!await _authRepository.IsHaveEmployeeByUsername(request.Username))
             {
                 throw new ApiException(ResponseError.InvalidAccount);
             }
 
             var employee = await _authRepository.GetEmployeeByUsername(request.Username);
 
-            if (employee.Password != request.Password)
+            if (employee.PasswordHash != request.Password)
                 throw new ApiException(ResponseError.InvalidAccount);
 
             //if (new PasswordHasher<Employee>().VerifyHashedPassword(employee, employee.Password, request.Password) == PasswordVerificationResult.Failed)
@@ -72,7 +72,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             {
                 AccessToken = CreateToken(employee),
                 RefreshToken = await GenerateRefreshTokenAsync(employee),
-                EmployeeId = employee.Id.ToString()
+                EmployeeId = employee.UserId.ToString()
             };
         }
 
@@ -85,9 +85,9 @@ namespace OEMEVWarrantyManagement.Application.Services
         {
             var claims = new List<Claim>
             {
-                new(ClaimTypes.Name, employee.Username),
-                new(ClaimTypes.NameIdentifier, employee.Id.ToString()),
-                new(ClaimTypes.Role, employee.RoleId)
+                new(ClaimTypes.Name, employee.Email),
+                new(ClaimTypes.NameIdentifier, employee.UserId.ToString()),
+                new(ClaimTypes.Role, employee.Role)
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appSettings.Token));
@@ -118,7 +118,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             var refreshToken = GenerateRefreshToken();
             employee.RefreshToken = refreshToken;
             employee.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-            
+
             await _authRepository.SaveChangesAsync();
             return refreshToken;
         }

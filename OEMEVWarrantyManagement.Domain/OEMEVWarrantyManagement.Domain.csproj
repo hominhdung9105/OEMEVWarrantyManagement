@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Scalar.AspNetCore" Version="2.8.6" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\OEMEVWarrantyManagement.Share\OEMEVWarrantyManagement.Share.csproj" />
   </ItemGroup>
 

@@ -34,15 +34,15 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         public async Task<Employee?> CreateAsync(EmployeeDto request)
         {
-            if (await _context.Employees.AnyAsync(e => e.Username == request.Username))
+            if (await _context.Employees.AnyAsync(e => e.Email == request.Email))
                 return null;
 
             var employee = new Employee();
 
-            var hashedPassword = new PasswordHasher<Employee>().HashPassword(employee, request.Password);
+            var hashedPassword = new PasswordHasher<Employee>().HashPassword(employee, request.PasswordHash);
 
-            employee.Username = request.Username;
-            employee.Password = hashedPassword;
+            employee.Email = request.Email;
+            employee.PasswordHash = hashedPassword;
 
             _context.Employees.Add(employee);
 
@@ -53,27 +53,27 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         public async Task<bool> IsHaveEmployeeByUsername(string username)
         {
-            return await _context.Employees.AnyAsync(e => e.Username == username);
+            return await _context.Employees.AnyAsync(e => e.Email == username);
         }
 
         public async Task<bool> IsHaveEmployeeById(string id)
         {
-            return await _context.Employees.AnyAsync(e => e.Id.ToString() == id);
+            return await _context.Employees.AnyAsync(e => e.UserId.ToString() == id);
         }
 
         public async Task<Employee?> GetEmployeeByUsername(string username)
         {
-            return await _context.Employees.FirstAsync(e => e.Username == username);
+            return await _context.Employees.FirstAsync(e => e.Email == username);
         }
 
         public async Task<Employee?> GetEmployeeById(string id)
         {
-            return await _context.Employees.FirstAsync(e => e.Id.ToString() == id);
+            return await _context.Employees.FirstAsync(e => e.UserId.ToString() == id);
         }
 
         public async Task SaveRefreshToken(string id, string refreshToken, DateTime expiryTime)
         {
-            var employee = await _context.Employees.FirstAsync(e => e.Id.ToString() == id);
+            var employee = await _context.Employees.FirstAsync(e => e.UserId.ToString() == id);
             employee.RefreshToken = refreshToken;
             employee.RefreshTokenExpiryTime = expiryTime;
             await _context.SaveChangesAsync();
