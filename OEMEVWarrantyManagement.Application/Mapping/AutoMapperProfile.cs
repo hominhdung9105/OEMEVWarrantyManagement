@@ -2,7 +2,6 @@
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Domain.Entities;
 
-
 namespace OEMEVWarrantyManagement.Application.Mapping
 {
     public class AutoMapperProfile : Profile
@@ -11,7 +10,8 @@ namespace OEMEVWarrantyManagement.Application.Mapping
         {
             //Warranty Request
             CreateMap<WarrantyClaim, WarrantyClaimDto>().ReverseMap();
-
+            CreateMap<ClaimAttachment, ImageDto>().ReverseMap();
+            CreateMap<Employee, EmployeeDto>().ReverseMap();
         }
     }
 }

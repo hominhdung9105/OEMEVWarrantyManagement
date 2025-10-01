@@ -1,14 +1,9 @@
 ﻿using OEMEVWarrantyManagement.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.Application.IRepository
 {
     public interface IEmployeeRepository
     {
-        Task<Employee> GetEmployeeById(string userId);
+        Task<Employee> GetEmployeeByIdAsync(Guid id);
     }
 }

@@ -13,42 +13,53 @@ namespace OEMEVWarrantyManagement.API.Controllers
     [ApiController]
     public class WarrantyClaimController : ControllerBase
     {
-        private IWarrantyClaimService _service;
-        public WarrantyClaimController(IWarrantyClaimService service)
+        private IWarrantyClaimService _warrantyClaimService;
+        private IEmployeeService _employeeService;
+        public WarrantyClaimController(IWarrantyClaimService warrantyClaimService, IEmployeeService employeeService)
         {
-            _service = service;
+            _warrantyClaimService = warrantyClaimService;
+            _employeeService = employeeService;
         }
 
-        //TODO - add serive tim orgId bang employeeId
+        //create : VIN
         [HttpPost]
         [Authorize(policy: "RequireScStaff")]
         public async Task<IActionResult> Create(WarrantyClaimDto dtos)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var status = WarrantyClaimStatus.WaitingForUnassigned;
+            var orgId = await _employeeService.GetEmployeeByIdAsync(Guid.Parse(userId));
             dtos.CreatedBy = Guid.Parse(userId);
             dtos.Status = status.GetWarrantyRequestStatus();
-            var result = await _service.CreateAsync(dtos);
+            dtos.ServiceCenterId = orgId.OrgId;
+            var result = await _warrantyClaimService.CreateAsync(dtos);
             return Ok(ApiResponse<object>.Ok(result, "Create Warranty Claim Successfully!"));
         }
 
-        //Get All by Admin or Staff
+        //Get All by Admin/Staff; Tech see claim are WaitingForUnassigned
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> GetAllWarrantyClaim()
         {
             var role = User.FindFirstValue(ClaimTypes.Role);
             var staffId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var status = WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyRequestStatus();
             if (role == RoleIdEnum.Admin.GetRoleId())
             {
-                var result = await _service.GetAllWarrantyClaimAsync();
+                var result = await _warrantyClaimService.GetAllWarrantyClaimAsync();
                 return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
             }
             else if (role == RoleIdEnum.ScStaff.GetRoleId())
             {
-                var result = await _service.GetAllWarrantyClaimAsync(staffId);
+                var result = await _warrantyClaimService.GetAllWarrantyClaimAsync(staffId);
                 return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
-            }else return Unauthorized(ApiResponse<object>.Fail(ResponseError.Forbidden));
+            }else if (role == RoleIdEnum.Technician.GetRoleId()) 
+            {
+                var result = await _warrantyClaimService.GetWarrantyClaimByStatusAsync(status);
+                //TODO - GET recall
+                return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
+            }
+            else return Unauthorized(ApiResponse<object>.Fail(ResponseError.Forbidden));
         }
 
         [HttpGet("{vin}")]
@@ -59,12 +70,12 @@ namespace OEMEVWarrantyManagement.API.Controllers
             var staffId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (role == RoleIdEnum.Admin.GetRoleId())
             {
-                var result = await _service.GetWarrantyClaimByVinAsync(vin);
+                var result = await _warrantyClaimService.GetWarrantyClaimByVinAsync(vin);
                 return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
             }
             else if (role == RoleIdEnum.ScStaff.GetRoleId())
             {
-                var result = await _service.GetWarrantyClaimByVinAsync(vin, staffId);
+                var result = await _warrantyClaimService.GetWarrantyClaimByVinAsync(vin, staffId);
                 return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
             }
             else return Unauthorized(ApiResponse<object>.Fail(ResponseError.Forbidden));
@@ -75,17 +86,20 @@ namespace OEMEVWarrantyManagement.API.Controllers
         [Authorize(policy: "RequireAdmin")]
         public async Task<IActionResult> DeleteWarrantyClaim(string claimId)
         {
-            var result = await _service.DeleteAsync(Guid.Parse(claimId));
+            var result = await _warrantyClaimService.DeleteAsync(Guid.Parse(claimId));
             return Ok("Delete Successfully!");
         }
 
-        [HttpPut("{id}")]
-        [Authorize(policy: "RequireScStaff")]
-        public async Task<IActionResult> UpdateWarrantyClaim(string id, WarrantyClaimDto dto)
+        [HttpPut("{claimId}")]
+        //[Authorize(policy: "RequireScStaff")]
+        [Authorize]
+        public async Task<IActionResult> UpdateWarrantyClaim(string claimId, WarrantyClaimDto dto)
         {
-            if (!Guid.TryParse(id, out var Id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
+            if (!Guid.TryParse(claimId, out var Id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
             dto.ClaimId = Id;
-            var result = await _service.UpdateAsync(dto); 
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            var result = await _warrantyClaimService.UpdateAsync(role, userId, dto); 
             return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Update Successfully!"));
         }
 

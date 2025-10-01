@@ -1,11 +1,6 @@
 ﻿using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 {
@@ -17,9 +12,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             _context = context;
         }
 
-        public Task<Employee> GetEmployeeById(string userId)
+        public async Task<Employee> GetEmployeeByIdAsync(Guid userId)
         {
-            throw new NotImplementedException();
+            return await _context.Employees.FindAsync(userId);
         }
+
+
     }
 }
