@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.Dtos.Request;
 using OEMEVWarrantyManagement.Application.IServices;
+using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Share.Models.Response;
 
 namespace OEMEVWarrantyManagement.API.Controllers
@@ -19,7 +20,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<ActionResult<Employee>> Create(EmployeeDto request)
+        public async Task<ActionResult> Create(EmployeeDto request)
         {
             //var employee = await _authService.CreateAsync(request) ?? throw new ApiException(ResponseError.UsernameAlreadyExists);
             //return Ok(employee);
@@ -39,7 +40,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpPost("refresh-token")]
         [AllowAnonymous]
-        public async Task<ActionResult<TokenResponseDto>> RefreshToken(RefreshTokenRequestDto request)
+        public async Task<ActionResult> RefreshToken(RefreshTokenRequestDto request)
         {
             var result = await _authService.RefreshTokenAsync(request);
 

@@ -9,7 +9,7 @@ namespace OEMEVWarrantyManagement.Domain.Entities
 {
     public class ClaimAttachment
     {
-        public Guid AttachmentId { get; set; }
+        public string AttachmentId { get; set; }
         public Guid ClaimId { get; set; }
         public string URL { get; set; }
         public Guid UploadedBy { get; set; }

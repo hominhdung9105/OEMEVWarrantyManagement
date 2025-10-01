@@ -57,7 +57,28 @@
         NotFoundWarrantyClaim,
 
         [ResponseErrorAttr("Invalid Warranty Claim Id.", 400, 19)]
-        InvalidWarrantyClaimId
+        InvalidWarrantyClaimId,
+
+        [ResponseErrorAttr("You are not assigned to this Warranty Claim.", 403, 20)]
+        NotYourWarrantyClaim,
+
+        [ResponseErrorAttr("Invalid image file.", 400, 21)]
+        InvalidImage,
+
+        [ResponseErrorAttr("Image size exceeds the limit of 5MB.", 400, 22)]
+        ImageSizeToLarge,
+
+        [ResponseErrorAttr("Failed to delete image.", 400, 23)]
+        DeleteImageFail,
+
+        [ResponseErrorAttr("Claim attachment not found.", 404, 24)]
+        NotFoundClaimAttachment,
+
+        [ResponseErrorAttr("ImageKit service error.", 500, 25)]
+        ImageKitError,
+
+        [ResponseErrorAttr("Failed to upload image.", 500, 26)]
+        UploadImageFail
     }
 
     public class ApiResponse<T>
