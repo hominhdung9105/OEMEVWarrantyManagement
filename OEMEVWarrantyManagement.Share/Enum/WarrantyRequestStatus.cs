@@ -16,11 +16,11 @@
         Denied // Bị từ chối bảo hành
     }
 
-    public static class WarrantyRequestStatusExtensions
+    public static class WarrantyClaimStatusExtensions
     {
-        public static string GetWarrantyRequestStatus(this WarrantyClaimStatus error)
+        public static string GetWarrantyClaimStatus(this WarrantyClaimStatus status)
         {
-            var memberInfo = typeof(WarrantyClaimStatus).GetField(error.ToString());
+            var memberInfo = typeof(WarrantyClaimStatus).GetField(status.ToString());
             return ((StatusAttr)Attribute.GetCustomAttribute(memberInfo, typeof(StatusAttr))).Status;
         }
     }

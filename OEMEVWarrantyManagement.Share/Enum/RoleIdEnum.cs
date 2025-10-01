@@ -14,9 +14,9 @@
 
     public static class RoleIdEnumExtensions
     {
-        public static string GetRoleId(this RoleIdEnum error)
+        public static string GetRoleId(this RoleIdEnum roleId)
         {
-            var memberInfo = typeof(RoleIdEnum).GetField(error.ToString());
+            var memberInfo = typeof(RoleIdEnum).GetField(roleId.ToString());
             return ((RoleIdAttr)Attribute.GetCustomAttribute(memberInfo, typeof(RoleIdAttr))).Id;
         }
     }

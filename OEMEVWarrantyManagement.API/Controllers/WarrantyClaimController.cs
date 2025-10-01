@@ -27,7 +27,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var status = WarrantyClaimStatus.WaitingForUnassigned;
             dtos.CreatedBy = Guid.Parse(userId);
-            dtos.Status = status.GetWarrantyRequestStatus();
+            dtos.Status = status.GetWarrantyClaimStatus();
             var result = await _service.CreateAsync(dtos);
             return Ok(ApiResponse<object>.Ok(result, "Create Warranty Claim Successfully!"));
         }

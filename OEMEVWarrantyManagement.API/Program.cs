@@ -101,7 +101,7 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddSingleton<IAuthorizationHandler, RoleHandler>();
 
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            //builder.Services.AddOpenApi();
+            builder.Services.AddOpenApi();
 
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
@@ -110,14 +110,15 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddScoped<IVehicleRepository, VehicelRepository>();
             builder.Services.AddScoped<IImageService, ImageService>();
             builder.Services.AddScoped<IImageRepository, ImageRepository>();
+            builder.Services.AddScoped<IFunctionsService, FunctionsService>();
 
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                //app.MapOpenApi();
-                //app.MapScalarApiReference();
+                app.MapOpenApi();
+                app.MapScalarApiReference();
             }
 
             app.UseMiddleware<ApiExceptionMiddleware>();
