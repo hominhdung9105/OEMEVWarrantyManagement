@@ -2,6 +2,8 @@
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
+using OEMEVWarrantyManagement.Share.Exceptions;
+using OEMEVWarrantyManagement.Share.Models.Response;
 
 namespace OEMEVWarrantyManagement.Application.Services
 {
@@ -19,6 +21,12 @@ namespace OEMEVWarrantyManagement.Application.Services
         {
             var exist = await _employeeRepository.GetEmployeeByIdAsync(userId);
             return _mapper.Map<EmployeeDto>(exist);
+        }
+
+        public async Task<IEnumerable<AllTech>> GetAllTechInWorkspaceAsync(Guid orgId)
+        {
+            var entities = await _employeeRepository.GetAllTechInWorkspaceAsync(orgId) ?? throw new ApiException(ResponseError.NotFoundEmployee);
+            return _mapper.Map<IEnumerable<AllTech>>(entities);
         }
     }
 }

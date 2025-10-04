@@ -10,4 +10,9 @@
         public string? RefreshToken { get; set; }
         public DateTime? RefreshTokenExpiryTime { get; set; }
     }
+
+    public class AllTech
+    {
+        public Guid UserId { get; set; }
+    }
 }

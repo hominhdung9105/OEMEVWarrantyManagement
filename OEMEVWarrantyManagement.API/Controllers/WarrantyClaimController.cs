@@ -13,12 +13,14 @@ namespace OEMEVWarrantyManagement.API.Controllers
     [ApiController]
     public class WarrantyClaimController : ControllerBase
     {
-        private IWarrantyClaimService _warrantyClaimService;
-        private IEmployeeService _employeeService;
-        public WarrantyClaimController(IWarrantyClaimService warrantyClaimService, IEmployeeService employeeService)
+        private readonly IWarrantyClaimService _warrantyClaimService;
+        private readonly IEmployeeService _employeeService;
+        private readonly IWorkOrderService _workOrderService;
+        public WarrantyClaimController(IWarrantyClaimService warrantyClaimService, IEmployeeService employeeService, IWorkOrderService workOrderService)
         {
             _warrantyClaimService = warrantyClaimService;
             _employeeService = employeeService;
+            _workOrderService = workOrderService;
         }
 
         //create : VIN
@@ -55,7 +57,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
                 return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
             }else if (role == RoleIdEnum.Technician.GetRoleId()) 
             {
-                var result = await _warrantyClaimService.GetWarrantyClaimByStatusAsync(status);
+                var result = await _workOrderService.GetWorkOrderByTech(Guid.Parse(staffId));
                 //TODO - GET recall
                 return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
             }

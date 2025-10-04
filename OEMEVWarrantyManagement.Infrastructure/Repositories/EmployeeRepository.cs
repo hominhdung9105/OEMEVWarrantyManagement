@@ -1,6 +1,8 @@
-﻿using OEMEVWarrantyManagement.Application.IRepository;
+﻿using Microsoft.EntityFrameworkCore;
+using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
+using OEMEVWarrantyManagement.Share.Enum;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 {
@@ -10,6 +12,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         public EmployeeRepository(AppDbContext context)
         {
             _context = context;
+        }
+
+        public async Task<IEnumerable<Employee>> GetAllTechInWorkspaceAsync(Guid orgId)
+        {
+            return await _context.Employees.Where(e => e.Role == RoleIdEnum.Technician.GetRoleId() && e.OrgId == orgId).ToListAsync();
         }
 
         public async Task<Employee> GetEmployeeByIdAsync(Guid userId)

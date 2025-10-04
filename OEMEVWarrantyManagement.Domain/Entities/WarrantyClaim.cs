@@ -13,6 +13,9 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public string? Description { get; set; }
         public Guid? ApprovedBy { get; set; }
         public DateTime? ApprovedDate { get; set; }
+        public Guid? PolicyId { get; set; }
+        
+
 
         // Navigation Properties
         [JsonIgnore]
@@ -28,6 +31,6 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         [JsonIgnore]
         public ICollection<ClaimPart> ClaimParts { get; set; } = new List<ClaimPart>();
         [JsonIgnore]
-        public ICollection<WorkOrder> WorkOrders { get; set; } = new List<WorkOrder>();
+        public WarrantyPolicy WarrantyPolicy { get; set; }
     }
 }

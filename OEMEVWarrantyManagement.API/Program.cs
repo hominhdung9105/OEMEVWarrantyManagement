@@ -105,14 +105,17 @@ namespace OEMEVWarrantyManagement.API
 
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+
             builder.Services.AddScoped<IWarrantyClaimService, WarrantyClaimService>();
             builder.Services.AddScoped<IWarrantyClaimRepository, WarrantyClaimRepository>();
+
             builder.Services.AddScoped<IVehicleRepository, VehicelRepository>();
 
             builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
             builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 
             builder.Services.AddScoped<IWorkOrderRepository, WorkOrderRepository>();
+            builder.Services.AddScoped<IWorkOrderService, WorkOrderService>();
 
             var app = builder.Build();
 
@@ -125,7 +128,7 @@ namespace OEMEVWarrantyManagement.API
 
             app.UseMiddleware<ApiExceptionMiddleware>();
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseAuthentication();
             app.UseAuthorization();

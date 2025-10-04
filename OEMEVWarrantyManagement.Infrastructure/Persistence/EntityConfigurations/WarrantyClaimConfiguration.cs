@@ -21,6 +21,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.Property(wc => wc.Description);
             builder.Property(wc => wc.ApprovedBy);
             builder.Property(wc => wc.ApprovedDate);
+            builder.Property(wc => wc.PolicyId).HasColumnName("PolicyId");
+
 
             builder.HasOne(wc => wc.Vehicle)
                    .WithMany(v => v.WarrantyClaims)
@@ -41,6 +43,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
                    .WithMany(e => e.ApprovedClaims)
                    .HasForeignKey(wc => wc.ApprovedBy)
                    .IsRequired(false) // Important for nullable FK
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(wc => wc.WarrantyPolicy)      
+                   .WithMany(p => p.WarrantyClaims)      
+                   .HasForeignKey(wc => wc.PolicyId)     
                    .OnDelete(DeleteBehavior.Restrict);
         }
     }
