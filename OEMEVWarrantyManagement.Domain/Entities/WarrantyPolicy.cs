@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
+
 
 namespace OEMEVWarrantyManagement.Domain.Entities
 {
@@ -19,5 +15,7 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public Organization Organization { get; set; }
         [JsonIgnore]
         public ICollection<VehicleWarrantyPolicy> VehicleWarrantyPolicies { get; set; } = new List<VehicleWarrantyPolicy>();
+        [JsonIgnore]
+        public ICollection<WarrantyClaim> WarrantyClaims { get; set; } = new List<WarrantyClaim>();
     }
 }

@@ -5,7 +5,7 @@ using OEMEVWarrantyManagement.Infrastructure.Persistence;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 {
-    public class ImageRepository (AppDbContext context) : IImageRepository
+    public class ImageRepository(AppDbContext context) : IImageRepository
     {
         public async Task<ClaimAttachment> AddImageAsync(ClaimAttachment claimAttachment)
         {

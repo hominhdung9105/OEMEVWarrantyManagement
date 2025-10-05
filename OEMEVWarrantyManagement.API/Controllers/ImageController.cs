@@ -114,7 +114,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
                 return false;
             }
 
-            if (!await claimService.IsHaveWarrantyClaim(id))
+            if (!await claimService.HasWarrantyClaim(id))
                 return false;
 
             return true;

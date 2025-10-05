@@ -4,6 +4,7 @@ namespace OEMEVWarrantyManagement.Application.IRepository
 {
     public interface IEmployeeRepository
     {
-        Task<Employee> GetEmployeeById(Guid id);
+        Task<Employee> GetEmployeeByIdAsync(Guid id);
+        Task<IEnumerable<Employee>> GetAllTechInWorkspaceAsync(Guid orgId);
     }
 }

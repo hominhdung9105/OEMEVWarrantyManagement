@@ -1,5 +1,4 @@
-﻿
-using OEMEVWarrantyManagement.Domain.Entities;
+﻿using OEMEVWarrantyManagement.Domain.Entities;
 
 
 namespace OEMEVWarrantyManagement.Application.IRepository
@@ -10,6 +9,7 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<IEnumerable<WarrantyClaim>> GetAllWarrantyClaimAsync(string staffId);
         Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimByVinAsync(string vin, string staffId);
         Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimByVinAsync(string vin);
+        Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimByStatusAsync(string status);
         Task<WarrantyClaim> GetWarrantyClaimByIdAsync(Guid id);
         Task<WarrantyClaim> CreateAsync(WarrantyClaim request);
         Task<WarrantyClaim> UpdateAsync(WarrantyClaim request);

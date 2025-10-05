@@ -3,7 +3,6 @@ using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
 
-
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 {
     public class WarrantyClaimRepository : IWarrantyClaimRepository
@@ -23,7 +22,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         public async Task<bool> DeleteAsync(WarrantyClaim request)
         {
-            var delete = _context.WarrantyClaims.Remove(request);
+            var _ = _context.WarrantyClaims.Remove(request);
             await _context.SaveChangesAsync();
             return true;
         }
@@ -42,6 +41,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         {
             return await _context.WarrantyClaims.FindAsync(id);
 
+        }
+
+        public async Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimByStatusAsync(string status)
+        {
+            return await _context.WarrantyClaims.Where(wc => wc.Status == status).ToListAsync();
         }
 
         public async Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimByVinAsync(string vin, string staffId)

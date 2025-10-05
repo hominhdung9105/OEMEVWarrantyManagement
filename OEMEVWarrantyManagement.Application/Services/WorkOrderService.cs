@@ -1,0 +1,69 @@
+﻿using AutoMapper;
+using OEMEVWarrantyManagement.Application.Dtos;
+using OEMEVWarrantyManagement.Application.IRepository;
+using OEMEVWarrantyManagement.Application.IServices;
+using OEMEVWarrantyManagement.Domain.Entities;
+using OEMEVWarrantyManagement.Share.Enum;
+
+namespace OEMEVWarrantyManagement.Application.Services
+{
+    public class WorkOrderService : IWorkOrderService
+    {
+        private readonly IWorkOrderRepository _workOrderRepository;
+        private readonly IWarrantyClaimService _claimService;
+        private readonly IMapper _mapper;
+        private readonly IWarrantyClaimRepository _claimRepository;
+        public WorkOrderService(IWorkOrderRepository workOrderRepository, IMapper mapper, IWarrantyClaimService warrantyClaimService, IWarrantyClaimRepository claimRepository)
+        {
+            _workOrderRepository = workOrderRepository;
+            _mapper = mapper;
+            _claimService = warrantyClaimService;
+            _claimRepository = claimRepository;
+        }
+
+        public async Task<RequestCreateWorkOrderDto> CreateWorkOrderAsync(RequestCreateWorkOrderDto request)
+        {
+            var entity = _mapper.Map<WorkOrder>(request);
+
+            var warrantyClaim = await _claimRepository.GetWarrantyClaimByIdAsync((Guid) request.TargetId);
+            if (warrantyClaim.Status == WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyRequestStatus())
+            {
+                entity.Type = WorkOrderType.Inspection.GetWorkOrderType();
+                entity.Target = WorkOrderTarget.Warranty.GetWorkOrderTarget();
+                entity.Status = WorkOrderStatus.InProgress.GetWorkOrderStatus();
+                warrantyClaim.Status = WarrantyClaimStatus.UnderInspection.GetWarrantyRequestStatus();
+            }
+            else if (warrantyClaim.Status == WarrantyClaimStatus.Approved.GetWarrantyRequestStatus())
+            {
+                entity.Type = WorkOrderType.Repair.GetWorkOrderType();
+                entity.Target = WorkOrderTarget.Warranty.GetWorkOrderTarget();
+                entity.Status = WorkOrderStatus.InProgress.GetWorkOrderStatus();
+                warrantyClaim.Status = WarrantyClaimStatus.UnderRepair.GetWarrantyRequestStatus();
+            }
+            //else throw new ApiException(ResponseError.InternalServerError);
+            var result = await _workOrderRepository.CreateAsync(entity);
+            await _claimRepository.UpdateAsync(warrantyClaim);
+            return _mapper.Map<RequestCreateWorkOrderDto>(result);
+        }
+
+        public async Task<WorkOrderDto> GetWorkOrder(Guid claimId, string? type = null, string? target = null)
+        {
+            var entity = await _workOrderRepository.GetWorkOrder(claimId, type, target);
+            return _mapper.Map<WorkOrderDto>(entity);
+
+        }
+
+        public async Task<IEnumerable<WorkOrderDto>> GetWorkOrderByTech(Guid techId)
+        {
+            var entity = await _workOrderRepository.GetWorkOrderByTech(techId);
+            return _mapper.Map<IEnumerable<WorkOrderDto>>(entity);
+        }
+
+        public async Task<WorkOrderDto> UpdateAsync(WorkOrderDto request)
+        {
+            var entity = await _workOrderRepository.GetWorkOrderByWorkOrderIdAsync((Guid)request.WorkOrderId);
+            var update = await _workOrderRepository.UpdateAsync(entity);
+            return _mapper.Map<WorkOrderDto>(update);
+        }
+    }
+}

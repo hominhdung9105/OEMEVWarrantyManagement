@@ -1,14 +1,29 @@
-﻿using OEMEVWarrantyManagement.Application.IRepository;
+﻿using Microsoft.EntityFrameworkCore;
+using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
+using OEMEVWarrantyManagement.Share.Enum;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 {
-    public class EmployeeRepository(AppDbContext context) : IEmployeeRepository
+    public class EmployeeRepository : IEmployeeRepository
     {
-        public async Task<Employee> GetEmployeeById(Guid id)
+        private readonly AppDbContext _context;
+        public EmployeeRepository(AppDbContext context)
         {
-            return await context.Employees.FindAsync(id);
+            _context = context;
         }
+
+        public async Task<IEnumerable<Employee>> GetAllTechInWorkspaceAsync(Guid orgId)
+        {
+            return await _context.Employees.Where(e => e.Role == RoleIdEnum.Technician.GetRoleId() && e.OrgId == orgId).ToListAsync();
+        }
+
+        public async Task<Employee> GetEmployeeByIdAsync(Guid userId)
+        {
+            return await _context.Employees.FindAsync(userId);
+        }
+
+
     }
 }

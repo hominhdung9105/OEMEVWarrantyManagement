@@ -78,7 +78,16 @@
         ImageKitError,
 
         [ResponseErrorAttr("Failed to upload image.", 500, 26)]
-        UploadImageFail
+        UploadImageFail,
+
+        [ResponseErrorAttr("Not found any part in here.", 404, 27)]
+        NotFoundPartHere,
+
+        [ResponseErrorAttr("Invalid description.", 400, 28)]
+        InvalidDescription,
+
+        [ResponseErrorAttr("Invalid body", 400, 29)]
+        InvalidJsonFormat
     }
 
     public class ApiResponse<T>
@@ -122,17 +131,10 @@
     }
 
     [AttributeUsage(AttributeTargets.Field)]
-    public class ResponseErrorAttr : Attribute
+    public class ResponseErrorAttr(string message, int httpStatus, int code) : Attribute
     {
-        public ResponseErrorAttr(string message, int httpStatus, int code)
-        {
-            Message = message;
-            HttpStatus = httpStatus;
-            Code = code;
-        }
-
-        public string Message { get; }
-        public int HttpStatus { get; }
-        public int Code { get; }
+        public string Message { get; } = message;
+        public int HttpStatus { get; } = httpStatus;
+        public int Code { get; } = code;
     }
 }
