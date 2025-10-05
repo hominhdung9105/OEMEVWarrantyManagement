@@ -78,7 +78,10 @@
         ImageKitError,
 
         [ResponseErrorAttr("Failed to upload image.", 500, 26)]
-        UploadImageFail
+        UploadImageFail,
+
+        [ResponseErrorAttr("Not found any part in here.", 404, 27)]
+        NotFoundPartHere
     }
 
     public class ApiResponse<T>

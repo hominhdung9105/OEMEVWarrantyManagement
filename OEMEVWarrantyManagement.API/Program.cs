@@ -103,20 +103,26 @@ namespace OEMEVWarrantyManagement.API
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
+            //Auth
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
-
+            //Warranty Claim
             builder.Services.AddScoped<IWarrantyClaimService, WarrantyClaimService>();
             builder.Services.AddScoped<IWarrantyClaimRepository, WarrantyClaimRepository>();
-
+            //Vehicle
             builder.Services.AddScoped<IVehicleRepository, VehicelRepository>();
-
+            //Employee
             builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
             builder.Services.AddScoped<IEmployeeService, EmployeeService>();
-
+            //WorkOrder
             builder.Services.AddScoped<IWorkOrderRepository, WorkOrderRepository>();
             builder.Services.AddScoped<IWorkOrderService, WorkOrderService>();
-
+            //Warranty Policy
+            builder.Services.AddScoped<IWarrantyPolicyRepository, WarrantyPolicyRepository>();
+            builder.Services.AddScoped<IWarrantyPolicyService, WarrantyPolicyService>();
+            //Part
+            builder.Services.AddScoped<IPartService, PartService>();
+            builder.Services.AddScoped<IPartRepository, PartRepository>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
