@@ -28,9 +28,27 @@ namespace OEMEVWarrantyManagement.Application.Services
         
         public async Task<WarrantyClaimDto> CreateAsync(WarrantyClaimDto request)
         {
-            var exist = await _vehicleRepository.GetVehicleByVinAsync(request.Vin) ?? throw new ApiException(ResponseError.NotfoundVin);
+            var _ = await _vehicleRepository.GetVehicleByVinAsync(request.Vin) ?? throw new ApiException(ResponseError.NotfoundVin);
             var entity = _mapper.Map<WarrantyClaim>(request);
             var result = await _warrantyClaimRepository.CreateAsync(entity);
+
+            if (request.AssignTo != null)
+            {
+                var workOrderEntity = new WorkOrder()
+                {
+                    StartDate = DateTime.Now,
+                    TargetId = (Guid) result.ClaimId,
+                    Type = "Inspection",
+                    Target = "Claim",
+                    Status = "IN PROGRESS"
+                };
+
+                result.Status = WarrantyClaimStatus.UnderInspection.GetWarrantyRequestStatus();
+
+                var workOrder = await _workOrderRepository.CreateAsync(workOrderEntity);
+                await _warrantyClaimRepository.UpdateAsync(result);
+            }
+
             return _mapper.Map<WarrantyClaimDto>(result);
         }
 
@@ -38,8 +56,7 @@ namespace OEMEVWarrantyManagement.Application.Services
         {
             var entity = await _warrantyClaimRepository
                 .GetWarrantyClaimByIdAsync(claimId) ?? throw new ApiException(ResponseError.NotFoundWarrantyClaim);
-            var result = await _warrantyClaimRepository.DeleteAsync(entity);
-            return true;
+            return await _warrantyClaimRepository.DeleteAsync(entity);
         }
 
         public async Task<IEnumerable<WarrantyClaimDto>> GetAllWarrantyClaimAsync()
@@ -86,7 +103,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<IEnumerable<WarrantyClaimDto>>(entities);
         }
 
-        public async Task<bool> IsHaveWarrantyClaim(Guid warrantyClaimId)
+        public async Task<bool> HasWarrantyClaim(Guid warrantyClaimId)
         {
             var entitie = await _warrantyClaimRepository.GetWarrantyClaimByIdAsync(warrantyClaimId);
 
@@ -100,41 +117,47 @@ namespace OEMEVWarrantyManagement.Application.Services
             var exist = await _warrantyClaimRepository
                 .GetWarrantyClaimByIdAsync((Guid)dto.ClaimId) ?? throw new ApiException(ResponseError.NotFoundWarrantyClaim);
 
-            if(role == RoleIdEnum.ScStaff.GetRoleId()) //ScStaff
+            //if(role == RoleIdEnum.ScStaff.GetRoleId()) //ScStaff
+            //{
+            //    //if(exist.Status == WarrantyClaimStatus.Approved.GetWarrantyRequestStatus())
+            //    //{
+            //    //    exist.Status = WarrantyClaimStatus.WaitingForRepair.GetWarrantyRequestStatus();
+            //    //} TODO- TAI SAO K HOAT DONG??????
+            //    if(exist.Status == WarrantyClaimStatus.PendingConfirmation.GetWarrantyRequestStatus())
+            //    {
+            //        if (dto.Status == WarrantyClaimStatus.SentToManufacturer.GetWarrantyRequestStatus())
+            //        {
+            //            exist.Status = WarrantyClaimStatus.SentToManufacturer.GetWarrantyRequestStatus();
+            //        }
+            //        if (dto.Status == WarrantyClaimStatus.Denied.GetWarrantyRequestStatus())
+            //        {
+            //            exist.Status = WarrantyClaimStatus.Denied.GetWarrantyRequestStatus();
+            //        }
+            //    }
+            //    else if(exist.Status == WarrantyClaimStatus.Repaired.GetWarrantyRequestStatus())
+            //    {
+            //        exist.Status = WarrantyClaimStatus.DoneWarranty.GetWarrantyRequestStatus();
+            //    }
+            //}
+            //else
+            if(role == RoleIdEnum.Technician.GetRoleId())
             {
-                //if(exist.Status == WarrantyClaimStatus.Approved.GetWarrantyRequestStatus())
+                //if (exist.Status == WarrantyClaimStatus.UnderInspection.GetWarrantyRequestStatus())//Sau khi hoan thanh kiem tra
                 //{
-                //    exist.Status = WarrantyClaimStatus.WaitingForRepair.GetWarrantyRequestStatus();
-                //} TODO- TAI SAO K HOAT DONG??????
-                if(exist.Status == WarrantyClaimStatus.PendingConfirmation.GetWarrantyRequestStatus())
-                {
-                    if (dto.Status == WarrantyClaimStatus.SentToManufacturer.GetWarrantyRequestStatus())
-                    {
-                        exist.Status = WarrantyClaimStatus.SentToManufacturer.GetWarrantyRequestStatus();
-                    }
-                    if (dto.Status == WarrantyClaimStatus.Denied.GetWarrantyRequestStatus())
-                    {
-                        exist.Status = WarrantyClaimStatus.Denied.GetWarrantyRequestStatus();
-                    }
-                }
-                else if(exist.Status == WarrantyClaimStatus.Repaired.GetWarrantyRequestStatus())
-                {
-                    exist.Status = WarrantyClaimStatus.DoneWarranty.GetWarrantyRequestStatus();
-                }
-            }
-            else if(role == RoleIdEnum.Technician.GetRoleId())
-            {
-                if (exist.Status == WarrantyClaimStatus.UnderInspection.GetWarrantyRequestStatus())//Sau khi hoan thanh kiem tra
-                {
-                    exist.Status = WarrantyClaimStatus.PendingConfirmation.GetWarrantyRequestStatus();
-                    if (dto.Description != null) exist.Description = dto.Description;
-                    var workOrder = await _workOrderRepository.GetWorkOrder((Guid)dto.ClaimId, "Inspection", "Claim");
-                    workOrder.Status = "Completed Inspection";
-                    workOrder.EndDate = DateTime.Now;
-                    await _workOrderRepository.UpdateAsync(workOrder);
-                }
+                //    exist.Status = WarrantyClaimStatus.PendingConfirmation.GetWarrantyRequestStatus();
+                //    if (dto.Description != null) exist.Description = dto.Description;
+                //    var workOrder = await _workOrderRepository.GetWorkOrder((Guid)dto.ClaimId, "Inspection", "Claim");
+                //    workOrder.Status = "Completed Inspection";
+                //    workOrder.EndDate = DateTime.Now;
+                //    await _workOrderRepository.UpdateAsync(workOrder);
+                //}
+                
+                //else
+
                 //Sau khi hoan thanh bao hanh
-                else if (exist.Status == WarrantyClaimStatus.UnderRepair.GetWarrantyRequestStatus())
+                // Tốt hơn nên để bên part cập nhật r trigger qua đây cập nhật status
+
+                if (exist.Status == WarrantyClaimStatus.UnderRepair.GetWarrantyRequestStatus())
                 {
                     exist.Status = WarrantyClaimStatus.DoneWarranty.GetWarrantyRequestStatus();
                     if (dto.Description != null) exist.Description = dto.Description;
@@ -144,25 +167,25 @@ namespace OEMEVWarrantyManagement.Application.Services
                     await _workOrderRepository.UpdateAsync(workOrder);
                 }
             }
-            else if(role == RoleIdEnum.EvmStaff.GetRoleId())
-            {
-                if(exist.Status == WarrantyClaimStatus.SentToManufacturer.GetWarrantyRequestStatus())
-                {
-                    if (dto.Status == WarrantyClaimStatus.Approved.GetWarrantyRequestStatus())
-                    {
-                        exist.Status = WarrantyClaimStatus.Approved.GetWarrantyRequestStatus();
-                        exist.ApprovedBy = Guid.Parse(userId);
-                        exist.ApprovedDate = DateTime.Now;
-                    }
+            //else if(role == RoleIdEnum.EvmStaff.GetRoleId())
+            //{
+            //    if(exist.Status == WarrantyClaimStatus.SentToManufacturer.GetWarrantyRequestStatus())
+            //    {
+            //        if (dto.Status == WarrantyClaimStatus.Approved.GetWarrantyRequestStatus())
+            //        {
+            //            exist.Status = WarrantyClaimStatus.Approved.GetWarrantyRequestStatus();
+            //            exist.ApprovedBy = Guid.Parse(userId);
+            //            exist.ApprovedDate = DateTime.Now;
+            //        }
                         
-                    if (dto.Status == WarrantyClaimStatus.Denied.GetWarrantyRequestStatus())
-                    {
-                        exist.Status = WarrantyClaimStatus.Denied.GetWarrantyRequestStatus();
-                        exist.ApprovedBy = Guid.Parse(userId);
-                    }
+            //        if (dto.Status == WarrantyClaimStatus.Denied.GetWarrantyRequestStatus())
+            //        {
+            //            exist.Status = WarrantyClaimStatus.Denied.GetWarrantyRequestStatus();
+            //            exist.ApprovedBy = Guid.Parse(userId);
+            //        }
                        
-                }
-            }
+            //    }
+            //}
             if (result == null)
             {
                 var update = await _warrantyClaimRepository.UpdateAsync(exist);
@@ -171,12 +194,27 @@ namespace OEMEVWarrantyManagement.Application.Services
             return result;
         }
 
-        public async Task<WarrantyClaimDto> UpdateAsync(Guid claimId, WarrantyClaimDto request)
+        public async Task<WarrantyClaimDto> UpdateStatusAsync(Guid claimId, string status)
         {
-            var entity = await _warrantyClaimRepository.GetWarrantyClaimByIdAsync(claimId);
+            var entity = await _warrantyClaimRepository.GetWarrantyClaimByIdAsync(claimId) ?? throw new ApiException(ResponseError.NotFoundWarrantyClaim);
+            entity.Status = status;
             var update = await _warrantyClaimRepository.UpdateAsync(entity);
             return _mapper.Map<WarrantyClaimDto>(update);
+        }
 
+        public async Task<WarrantyClaimDto> UpdateDescription(Guid claimId, string description)
+        {
+            var entity = await _warrantyClaimRepository.GetWarrantyClaimByIdAsync(claimId) ?? throw new ApiException(ResponseError.NotFoundWarrantyClaim);
+            entity.Description = description;
+            entity.Status = WarrantyClaimStatus.PendingConfirmation.GetWarrantyRequestStatus();
+            var update = await _warrantyClaimRepository.UpdateAsync(entity);
+
+            var workOrder = await _workOrderRepository.GetWorkOrder(claimId, "Inspection", "Claim");
+            workOrder.Status = "Completed Inspection";
+            workOrder.EndDate = DateTime.Now;
+            await _workOrderRepository.UpdateAsync(workOrder);
+
+            return _mapper.Map<WarrantyClaimDto>(update);
         }
     }
 }

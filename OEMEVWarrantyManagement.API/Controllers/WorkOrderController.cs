@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IServices;
+using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
 
 namespace OEMEVWarrantyManagement.API.Controllers
@@ -24,11 +24,12 @@ namespace OEMEVWarrantyManagement.API.Controllers
         [Authorize]
         public async Task<IActionResult> Create(string claimId, RequestCreateWorkOrderDto dto)
         {
-            dto.TargetId = Guid.Parse(claimId);
+            if (!Guid.TryParse(claimId, out var Id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
+
+            dto.TargetId = Id;
             dto.StartDate = DateTime.Now;
-            var result = await _workOrderService.CreateWorkOrderAsync(Guid.Parse(claimId), dto);
+            var result = await _workOrderService.CreateWorkOrderAsync(dto);
             return Ok(ApiResponse<RequestCreateWorkOrderDto>.Ok(result, "Create Work Order successfully!!"));
         }
-
     }
 }

@@ -4,9 +4,6 @@ using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Share.Enum;
-using OEMEVWarrantyManagement.Share.Exceptions;
-using OEMEVWarrantyManagement.Share.Models.Response;
-
 
 namespace OEMEVWarrantyManagement.Application.Services
 {
@@ -24,10 +21,11 @@ namespace OEMEVWarrantyManagement.Application.Services
             _claimRepository = claimRepository;
         }
 
-        public async Task<RequestCreateWorkOrderDto> CreateWorkOrderAsync(Guid claimId,RequestCreateWorkOrderDto request)
+        public async Task<RequestCreateWorkOrderDto> CreateWorkOrderAsync(RequestCreateWorkOrderDto request)
         {
             var entity = _mapper.Map<WorkOrder>(request);
-            var warrantyClaim = await _claimRepository.GetWarrantyClaimByIdAsync(claimId);
+
+            var warrantyClaim = await _claimRepository.GetWarrantyClaimByIdAsync((Guid) request.TargetId);
             if (warrantyClaim.Status == WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyRequestStatus())
             {
                 entity.Type = "Inspection";
