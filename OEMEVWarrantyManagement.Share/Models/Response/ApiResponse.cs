@@ -81,7 +81,13 @@
         UploadImageFail,
 
         [ResponseErrorAttr("Not found any part in here.", 404, 27)]
-        NotFoundPartHere
+        NotFoundPartHere,
+
+        [ResponseErrorAttr("Invalid description.", 400, 28)]
+        InvalidDescription,
+
+        [ResponseErrorAttr("Invalid body", 400, 29)]
+        InvalidJsonFormat
     }
 
     public class ApiResponse<T>

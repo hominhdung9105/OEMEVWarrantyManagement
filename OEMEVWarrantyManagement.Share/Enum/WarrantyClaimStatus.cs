@@ -20,9 +20,6 @@
         [StatusAttr("approved")]
         Approved, // Được chấp nhận bảo hành
 
-        [StatusAttr("waiting for repair")]
-        WaitingForRepair, // Chờ để tech tiến hành bảo hành
-
         [StatusAttr("under repair")]
         UnderRepair, // Kỹ thuật viên đang bảo hành
 
@@ -35,9 +32,9 @@
 
     public static class WarrantyRequestStatusExtensions
     {
-        public static string GetWarrantyRequestStatus(this WarrantyClaimStatus error)
+        public static string GetWarrantyRequestStatus(this WarrantyClaimStatus status)
         {
-            var memberInfo = typeof(WarrantyClaimStatus).GetField(error.ToString());
+            var memberInfo = typeof(WarrantyClaimStatus).GetField(status.ToString());
             return ((StatusAttr)Attribute.GetCustomAttribute(memberInfo, typeof(StatusAttr))).Status;
         }
     }

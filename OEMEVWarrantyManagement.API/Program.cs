@@ -1,6 +1,7 @@
-using System.Text;
+﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OEMEVWarrantyManagement.API.Policy.Role;
@@ -13,6 +14,7 @@ using OEMEVWarrantyManagement.Infrastructure.Persistence;
 using OEMEVWarrantyManagement.Infrastructure.Repositories;
 using OEMEVWarrantyManagement.Share.Enum;
 using OEMEVWarrantyManagement.Share.Exceptions;
+using OEMEVWarrantyManagement.Share.Middleware;
 using OEMEVWarrantyManagement.Share.Models.Response;
 using Scalar.AspNetCore;
 
@@ -28,11 +30,28 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.Configure<AppSettings>(
                 builder.Configuration.GetSection("AppSettings"));
 
-            // Add services to the container.
-            //builder.Services.AddControllers();
+            // Add Controllers - ignore null value in response
+            builder.Services.AddControllers()
+                .ConfigureApiBehaviorOptions(options =>
+                {
+                    options.InvalidModelStateResponseFactory = context =>
+                    {
+                        var errors = context.ModelState
+                            .Where(x => x.Value?.Errors.Count > 0)
+                            .Select(x => new
+                            {
+                                field = x.Key,
+                                messages = x.Value!.Errors.Select(e => e.ErrorMessage)
+                            });
 
-            //Ignore Null
-            builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull);
+                        return new BadRequestObjectResult(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
+                    };
+                })
+                .AddJsonOptions(options =>
+                {
+                    options.AllowInputFormatterExceptionMessages = true;
+                    options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+                });
 
             //Auto Mapper
             builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
@@ -41,6 +60,7 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            // Authentication - JWT Bearer
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {
                 options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
@@ -65,6 +85,14 @@ namespace OEMEVWarrantyManagement.API
                         var response = ApiResponse<object>.Fail(ResponseError.AuthenticationFailed);
 
                         return context.Response.WriteAsJsonAsync(response);
+                    },
+
+                    OnForbidden = context =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        context.Response.ContentType = "application/json";
+                        var response = ApiResponse<object>.Fail(ResponseError.Forbidden);
+                        return context.Response.WriteAsJsonAsync(response);
                     }
                 };
 
@@ -80,6 +108,7 @@ namespace OEMEVWarrantyManagement.API
                 };
             });
 
+            // Authorization
             builder.Services.AddAuthorization(options =>
             {
                 options.AddPolicy("RequireAdmin", policy =>
@@ -126,16 +155,19 @@ namespace OEMEVWarrantyManagement.API
             //Part
             builder.Services.AddScoped<IPartService, PartService>();
             builder.Services.AddScoped<IPartRepository, PartRepository>();
+
+
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            // Dev
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
                 app.MapScalarApiReference();
             }
 
-            app.UseMiddleware<ApiExceptionMiddleware>();
+            // Thay tất cả exception middleware bằng global response
+            app.UseMiddleware<GlobalResponseMiddleware>();
 
             //app.UseHttpsRedirection();
 

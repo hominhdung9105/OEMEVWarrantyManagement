@@ -28,16 +28,16 @@ namespace OEMEVWarrantyManagement.Application.Services
             var warrantyClaim = await _claimRepository.GetWarrantyClaimByIdAsync((Guid) request.TargetId);
             if (warrantyClaim.Status == WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyRequestStatus())
             {
-                entity.Type = "Inspection";
-                entity.Target = "Claim";
-                entity.Status = "IN PROGRESS";
+                entity.Type = WorkOrderType.Inspection.GetWorkOrderType();
+                entity.Target = WorkOrderTarget.Warranty.GetWorkOrderTarget();
+                entity.Status = WorkOrderStatus.InProgress.GetWorkOrderStatus();
                 warrantyClaim.Status = WarrantyClaimStatus.UnderInspection.GetWarrantyRequestStatus();
             }
             else if (warrantyClaim.Status == WarrantyClaimStatus.Approved.GetWarrantyRequestStatus())
             {
-                entity.Type = "Repair";
-                entity.Target = "Claim";
-                entity.Status = "IN PROGRESS";
+                entity.Type = WorkOrderType.Repair.GetWorkOrderType();
+                entity.Target = WorkOrderTarget.Warranty.GetWorkOrderTarget();
+                entity.Status = WorkOrderStatus.InProgress.GetWorkOrderStatus();
                 warrantyClaim.Status = WarrantyClaimStatus.UnderRepair.GetWarrantyRequestStatus();
             }
             //else throw new ApiException(ResponseError.InternalServerError);
