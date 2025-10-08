@@ -6,6 +6,7 @@ using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Share.Enum;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
+using System.Security.Claims;
 
 namespace OEMEVWarrantyManagement.Application.Services
 {
@@ -16,19 +17,22 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IVehicleRepository _vehicleRepository;
         private readonly IWorkOrderRepository _workOrderRepository;
         private readonly IEmployeeRepository _employeeRepository;
+        private readonly ICurrentUserService _currentUserService;
         //private readonly IWorkOrderService _workOrderService;
-        public WarrantyClaimService(IMapper mapper, IWarrantyClaimRepository warrantyClaimRepository, IVehicleRepository vehicleRepository, IWorkOrderRepository workOrderRepository, IEmployeeRepository employeeRepository)
+        public WarrantyClaimService(IMapper mapper, IWarrantyClaimRepository warrantyClaimRepository, IVehicleRepository vehicleRepository, IWorkOrderRepository workOrderRepository, IEmployeeRepository employeeRepository, ICurrentUserService currentUserService)
         {
             _mapper = mapper;
             _warrantyClaimRepository = warrantyClaimRepository;
             _vehicleRepository = vehicleRepository;
             _workOrderRepository = workOrderRepository;
             _employeeRepository = employeeRepository;
-            //_workOrderService = workOrderService;vong lap khi goi service cua nhau
+            _currentUserService = currentUserService;
+
         }
         
-        public async Task<WarrantyClaimDto> CreateAsync(WarrantyClaimDto request)
+        public async Task<ResponseWarrantyClaim> CreateAsync(RequestWarrantyClaim request)
         {
+
             _ = await _vehicleRepository.GetVehicleByVinAsync(request.Vin) ?? throw new ApiException(ResponseError.NotfoundVin);
             if (request.AssignTo != null) //Neu co giao cho ai thi tao work order luon
             {
@@ -36,27 +40,38 @@ namespace OEMEVWarrantyManagement.Application.Services
             }
 
             var entity = _mapper.Map<WarrantyClaim>(request);
-            var result = await _warrantyClaimRepository.CreateAsync(entity);
+
+            var userId = _currentUserService.GetUserId();
+            var status = WarrantyClaimStatus.WaitingForUnassigned;
+            var orgId = await _employeeRepository.GetEmployeeByIdAsync(userId);
+            entity.CreatedBy = userId;
+            entity.Status = status.GetWarrantyRequestStatus();
+            entity.ServiceCenterId = orgId.OrgId;
+            entity.CreatedDate = DateTime.UtcNow;
+
+            var create = await _warrantyClaimRepository.CreateAsync(entity);
 
             if (request.AssignTo != null)
             {
                 var workOrderEntity = new WorkOrder()
                 {
                     StartDate = DateTime.Now,
-                    TargetId = (Guid) result.ClaimId,
+                    TargetId = (Guid) create.ClaimId,
                     Type = WorkOrderType.Inspection.GetWorkOrderType(),
                     Target = WorkOrderTarget.Warranty.GetWorkOrderTarget(),
                     Status = WorkOrderStatus.InProgress.GetWorkOrderStatus(),
                     AssignedTo = request.AssignTo
                 };
 
-                result.Status = WarrantyClaimStatus.UnderInspection.GetWarrantyRequestStatus();
+                create.Status = WarrantyClaimStatus.UnderInspection.GetWarrantyRequestStatus();
 
                 var workOrder = await _workOrderRepository.CreateAsync(workOrderEntity);
-                await _warrantyClaimRepository.UpdateAsync(result);
+                await _warrantyClaimRepository.UpdateAsync(create);
             }
 
-            return _mapper.Map<WarrantyClaimDto>(result);
+            var result = _mapper.Map<ResponseWarrantyClaim>(create);
+            result.AssignTo = request.AssignTo;
+            return result;
         }
 
         public async Task<bool> DeleteAsync(Guid claimId)

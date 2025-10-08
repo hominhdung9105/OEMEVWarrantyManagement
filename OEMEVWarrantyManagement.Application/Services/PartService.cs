@@ -36,5 +36,11 @@ namespace OEMEVWarrantyManagement.Application.Services
             var entities = await _partRepository.GetAllAsync();
             return _mapper.Map<IEnumerable<PartDto>>(entities);
         }
+
+        public async Task<IEnumerable<PartDto>> GetPartsAsync(string model, string category)
+        {
+            var parts = await _partRepository.GetPartsAsync(model, category);
+            return _mapper.Map<IEnumerable<PartDto>>(parts);
+        }
     }
 }

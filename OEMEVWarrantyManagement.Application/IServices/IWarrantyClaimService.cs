@@ -11,7 +11,7 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<IEnumerable<WarrantyClaimDto>> GetWarrantyClaimByStatusAsync(string status);
         Task<WarrantyClaimDto> GetWarrantyClaimByIdAsync(Guid id);
         Task<bool> HasWarrantyClaim(Guid warrantyClaimId);
-        Task<WarrantyClaimDto> CreateAsync(WarrantyClaimDto request);
+        Task<ResponseWarrantyClaim> CreateAsync(RequestWarrantyClaim request);
         Task<WarrantyClaimDto> UpdateAsync(string role, string userId, WarrantyClaimDto request);
         Task<WarrantyClaimDto> UpdateStatusAsync(Guid claimId, string status);
         Task<WarrantyClaimDto> UpdateApproveStatusAsync(Guid claimId, Guid staffId);

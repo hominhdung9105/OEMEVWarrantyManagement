@@ -6,7 +6,7 @@ namespace OEMEVWarrantyManagement.Domain.Entities
     public class Part
     {
         public Guid PartId { get; set; }
-        public string PartNumber { get; set; }
+        public string Model { get; set; }
         public string Name { get; set; }
         public string Category { get; set; }
         public int StockQuantity { get; set; }

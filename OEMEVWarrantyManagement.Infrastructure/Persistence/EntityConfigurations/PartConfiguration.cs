@@ -11,10 +11,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
         {
             builder.ToTable("Parts");
             builder.HasKey(p => p.PartId);
-            builder.HasIndex(p => p.PartNumber).IsUnique();
+            builder.HasIndex(p => p.Model);
 
             builder.Property(p => p.PartId).ValueGeneratedOnAdd();
-            builder.Property(p => p.PartNumber).IsRequired();
+            builder.Property(p => p.Model).IsRequired();
             builder.Property(p => p.Name).IsRequired();
             builder.Property(p => p.Category);
             builder.Property(p => p.StockQuantity);

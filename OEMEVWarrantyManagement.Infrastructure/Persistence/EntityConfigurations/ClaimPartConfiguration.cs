@@ -14,8 +14,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.Property(cp => cp.ClaimPartId).ValueGeneratedOnAdd();
             builder.Property(cp => cp.ClaimId);
             builder.Property(cp => cp.PartId);
-            builder.Property(cp => cp.SerialNumber);
+            builder.Property(cp => cp.Quantity);
+            builder.Property(cp => cp.Model);
             builder.Property(cp => cp.Action);
+            builder.Property(cp => cp.Status);
             builder.Property(cp => cp.Cost).HasColumnType("decimal(18,2)"); ;
 
             builder.HasOne(cp => cp.WarrantyClaim)

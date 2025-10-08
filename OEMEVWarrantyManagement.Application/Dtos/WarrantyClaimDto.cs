@@ -13,5 +13,26 @@
         public DateTime? ApprovedDate { get; set; }
         public Guid? AssignTo { get; set; }
         public Guid? WorkOrderId { get; set; } //tra ve từ bảng workorder
+        public string FailureDesc { get; set; }
     }
+
+    public class RequestWarrantyClaim
+    {
+        public string Vin { get; set; }
+        public Guid? AssignTo { get; set; }
+        public string FailureDesc { get; set; }
+    }
+
+    public class ResponseWarrantyClaim
+    {
+        public Guid ClaimId { get; set; }
+        public string Vin { get; set; }
+        public Guid ServiceCenterId { get; set; }
+        public Guid CreatedBy { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public Guid? AssignTo { get; set; }
+        public string Status { get; set; }
+        public string FailureDesc { get; set; }
+    }
+
 }

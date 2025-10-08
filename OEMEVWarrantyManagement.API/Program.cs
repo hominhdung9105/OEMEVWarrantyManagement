@@ -134,6 +134,7 @@ namespace OEMEVWarrantyManagement.API
 
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
+            builder.Services.AddHttpContextAccessor();//Use for CurrentUserService 
 
             //Auth
             builder.Services.AddScoped<IAuthService, AuthService>();
@@ -155,7 +156,17 @@ namespace OEMEVWarrantyManagement.API
             //Part
             builder.Services.AddScoped<IPartService, PartService>();
             builder.Services.AddScoped<IPartRepository, PartRepository>();
-
+            //Take User
+            builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+            //Claim Part
+            builder.Services.AddScoped<IClaimPartService, ClaimPartService>();
+            builder.Services.AddScoped<IClaimPartRepository, ClaimPartRepository>();
+            //Part ORder
+            builder.Services.AddScoped<IPartOrderRepository, PartOrderRepository>();
+            builder.Services.AddScoped<IPartOrderService, PartOrderService>();
+            //Part Order Item
+            builder.Services.AddScoped<IPartOrderItemRepository, PartOrderItemRepository>();
+            builder.Services.AddScoped<IPartOrderItemService, PartOrderItemService>();
 
             var app = builder.Build();
 

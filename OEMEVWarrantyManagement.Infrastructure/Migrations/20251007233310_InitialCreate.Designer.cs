@@ -12,7 +12,7 @@ using OEMEVWarrantyManagement.Infrastructure.Persistence;
 namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251005180125_InitialCreate")]
+    [Migration("20251007233310_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -165,11 +165,17 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<decimal>("Cost")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("PartId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("SerialNumber")
-                        .IsRequired()
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ClaimPartId");
@@ -285,6 +291,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -292,19 +302,14 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<Guid>("OrgId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("PartNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<int>("StockQuantity")
                         .HasColumnType("int");
 
                     b.HasKey("PartId");
 
-                    b.HasIndex("OrgId");
+                    b.HasIndex("Model");
 
-                    b.HasIndex("PartNumber")
-                        .IsUnique();
+                    b.HasIndex("OrgId");
 
                     b.ToTable("Parts", (string)null);
                 });
@@ -493,6 +498,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<string>("Vin")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("failureDesc")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ClaimId");
 

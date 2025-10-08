@@ -27,5 +27,31 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         {
             return await _context.Parts.Where(p => p.OrgId == orgId).ToListAsync();
         }
+
+        public async Task<IEnumerable<Part>> GetPartsAsync(string model = null, string category = null)//TODO - 
+        {
+            var query = _context.Parts.AsQueryable();
+            if(model != null && category != null)
+            {
+                query = query.Where(q =>q.Model ==model && q.Category == category);
+            } 
+            else
+            {
+                if (model != null)
+                {
+                    query = query.Where(q => q.Model == model);
+                }
+                if (category != null)
+                {
+                    query = query.Where(q => q.Category == category);
+                }
+            }
+            return await query.ToListAsync();
+        }
+
+        public async Task<Part> GetPartsByIdAsync(Guid PartId)
+        {
+            return await _context.Parts.FindAsync(PartId);
+        }
     }
 }

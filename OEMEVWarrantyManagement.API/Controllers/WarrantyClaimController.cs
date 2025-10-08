@@ -26,16 +26,9 @@ namespace OEMEVWarrantyManagement.API.Controllers
         //create : VIN
         [HttpPost]
         [Authorize(policy: "RequireScStaff")]
-        public async Task<IActionResult> Create(WarrantyClaimDto dto)
+        public async Task<IActionResult> Create(RequestWarrantyClaim request)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var status = WarrantyClaimStatus.WaitingForUnassigned;
-            var orgId = await _employeeService.GetEmployeeByIdAsync(Guid.Parse(userId));
-            dto.CreatedBy = Guid.Parse(userId);
-            dto.Status = status.GetWarrantyRequestStatus();
-            dto.ServiceCenterId = orgId.OrgId;
-            dto.CreatedDate = DateTime.UtcNow;
-            var result = await _warrantyClaimService.CreateAsync(dto);
+            var result = await _warrantyClaimService.CreateAsync(request);
             return Ok(ApiResponse<object>.Ok(result, "Create Warranty Claim Successfully!"));
         }
 
@@ -83,15 +76,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             }
             else return Unauthorized(ApiResponse<object>.Fail(ResponseError.Forbidden));
         }
-
-        ////TODO - chuyen thanh inactive record trong DB
-        //[HttpDelete("{claimId}")]
-        //[Authorize(policy: "RequireAdmin")]
-        //public async Task<IActionResult> DeleteWarrantyClaim(string claimId)
-        //{
-        //    var result = await _warrantyClaimService.DeleteAsync(Guid.Parse(claimId));
-        //    return Ok("Delete Successfully!");
-        //}
 
         [HttpPut("{claimId}")]
         //[Authorize(policy: "RequireScStaff")]

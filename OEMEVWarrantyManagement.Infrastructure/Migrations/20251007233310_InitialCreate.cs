@@ -100,7 +100,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 columns: table => new
                 {
                     PartId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    PartNumber = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Model = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Category = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     StockQuantity = table.Column<int>(type: "int", nullable: false),
@@ -329,7 +329,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ApprovedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     ApprovedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    PolicyId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    PolicyId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    failureDesc = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -426,8 +427,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     ClaimPartId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ClaimId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     PartId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    SerialNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Model = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
                     Action = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Cost = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
                 },
                 constraints: table =>
@@ -518,15 +521,14 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 column: "ServiceCenterId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Parts_Model",
+                table: "Parts",
+                column: "Model");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Parts_OrgId",
                 table: "Parts",
                 column: "OrgId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Parts_PartNumber",
-                table: "Parts",
-                column: "PartNumber",
-                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_VehicleParts_PartId",

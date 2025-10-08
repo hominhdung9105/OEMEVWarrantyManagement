@@ -8,8 +8,10 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public Guid ClaimPartId { get; set; }
         public Guid ClaimId { get; set; }
         public Guid PartId { get; set; }
-        public string SerialNumber { get; set; }
+        public string Model { get; set; }
+        public int Quantity { get; set; }
         public string Action { get; set; } // repair | replace
+        public string? Status { get; set; }
         public decimal Cost { get; set; }
 
         // Navigation Properties

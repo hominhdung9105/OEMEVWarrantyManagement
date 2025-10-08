@@ -37,5 +37,15 @@ namespace OEMEVWarrantyManagement.API.Controllers
             var result = await _partService.GetPartByOrgIdAsync(orgId);
             return Ok(ApiResponse<object>.Ok(result, "Get All Part here Successfully!"));
         }
+
+        [HttpGet("filter")]
+        public async Task<IActionResult> GetPart([FromQuery] string? model, [FromQuery] string? category)
+        {
+            var entities = await _partService.GetPartsAsync(model, category);
+            return Ok(ApiResponse<object>.Ok(entities, "Get parts successfully!"));
+
+        }
+
+        
     }
 }
