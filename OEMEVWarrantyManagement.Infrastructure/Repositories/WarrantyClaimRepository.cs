@@ -61,6 +61,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return await _context.WarrantyClaims.Where(wc => wc.Vin == vin).ToListAsync();
         }
 
+        public async Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimsByStatusAndOrgIdAsync(string status, Guid orgId)
+        {
+            return await _context.WarrantyClaims.Where(wc =>  wc.Status == status && wc.ServiceCenterId == orgId).ToListAsync();
+        }
+
         public async Task<WarrantyClaim> UpdateAsync(WarrantyClaim request)
         {
             var update = _context.WarrantyClaims.Update(request);

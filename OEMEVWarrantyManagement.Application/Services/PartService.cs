@@ -2,6 +2,7 @@
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
+using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
 using System;
@@ -41,6 +42,12 @@ namespace OEMEVWarrantyManagement.Application.Services
         {
             var parts = await _partRepository.GetPartsAsync(model, category);
             return _mapper.Map<IEnumerable<PartDto>>(parts);
+        }
+
+        public IEnumerable<string> GetPartCategories()
+        {
+            PartCategory.Battery.GetPartCategory();
+            return PartCategoryExtensions.GetAllCategories();
         }
     }
 }

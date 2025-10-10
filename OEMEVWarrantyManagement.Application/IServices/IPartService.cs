@@ -8,5 +8,6 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<IEnumerable<PartDto>> GetAllAsync();
         Task<IEnumerable<PartDto>> GetPartByOrgIdAsync(Guid id);
         Task<IEnumerable<PartDto>> GetPartsAsync(string model, string category);
+        IEnumerable<string> GetPartCategories();
     }
 }

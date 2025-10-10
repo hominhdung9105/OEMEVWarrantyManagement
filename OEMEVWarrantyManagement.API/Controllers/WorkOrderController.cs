@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IServices;
+using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
 
@@ -20,16 +22,55 @@ namespace OEMEVWarrantyManagement.API.Controllers
             _warrantyClaimService = warrantyClaimService;
         }
 
+        // TODO - claimId nay nen doi thanh targetId va can truyen ca type vao de biet la claim hay campaign
         [HttpPost("{claimId}")]
         [Authorize]
         public async Task<IActionResult> Create(string claimId, RequestCreateWorkOrderDto dto)
         {
-            if (!Guid.TryParse(claimId, out var Id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
+            if (!Guid.TryParse(claimId, out var Id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId); // TODO - chua biet claim hay campaign ma bao loi
 
             dto.TargetId = Id;
             dto.StartDate = DateTime.Now;
             var result = await _workOrderService.CreateWorkOrderAsync(dto);
             return Ok(ApiResponse<RequestCreateWorkOrderDto>.Ok(result, "Create Work Order successfully!!"));
+        }
+
+        [HttpGet("by-tech")]
+        [Authorize(Roles = "RequireScTech")]
+        public async Task<IActionResult> GetWorkOrderByTech() // TODO - chua test
+        {
+            var techId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = await _workOrderService.GetWorkOrderByTechAsync(Guid.Parse(techId));
+            return Ok(ApiResponse<IEnumerable<WorkOrderDto>>.Ok(result, "Get Work Order by Tech successfully!!"));
+        }
+
+        [HttpGet("by-tech/inspection")]
+        [Authorize(Roles = "RequireScTech")]
+        public async Task<IActionResult> GetWorkOrderTypeInspectionByTech() // TODO - chua test
+        {
+            var techId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = await _workOrderService.GetWorkOrderOfTechByTypeAsync(Guid.Parse(techId), WorkOrderType.Inspection);
+            return Ok(ApiResponse<IEnumerable<WorkOrderDto>>.Ok(result, "Get Work Order by Tech successfully!!"));
+        }
+
+        [HttpGet("by-tech/repair")]
+        [Authorize(Roles = "RequireScTech")]
+        public async Task<IActionResult> GetWorkOrderTypeRepairByTech() // TODO - chua test
+        {
+            var techId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = await _workOrderService.GetWorkOrderOfTechByTypeAsync(Guid.Parse(techId), WorkOrderType.Repair);
+            return Ok(ApiResponse<IEnumerable<WorkOrderDto>>.Ok(result, "Get Work Order by Tech successfully!!"));
+        }
+
+        [HttpPost("{targetId}")]
+        [Authorize(Roles = "RequireScStaff")]
+        public async Task<IActionResult> CreateWorkOrders(string claimId, RequestCreateWorkOrdersDto request) // TODO - chua test
+        {
+            if (!Guid.TryParse(claimId, out var Id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
+
+            request.TargetId = Id;
+            var result = await _workOrderService.CreateWorkOrdersAsync(request);
+            return Ok(ApiResponse<IEnumerable<WorkOrderDto>>.Ok(result, "Create Work Orders successfully!!"));
         }
     }
 }

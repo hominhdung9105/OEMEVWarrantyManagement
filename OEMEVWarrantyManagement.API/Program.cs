@@ -12,7 +12,7 @@ using OEMEVWarrantyManagement.Application.Mapping;
 using OEMEVWarrantyManagement.Application.Services;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
 using OEMEVWarrantyManagement.Infrastructure.Repositories;
-using OEMEVWarrantyManagement.Share.Enum;
+using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Middleware;
 using OEMEVWarrantyManagement.Share.Models.Response;

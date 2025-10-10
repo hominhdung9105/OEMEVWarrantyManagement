@@ -3,10 +3,9 @@ using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Domain.Entities;
-using OEMEVWarrantyManagement.Share.Enum;
+using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
-using System.Security.Claims;
 
 namespace OEMEVWarrantyManagement.Application.Services
 {
@@ -45,7 +44,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             var status = WarrantyClaimStatus.WaitingForUnassigned;
             var orgId = await _employeeRepository.GetEmployeeByIdAsync(userId);
             entity.CreatedBy = userId;
-            entity.Status = status.GetWarrantyRequestStatus();
+            entity.Status = status.GetWarrantyClaimStatus();
             entity.ServiceCenterId = orgId.OrgId;
             entity.CreatedDate = DateTime.UtcNow;
 
@@ -63,7 +62,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                     AssignedTo = request.AssignTo
                 };
 
-                create.Status = WarrantyClaimStatus.UnderInspection.GetWarrantyRequestStatus();
+                create.Status = WarrantyClaimStatus.UnderInspection.GetWarrantyClaimStatus();
 
                 var workOrder = await _workOrderRepository.CreateAsync(workOrderEntity);
                 await _warrantyClaimRepository.UpdateAsync(create);
@@ -146,9 +145,9 @@ namespace OEMEVWarrantyManagement.Application.Services
                 //Sau khi hoan thanh bao hanh
                 // Tốt hơn nên để bên part cập nhật r trigger qua đây cập nhật status
 
-                if (exist.Status == WarrantyClaimStatus.UnderRepair.GetWarrantyRequestStatus())
+                if (exist.Status == WarrantyClaimStatus.UnderRepair.GetWarrantyClaimStatus())
                 {
-                    exist.Status = WarrantyClaimStatus.DoneWarranty.GetWarrantyRequestStatus();
+                    exist.Status = WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus();
                     if (dto.Description != null) exist.Description = dto.Description;
                     var workOrder = await _workOrderRepository.GetWorkOrder((Guid)dto.ClaimId, WorkOrderType.Repair.GetWorkOrderType(), WorkOrderTarget.Warranty.GetWorkOrderTarget());
 
@@ -182,7 +181,7 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             entity.ApprovedBy = staffId;
             entity.ApprovedDate = DateTime.Now;
-            entity.Status = WarrantyClaimStatus.Approved.GetWarrantyRequestStatus();
+            entity.Status = WarrantyClaimStatus.Approved.GetWarrantyClaimStatus();
 
             var update = await _warrantyClaimRepository.UpdateAsync(entity);
             return _mapper.Map<WarrantyClaimDto>(update);
@@ -192,7 +191,7 @@ namespace OEMEVWarrantyManagement.Application.Services
         {
             var entity = await _warrantyClaimRepository.GetWarrantyClaimByIdAsync(claimId) ?? throw new ApiException(ResponseError.NotFoundWarrantyClaim);
             entity.Description = description;
-            entity.Status = WarrantyClaimStatus.PendingConfirmation.GetWarrantyRequestStatus();
+            entity.Status = WarrantyClaimStatus.PendingConfirmation.GetWarrantyClaimStatus();
             var update = await _warrantyClaimRepository.UpdateAsync(entity);
 
             var workOrder = await _workOrderRepository.GetWorkOrder(claimId, WorkOrderType.Inspection.GetWorkOrderType(), WorkOrderTarget.Warranty.GetWorkOrderTarget());
@@ -201,6 +200,12 @@ namespace OEMEVWarrantyManagement.Application.Services
             await _workOrderRepository.UpdateAsync(workOrder);
 
             return _mapper.Map<WarrantyClaimDto>(update);
+        }
+
+        public async Task<IEnumerable<WarrantyClaimDto>> GetWarrantyClaimsByStatusAndOrgIdAsync(string status, Guid orgId)
+        {
+            var entities = await _warrantyClaimRepository.GetWarrantyClaimsByStatusAndOrgIdAsync(status, orgId);
+            return _mapper.Map<IEnumerable<WarrantyClaimDto>>(entities);
         }
     }
 }

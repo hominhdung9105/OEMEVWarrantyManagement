@@ -9,6 +9,7 @@ namespace OEMEVWarrantyManagement.Application.IServices
 {
     public interface IClaimPartService
     {
-        Task<RequestClaimPart> CreateClaimPartAsync(RequestClaimPart dto);
+        Task<RequestClaimPart> CreateClaimPartAsync(RequestClaimPart dto); // TODO - response co ve sai?
+        Task<RequestClaimPart> UpdateSerialClaimPartAsync(Guid id, string serial); // TODO - response co ve sai?
     }
 }

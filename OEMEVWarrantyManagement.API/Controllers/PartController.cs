@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Share.Models.Response;
-using System.Security.Claims;
 
 namespace OEMEVWarrantyManagement.API.Controllers
 {
@@ -46,6 +44,11 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         }
 
-        
+        [HttpGet("category")]
+        public IActionResult GetPartCategory() // TODO - chua test
+        {
+            var entities = _partService.GetPartCategories();
+            return Ok(ApiResponse<object>.Ok(entities, "Get part categories successfully!"));
+        }
     }
 }

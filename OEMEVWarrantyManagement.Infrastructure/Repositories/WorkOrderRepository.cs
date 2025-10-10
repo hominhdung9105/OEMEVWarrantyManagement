@@ -21,6 +21,14 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return request;
         }
 
+        public async Task<IEnumerable<WorkOrder>> CreateRangeAsync(List<WorkOrder> workOrders)
+        {
+            _context.AddRange(workOrders);
+            await _context.SaveChangesAsync();
+
+            return workOrders;
+        }
+
         public async Task<WorkOrder> GetWorkOrder(Guid claimId, string type, string target)
         {
             var entity = await _context.WorkOrders.FirstOrDefaultAsync(wo => wo.TargetId == claimId && wo.Target == target && wo.Type == type);

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IServices;
@@ -17,10 +18,19 @@ namespace OEMEVWarrantyManagement.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(policy: "RequireScTech")]
         public async Task<IActionResult> CreatePartOrderItem(RequestClaimPart dto)
         {
             var result = await _claimPartService.CreateClaimPartAsync(dto);
             return Ok(ApiResponse<RequestClaimPart>.Ok(result, "Create PartOrderItem Successfully!"));
+        }
+
+        [HttpPut("{id}")]
+        [Authorize(policy: "RequireScTech")]
+        public async Task<IActionResult> UpdatePartOrderItem([FromRoute] Guid id, [FromQuery] string serial) // TODO - service chua xong
+        {
+            var result = await _claimPartService.UpdateSerialClaimPartAsync(id, serial);
+            return Ok(ApiResponse<RequestClaimPart>.Ok(result, "Update PartOrderItem Successfully!"));
         }
     }
 }

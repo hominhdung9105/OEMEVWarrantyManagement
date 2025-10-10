@@ -24,9 +24,14 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return request;
         }
 
-        public Task<ClaimPart> GetClaimPartAsync(ClaimPart request)
+        public async Task<ClaimPart> GetClaimPartAsync(Guid id)
         {
-            throw new NotImplementedException();
+            return await _context.ClaimParts.FindAsync(id);
+        }
+
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
         }
     }
 }
