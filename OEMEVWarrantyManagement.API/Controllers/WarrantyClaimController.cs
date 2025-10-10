@@ -154,5 +154,16 @@ namespace OEMEVWarrantyManagement.API.Controllers
             var result = await _warrantyClaimService.UpdateDescription(id, request.Description);
             return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Update Description Successfully!"));
         }
+
+        [HttpPut("{claimId}/car-back-home")]
+        [Authorize(policy: "RequireScStaff")]
+        public async Task<IActionResult> CarBackHomeWarrantyClaim(string claimId)
+        {
+            if (!Guid.TryParse(claimId, out var id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
+
+            var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.CarBackHome.GetWarrantyRequestStatus());
+
+            return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Start Inspection Successfully!"));
+        }
     }
 }

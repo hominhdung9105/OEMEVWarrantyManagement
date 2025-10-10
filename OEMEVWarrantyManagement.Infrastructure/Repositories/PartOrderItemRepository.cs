@@ -1,4 +1,5 @@
-﻿using OEMEVWarrantyManagement.Application.IRepository;
+﻿using Microsoft.EntityFrameworkCore;
+using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
 using System;
@@ -21,6 +22,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             _ = await _context.PartOrderItems.AddAsync(request);
             _context.SaveChanges();
             return request;
+        }
+
+        public async Task<IEnumerable<PartOrderItem>> GetAllByOrderIdAsync(Guid orderId)
+        {
+            return await _context.PartOrderItems.Where(poi => poi.OrderId == orderId).ToListAsync();
         }
     }
 }

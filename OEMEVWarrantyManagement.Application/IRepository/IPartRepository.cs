@@ -12,6 +12,7 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<IEnumerable<Part>> GetAllAsync();
         Task<IEnumerable<Part>> GetByOrgIdAsync(Guid orgId);
         Task<IEnumerable<Part>> GetPartsAsync(string model = null, string category = null);
-        Task<Part> GetPartsByIdAsync(Guid PartId); 
+        Task<Part> GetPartsByIdAsync(Guid PartId);
+        Task UpdateRangeAsync(IEnumerable<Part> entities);
     }
 }

@@ -22,5 +22,12 @@ namespace OEMEVWarrantyManagement.API.Controllers
             var result = await _claimPartService.CreateClaimPartAsync(dto);
             return Ok(ApiResponse<RequestClaimPart>.Ok(result, "Create PartOrderItem Successfully!"));
         }
+
+        [HttpPut("{claimId}")]
+        public async Task<IActionResult> UpdateStatus(string claimId)
+        {
+            var result = await _claimPartService.UpdateStatusClaimPartAsync(Guid.Parse(claimId));
+            return Ok(ApiResponse<object>.Ok(result, "Update status successfully"));
+        }
     }
 }

@@ -28,5 +28,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         {
             return await _context.PartOrders.ToListAsync();
         }
+
+        public async Task<PartOrder> GetPartOrderByIdAsync(Guid id)
+        {
+            return await _context.PartOrders.FindAsync(id);
+        }
     }
 }

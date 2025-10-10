@@ -12,7 +12,7 @@ using OEMEVWarrantyManagement.Infrastructure.Persistence;
 namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251007233310_InitialCreate")]
+    [Migration("20251008202551_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -469,11 +469,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("ApprovedBy")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime?>("ApprovedDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ComfirmStatus")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uniqueidentifier");
@@ -505,7 +505,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
                     b.HasKey("ClaimId");
 
-                    b.HasIndex("ApprovedBy");
+                    b.HasIndex("ComfirmStatus");
 
                     b.HasIndex("CreatedBy");
 
@@ -788,7 +788,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 {
                     b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Employee", "ApprovedByEmployee")
                         .WithMany("ApprovedClaims")
-                        .HasForeignKey("ApprovedBy")
+                        .HasForeignKey("ComfirmStatus")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Employee", "CreatedByEmployee")

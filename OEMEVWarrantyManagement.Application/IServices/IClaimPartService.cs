@@ -10,5 +10,9 @@ namespace OEMEVWarrantyManagement.Application.IServices
     public interface IClaimPartService
     {
         Task<RequestClaimPart> CreateClaimPartAsync(RequestClaimPart dto);
+        Task<bool> UpdateStatusClaimPartAsync(Guid claimPartId);
+        Task<bool> CheckQuantityClaimPartAsync(Guid claimId);
+        Task<IEnumerable<RequestClaimPart>> GetClaimPartsAsync(Guid claimId);
+        //Task UpdateEnoughClaimPartsAsync();
     }
 }

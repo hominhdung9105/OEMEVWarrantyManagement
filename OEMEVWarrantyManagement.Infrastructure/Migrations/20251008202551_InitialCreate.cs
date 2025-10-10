@@ -327,7 +327,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ApprovedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    ComfirmStatus = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     ApprovedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     PolicyId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     failureDesc = table.Column<string>(type: "nvarchar(max)", nullable: false)
@@ -336,8 +336,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_WarrantyClaims", x => x.ClaimId);
                     table.ForeignKey(
-                        name: "FK_WarrantyClaims_Employee_ApprovedBy",
-                        column: x => x.ApprovedBy,
+                        name: "FK_WarrantyClaims_Employee_ComfirmStatus",
+                        column: x => x.ComfirmStatus,
                         principalTable: "Employee",
                         principalColumn: "UserId",
                         onDelete: ReferentialAction.Restrict);
@@ -556,9 +556,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 column: "Vin");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WarrantyClaims_ApprovedBy",
+                name: "IX_WarrantyClaims_ComfirmStatus",
                 table: "WarrantyClaims",
-                column: "ApprovedBy");
+                column: "ComfirmStatus");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WarrantyClaims_CreatedBy",

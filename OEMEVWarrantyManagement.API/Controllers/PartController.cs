@@ -46,6 +46,14 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         }
 
+        [HttpPut("{orderID}")]
+        public async Task<IActionResult>Update(string orderID)
+        {
+            var entities = await _partService.UpdateQuantityAsync(Guid.Parse(orderID));
+            return Ok(ApiResponse<object>.Ok(entities, "update qunantity successfully"));
+
+        }
+
         
     }
 }

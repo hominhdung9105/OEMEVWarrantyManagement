@@ -26,6 +26,12 @@
         [StatusAttr("repaired")]
         Repaired, //Bao hanh xong 
 
+        [StatusAttr("car back home")]
+        CarBackHome, //Khach lay xe ve
+
+        [StatusAttr("hold customer car")]
+        HoldCustomerCar, //Giu xe khach de bao hanh
+
         [StatusAttr("done warranty")]
         DoneWarranty //Giao xe cho khách xong
     }

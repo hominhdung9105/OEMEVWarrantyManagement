@@ -1,4 +1,5 @@
-﻿using OEMEVWarrantyManagement.Application.IRepository;
+﻿using Microsoft.EntityFrameworkCore;
+using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
 using System;
@@ -24,9 +25,22 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return request;
         }
 
-        public Task<ClaimPart> GetClaimPartAsync(ClaimPart request)
+        public async Task<IEnumerable<ClaimPart>> GetAllNotEnoughAsync()
         {
-            throw new NotImplementedException();
+            var entities =  await _context.ClaimParts.Where(cp => cp.Status == "not enough part").ToListAsync();
+            return entities;
         }
+
+        public async Task<IEnumerable<ClaimPart>> GetClaimPartByClaimIdAsync(Guid claimId)
+        {
+            return await _context.ClaimParts.Where(cp => cp.ClaimId == claimId).ToListAsync();
+        }
+
+        public async Task UpdateRangeAsync(IEnumerable<ClaimPart> entities)
+        {
+            _context.ClaimParts.UpdateRange(entities);
+            await _context.SaveChangesAsync();
+        }
+
     }
 }

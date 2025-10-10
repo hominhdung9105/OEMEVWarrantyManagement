@@ -53,5 +53,18 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         {
             return await _context.Parts.FindAsync(PartId);
         }
+
+        public async Task<Part> UpdateQuantityAsync(Part part)
+        {
+            var entity = _context.Parts.Update(part);
+            await _context.SaveChangesAsync();
+            return part;
+        }
+
+        public async Task UpdateRangeAsync(IEnumerable<Part> entities)
+        {
+            _context.Parts.UpdateRange(entities);
+            await _context.SaveChangesAsync();
+        }
     }
 }

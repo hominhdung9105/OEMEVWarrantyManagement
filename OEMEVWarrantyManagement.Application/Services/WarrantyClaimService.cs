@@ -180,7 +180,7 @@ namespace OEMEVWarrantyManagement.Application.Services
         {
             var entity = await _warrantyClaimRepository.GetWarrantyClaimByIdAsync(claimId) ?? throw new ApiException(ResponseError.NotFoundWarrantyClaim);
 
-            entity.ApprovedBy = staffId;
+            entity.ComfirmStatus = staffId;
             entity.ApprovedDate = DateTime.Now;
             entity.Status = WarrantyClaimStatus.Approved.GetWarrantyRequestStatus();
 
