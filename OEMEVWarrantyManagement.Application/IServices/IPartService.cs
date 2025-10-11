@@ -11,5 +11,6 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<IEnumerable<PartDto>> GetPartsAsync(string model, string category);
         Task <IEnumerable<PartDto>> UpdateQuantityAsync(Guid orderID);
         Task UpdateEnoughClaimPartsAsync();
+        Task<bool> CheckQuantityClaimPartAsync(Guid claimId);
     }
 }
