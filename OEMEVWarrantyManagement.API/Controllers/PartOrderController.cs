@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IServices;
+using OEMEVWarrantyManagement.Application.Services;
 using OEMEVWarrantyManagement.Share.Models.Response;
 
 namespace OEMEVWarrantyManagement.API.Controllers
@@ -12,9 +13,11 @@ namespace OEMEVWarrantyManagement.API.Controllers
     public class PartOrderController : ControllerBase
     {
         private readonly IPartOrderService _partOrderService;
-        public PartOrderController(IPartOrderService partOrderService)
+        private readonly IPartService _partService;
+        public PartOrderController(IPartOrderService partOrderService, IPartService partService)
         {
             _partOrderService = partOrderService;
+            _partService = partService;
         }
 
         [HttpPost]
@@ -30,6 +33,15 @@ namespace OEMEVWarrantyManagement.API.Controllers
         {
             var result = await _partOrderService.GetAllAsync();
             return Ok(ApiResponse<object>.Ok(result, "Get all Successfully"));
+        }
+
+        [HttpPut("{orderID}")]
+        public async Task<IActionResult> UpdateStatus(string orderID)
+        {
+            var update = await _partOrderService.UpdateStatusAsync(Guid.Parse(orderID));
+            var _ = await _partService.UpdateQuantityAsync(Guid.Parse(orderID));
+            return Ok(ApiResponse<object>.Ok(update, "update status successfully"));
+
         }
     }
 }

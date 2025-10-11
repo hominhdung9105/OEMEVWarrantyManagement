@@ -12,5 +12,6 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<PartOrder> CreateAsync(PartOrder Request);
         Task<IEnumerable<PartOrder>> GetAll();
         Task<PartOrder> GetPartOrderByIdAsync(Guid id);
+        Task <PartOrder> UpdateAsync(PartOrder Request);
     }
 }

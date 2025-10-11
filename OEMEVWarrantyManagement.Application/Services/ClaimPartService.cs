@@ -42,13 +42,30 @@ namespace OEMEVWarrantyManagement.Application.Services
             return true;
         }
 
-        public async Task<RequestClaimPart> CreateClaimPartAsync(RequestClaimPart dto)
+        public async Task<RequestClaimPart> CreateClaimPartAsync(CreateClaimPartsRequest dto)
         {
             var entity = _mapper.Map<ClaimPart>(dto);
             entity.Status = "pending";
             var part = await _partRepository.GetPartsByIdAsync(entity.PartId);
             var create = await _claimPartReposotory.CreateClaimPartAsync(entity);
             return _mapper.Map<RequestClaimPart>(create);
+        }
+
+        public async Task<List<RequestClaimPart>> CreateManyClaimPartsAsync(CreateClaimPartsRequest dto)
+        {
+            var entities = dto.Parts.Select(p => new ClaimPart
+            {
+                ClaimId = (Guid)dto.ClaimId,
+                PartId = p.PartId,
+                Model = p.Model,
+                Quantity = p.Quantity,
+                Action = p.Action,
+                Status = p.Status,
+                Cost = 0
+            }).ToList();
+
+            await _claimPartReposotory.CreateManyClaimPartsAsync(entities);
+            return _mapper.Map<List<RequestClaimPart>>(entities);
         }
 
         public async Task<IEnumerable<RequestClaimPart>> GetClaimPartsAsync(Guid claimId)
@@ -85,6 +102,14 @@ namespace OEMEVWarrantyManagement.Application.Services
                 }
                 await _claimPartReposotory.UpdateRangeAsync(claimParts);
                 await _partRepository.UpdateRangeAsync(parts);
+            }
+            else if(!isEnoughStock)
+            {
+                foreach(var cp in targetClaimParts)
+                {
+                    cp.Status = status;
+                }
+                await _claimPartReposotory.UpdateRangeAsync(claimParts);
             }
             return true;
         }

@@ -42,5 +42,13 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<List<ClaimPart>> CreateManyClaimPartsAsync(List<ClaimPart> requests)
+        {
+            await _context.ClaimParts.AddRangeAsync(requests);
+            await _context.SaveChangesAsync();
+            return requests;
+        }
+
+
     }
 }

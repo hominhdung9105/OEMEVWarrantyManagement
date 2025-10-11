@@ -11,5 +11,7 @@ namespace OEMEVWarrantyManagement.Application.IServices
     {
         Task<RequestPartOrderDto> CreateAsync();
         Task<IEnumerable<PartOrderDto>> GetAllAsync();
+        Task <PartOrderDto> GetByIdAsync(Guid id);
+        Task<PartOrderDto> UpdateStatusAsync(Guid id);
     }
 }

@@ -27,4 +27,19 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string Action { get; set; }
         public string? Status { get; set; }
     }
+
+    public class PartsInClaimPartDto
+    {
+        public Guid PartId { get; set; }
+        public string Model { get; set; }
+        public int Quantity { get; set; }
+        public string Action { get; set; }
+        public string? Status { get; set; }
+    }
+
+    public class CreateClaimPartsRequest
+    {
+        public Guid? ClaimId { get; set; }
+        public List<PartsInClaimPartDto> Parts { get; set; }
+    }
 }
