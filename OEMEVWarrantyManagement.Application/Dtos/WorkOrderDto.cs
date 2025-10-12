@@ -23,14 +23,4 @@
         public DateTime? StartDate { get; set; }
     }
 
-    public class RequestCreateAndUpdateDto
-    {
-        public Guid? ClaimId { get; set; }
-        public Guid? AssignedTo { get; set; }
-        public string? Type { get; set; } // kiểm tra/ sửa chữa / thay thế
-        public string? Target { get; set; }// claim hay campaign
-        public Guid? TargetId { get; set; }
-        public string? Status { get; set; }
-        public DateTime? StartDate { get; set; }
-    }
 }

@@ -35,4 +35,10 @@
         public string FailureDesc { get; set; }
     }
 
+    public class TechUpdateDto
+    {
+        public Guid? ClaimId { get; set; }
+        public string? Description { get; set; }
+    }
+
 }

@@ -133,16 +133,17 @@ namespace OEMEVWarrantyManagement.Application.Services
         }
 
         // TODO - sửa cái này
-        public async Task<WarrantyClaimDto> UpdateAsync(string role, string userId, WarrantyClaimDto dto)
+        public async Task<WarrantyClaimDto> UpdateAsync(TechUpdateDto dto)
         {
             WarrantyClaimDto result = null;
+            var userId = _currentUserService.GetUserId();
+            var role = _currentUserService.GetRole();
 
             var exist = await _warrantyClaimRepository
                 .GetWarrantyClaimByIdAsync((Guid)dto.ClaimId) ?? throw new ApiException(ResponseError.NotFoundWarrantyClaim);
 
             if(role == RoleIdEnum.Technician.GetRoleId())
             {
-
                 //Sau khi hoan thanh bao hanh
                 // Tốt hơn nên để bên part cập nhật r trigger qua đây cập nhật status
 

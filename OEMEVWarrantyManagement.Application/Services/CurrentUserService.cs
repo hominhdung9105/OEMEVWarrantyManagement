@@ -20,5 +20,7 @@ namespace OEMEVWarrantyManagement.Application.Services
 
         public Guid GetUserId() =>
             Guid.Parse(_context.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+        public string GetRole() =>
+           _context.HttpContext.User.FindFirstValue(ClaimTypes.Role);
     }
 }

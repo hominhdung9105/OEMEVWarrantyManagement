@@ -168,6 +168,7 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddScoped<IPartOrderItemRepository, PartOrderItemRepository>();
             builder.Services.AddScoped<IPartOrderItemService, PartOrderItemService>();
 
+            builder.Services.AddScoped<CurrentUserService>();
             var app = builder.Build();
 
             // Dev

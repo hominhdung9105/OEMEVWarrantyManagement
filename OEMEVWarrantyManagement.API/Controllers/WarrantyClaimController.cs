@@ -80,15 +80,13 @@ namespace OEMEVWarrantyManagement.API.Controllers
         [HttpPut("{claimId}")]
         //[Authorize(policy: "RequireScStaff")]
         [Authorize]
-        public async Task<IActionResult> UpdateWarrantyClaim(string claimId, WarrantyClaimDto dto)
+        public async Task<IActionResult> UpdateWarrantyClaim(string claimId, TechUpdateDto dto)
         {
             if (!Guid.TryParse(claimId, out var id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
 
             dto.ClaimId = id;
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var role = User.FindFirstValue(ClaimTypes.Role);
 
-            var result = await _warrantyClaimService.UpdateAsync(role, userId, dto);
+            var result = await _warrantyClaimService.UpdateAsync(dto);
 
             return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Update Successfully!"));
         }
@@ -141,7 +139,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpPut("{claimId}/description")]
         [Authorize(policy: "RequireScTech")]
-        public async Task<IActionResult> UpdateDescriptionWarrantyClaim(string claimId, [FromBody] WarrantyClaimDto request)
+        public async Task<IActionResult> UpdateDescriptionWarrantyClaim(string claimId, [FromBody] TechUpdateDto request)
         {
             if (!Guid.TryParse(claimId, out var id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
 

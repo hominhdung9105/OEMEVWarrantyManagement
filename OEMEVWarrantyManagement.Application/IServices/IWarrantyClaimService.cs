@@ -12,7 +12,7 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<WarrantyClaimDto> GetWarrantyClaimByIdAsync(Guid id);
         Task<bool> HasWarrantyClaim(Guid warrantyClaimId);
         Task<ResponseWarrantyClaim> CreateAsync(RequestWarrantyClaim request);
-        Task<WarrantyClaimDto> UpdateAsync(string role, string userId, WarrantyClaimDto request);
+        Task<WarrantyClaimDto> UpdateAsync(TechUpdateDto request);
         Task<WarrantyClaimDto> UpdateStatusAsync(Guid claimId, string status);
         Task<WarrantyClaimDto> UpdateApproveStatusAsync(Guid claimId, Guid staffId);
         Task<bool> DeleteAsync(Guid id);
