@@ -19,7 +19,9 @@ namespace OEMEVWarrantyManagement.Share.Enums
         public static string GetRoleId(this RoleIdEnum role)
         {
             var memberInfo = typeof(RoleIdEnum).GetField(role.ToString());
-            return ((DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute))).ToString();
+            var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute));
+            return attribute?.Description ?? role.ToString();
         }
     }
+
 }

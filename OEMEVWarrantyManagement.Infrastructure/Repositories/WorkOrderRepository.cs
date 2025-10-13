@@ -44,5 +44,18 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             await _context.SaveChangesAsync();
             return request;
         }
+        public async Task<IEnumerable<WorkOrder>> GetWorkOrderByTech(Guid techId)
+        {
+            var entity = await _context.WorkOrders.Where(wo => wo.AssignedTo == techId).ToListAsync();
+            return entity;
+        }
+
+        public async Task<IEnumerable<WorkOrder>> CreateRangeAsync(List<WorkOrder> workOrders)
+        {
+            _context.AddRange(workOrders);
+            await _context.SaveChangesAsync();
+
+            return workOrders;
+        }
     }
 }

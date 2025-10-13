@@ -34,6 +34,9 @@ namespace OEMEVWarrantyManagement.Application.Mapping
             CreateMap<PartOrderItem, PartOrderItemDto>().ReverseMap();
             CreateMap<PartOrderItem, RequsetPartOrderItemDto>().ReverseMap();
 
+            CreateMap<Vehicle, VehicleDto>().ReverseMap();
+            CreateMap<Vehicle, ResponseVehicleDto>().ReverseMap();
+
 
         }
     }

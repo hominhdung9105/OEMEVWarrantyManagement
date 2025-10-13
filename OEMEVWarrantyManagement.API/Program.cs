@@ -33,18 +33,18 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddControllers()
                 .ConfigureApiBehaviorOptions(options =>
                 {
-                    options.InvalidModelStateResponseFactory = context =>
-                    {
-                        var errors = context.ModelState
-                            .Where(x => x.Value?.Errors.Count > 0)
-                            .Select(x => new
-                            {
-                                field = x.Key,
-                                messages = x.Value!.Errors.Select(e => e.ErrorMessage)
-                            });
+                    //options.InvalidModelStateResponseFactory = context =>
+                    //{
+                    //    var errors = context.ModelState
+                    //        .Where(x => x.Value?.Errors.Count > 0)
+                    //        .Select(x => new
+                    //        {
+                    //            field = x.Key,
+                    //            messages = x.Value!.Errors.Select(e => e.ErrorMessage)
+                    //        });
 
-                        return new BadRequestObjectResult(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
-                    };
+                    //    return new BadRequestObjectResult(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
+                    //};
                 })
                 .AddJsonOptions(options =>
                 {
@@ -143,6 +143,7 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddScoped<IWarrantyClaimRepository, WarrantyClaimRepository>();
             //Vehicle
             builder.Services.AddScoped<IVehicleRepository, VehicelRepository>();
+            builder.Services.AddScoped<IVehicleService, VehicleService>();
             //Employee
             builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
             builder.Services.AddScoped<IEmployeeService, EmployeeService>();
@@ -166,8 +167,26 @@ namespace OEMEVWarrantyManagement.API
             //Part Order Item
             builder.Services.AddScoped<IPartOrderItemRepository, PartOrderItemRepository>();
             builder.Services.AddScoped<IPartOrderItemService, PartOrderItemService>();
+            //Vehicle Warranty Policy
+            builder.Services.AddScoped<IVehicleWarrantyPolicyRepository, VehicleWarrantyPolicyRepository>();
+            builder.Services.AddScoped<IVehicleWarrantyPolicyService, VehicleWarrantyPolicyService>();
+            //Customer
+            builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+            //builder.Services.AddScoped<ICustomerService, CustomerService>();
 
+            //Current User Service
             builder.Services.AddScoped<CurrentUserService>();
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll",
+                    policy => policy
+                        .AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod());
+            });
+
+
 
             var app = builder.Build();
 
@@ -176,10 +195,12 @@ namespace OEMEVWarrantyManagement.API
             {
                 app.MapOpenApi();
                 app.MapScalarApiReference();
+
             }
 
+            app.UseCors("AllowAll");
             // Thay tất cả exception middleware bằng global response
-            app.UseMiddleware<GlobalResponseMiddleware>();
+            //app.UseMiddleware<GlobalResponseMiddleware>();
 
             //app.UseHttpsRedirection();
 

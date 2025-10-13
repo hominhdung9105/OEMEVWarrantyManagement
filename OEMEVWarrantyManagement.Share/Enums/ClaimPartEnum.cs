@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 
 namespace OEMEVWarrantyManagement.Share.Enums
 {
@@ -21,8 +22,9 @@ namespace OEMEVWarrantyManagement.Share.Enums
     {
         public static string GetClaimPartStatus(this ClaimPartStatus status)
         {
-            var memberInfo = typeof(PartCategory).GetField(status.ToString());
-            return ((DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute))).ToString();
+            var memberInfo = typeof(ClaimPartStatus).GetField(status.ToString());
+            var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute));
+            return attribute?.Description ?? status.ToString();
         }
     }
 
@@ -39,8 +41,9 @@ namespace OEMEVWarrantyManagement.Share.Enums
     {
         public static string GetClaimPartAction(this ClaimPartAction action)
         {
-            var memberInfo = typeof(PartCategory).GetField(action.ToString());
-            return ((DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute))).ToString();
+            var memberInfo = typeof(ClaimPartAction).GetField(action.ToString());
+            var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute));
+            return attribute?.Description ?? action.ToString();
         }
     }
 }

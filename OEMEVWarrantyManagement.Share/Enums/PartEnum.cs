@@ -1,4 +1,6 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace OEMEVWarrantyManagement.Share.Enums
 {
@@ -22,12 +24,13 @@ namespace OEMEVWarrantyManagement.Share.Enums
         public static string GetPartCategory(this PartCategory category)
         {
             var memberInfo = typeof(PartCategory).GetField(category.ToString());
-            return ((DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute))).ToString();
+            var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute));
+            return attribute?.Description ?? category.ToString();
         }
 
         public static List<string> GetAllCategories()
         {
-            List<string> categories = [];
+            List<string> categories = new List<string>();
             foreach (var category in Enum.GetValues<PartCategory>())
             {
                 categories.Add(((PartCategory)category).GetPartCategory());
@@ -35,10 +38,10 @@ namespace OEMEVWarrantyManagement.Share.Enums
             return categories;
         }
 
-        public static bool IsValidCategory(string caterogry)
+        public static bool IsValidCategory(string category)
         {
             var listCategory = GetAllCategories();
-            return listCategory.Contains(caterogry);
+            return listCategory.Contains(category);
         }
     }
 
@@ -48,29 +51,29 @@ namespace OEMEVWarrantyManagement.Share.Enums
         public static readonly Dictionary<string, List<string>> ModelsByCategory =
             new Dictionary<string, List<string>>
             {
-            {
-                PartCategory.Battery.GetPartCategory(), new List<string>
                 {
-                    "Battery Model A",
-                    "Battery Model B",
-                    "Battery Model C"
-                }
-            },
-            {
-                PartCategory.Engine.GetPartCategory(), new List<string>
+                    PartCategory.Battery.GetPartCategory(), new List<string>
+                    {
+                        "Battery Model A",
+                        "Battery Model B",
+                        "Battery Model C"
+                    }
+                },
                 {
-                    "Engine V6",
-                    "Engine V8",
-                    "Engine Turbo"
-                }
-            },
-            {
-                PartCategory.Tire.GetPartCategory(), new List<string>
+                    PartCategory.Engine.GetPartCategory(), new List<string>
+                    {
+                        "Engine V6",
+                        "Engine V8",
+                        "Engine Turbo"
+                    }
+                },
                 {
-                    "Tire 16 inch",
-                    "Tire 18 inch"
+                    PartCategory.Tire.GetPartCategory(), new List<string>
+                    {
+                        "Tire 16 inch",
+                        "Tire 18 inch"
+                    }
                 }
-            }
             };
 
         public static List<string> GetModels(string category)

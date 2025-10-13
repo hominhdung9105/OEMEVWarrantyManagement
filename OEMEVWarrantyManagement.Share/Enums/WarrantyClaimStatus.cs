@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 
 namespace OEMEVWarrantyManagement.Share.Enums
 {
@@ -29,16 +30,16 @@ namespace OEMEVWarrantyManagement.Share.Enums
         UnderRepair, // Kỹ thuật viên đang bảo hành
 
         [Description("repaired")]
-        Repaired, //Bao hanh xong
+        Repaired, // Bảo hành xong
 
         [Description("car back home")]
-        CarBackHome, //Khach lay xe ve
+        CarBackHome, // Khách lấy xe về
 
         [Description("hold customer car")]
-        HoldCustomerCar, //Giu xe khach de bao hanh
+        HoldCustomerCar, // Giữ xe khách để bảo hành
 
         [Description("done warranty")]
-        DoneWarranty //Giao xe cho khách xong
+        DoneWarranty // Giao xe cho khách xong
     }
 
     public static class WarrantyClaimStatusExtensions
@@ -46,7 +47,8 @@ namespace OEMEVWarrantyManagement.Share.Enums
         public static string GetWarrantyClaimStatus(this WarrantyClaimStatus status)
         {
             var memberInfo = typeof(WarrantyClaimStatus).GetField(status.ToString());
-            return ((DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute))).ToString();
+            var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute));
+            return attribute?.Description ?? status.ToString();
         }
     }
 }

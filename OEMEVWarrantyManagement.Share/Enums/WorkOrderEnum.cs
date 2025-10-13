@@ -1,4 +1,6 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
+using System.Linq;
 
 namespace OEMEVWarrantyManagement.Share.Enums
 {
@@ -16,7 +18,8 @@ namespace OEMEVWarrantyManagement.Share.Enums
         public static string GetWorkOrderType(this WorkOrderType type)
         {
             var memberInfo = typeof(WorkOrderType).GetField(type.ToString());
-            return ((DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute))).ToString();
+            var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute));
+            return attribute?.Description ?? type.ToString();
         }
     }
 
@@ -34,7 +37,8 @@ namespace OEMEVWarrantyManagement.Share.Enums
         public static string GetWorkOrderTarget(this WorkOrderTarget target)
         {
             var memberInfo = typeof(WorkOrderTarget).GetField(target.ToString());
-            return ((DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute))).ToString();
+            var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute));
+            return attribute?.Description ?? target.ToString();
         }
     }
 
@@ -42,6 +46,7 @@ namespace OEMEVWarrantyManagement.Share.Enums
     {
         [Description("in progress")]
         InProgress,
+
         [Description("completed")]
         Completed
     }
@@ -51,7 +56,8 @@ namespace OEMEVWarrantyManagement.Share.Enums
         public static string GetWorkOrderStatus(this WorkOrderStatus status)
         {
             var memberInfo = typeof(WorkOrderStatus).GetField(status.ToString());
-            return ((DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute))).ToString();
+            var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute));
+            return attribute?.Description ?? status.ToString();
         }
     }
 }
