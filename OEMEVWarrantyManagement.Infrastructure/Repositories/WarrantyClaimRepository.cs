@@ -32,9 +32,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return await _context.WarrantyClaims.ToListAsync();
         }
 
-        public async Task<IEnumerable<WarrantyClaim>> GetAllWarrantyClaimAsync(string staffId)
+        public async Task<IEnumerable<WarrantyClaim>> GetAllWarrantyClaimByOrgIdAsync(Guid orgId)
         {
-            return await _context.WarrantyClaims.Where(wc => wc.CreatedBy == Guid.Parse(staffId)).ToListAsync();
+            return await _context.WarrantyClaims.Where(wc => wc.ServiceCenterId == orgId).ToListAsync();
         }
 
         public async Task<WarrantyClaim> GetWarrantyClaimByIdAsync(Guid id)
@@ -43,12 +43,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         }
 
-        public async Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimByStatusAsync(string status)
-        {
-            return await _context.WarrantyClaims.Where(wc => wc.Status == status).ToListAsync();
-        }
-
-        public async Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimByVinAsync(string vin, string staffId)
+        public async Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimsByVinAsync(string vin, string staffId)
         {
             var exists = await _context.WarrantyClaims
                 .Where(wc => wc.Vin == vin && wc.CreatedBy == Guid.Parse(staffId)).ToListAsync() ;
@@ -56,7 +51,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         }
 
-        public async Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimByVinAsync(string vin)
+        public async Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimsByVinAsync(string vin)
         {
             return await _context.WarrantyClaims.Where(wc => wc.Vin == vin).ToListAsync();
         }

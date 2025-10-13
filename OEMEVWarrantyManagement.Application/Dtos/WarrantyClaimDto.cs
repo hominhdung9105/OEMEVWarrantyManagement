@@ -21,8 +21,9 @@
         public string Vin { get; set; }
         public Guid? AssignTo { get; set; }
         public string FailureDesc { get; set; }
+        public List<Guid>? AssignsTo { get; set; }
     }
-
+    
     public class ResponseWarrantyClaim
     {
         public Guid ClaimId { get; set; }
@@ -33,12 +34,19 @@
         public Guid? AssignTo { get; set; }
         public string Status { get; set; }
         public string FailureDesc { get; set; }
+        public List<Guid>? AssignsTo { get; set; }
     }
 
-    public class TechUpdateDto
+    public class InspectionDto
     {
         public Guid? ClaimId { get; set; }
         public string? Description { get; set; }
+        public List<PartsInClaimPartDto> Parts { get; set; }
     }
 
+    //public class RepairRequestDto
+    //{
+    //    public Guid ClaimId { get; set; }
+    //    public List<> Parts { get; set; }
+    //}
 }

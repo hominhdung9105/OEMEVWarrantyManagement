@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IServices;
-using OEMEVWarrantyManagement.Share.Enum;
+using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
-using System.Security.Claims;
 
 namespace OEMEVWarrantyManagement.API.Controllers
 {
@@ -16,17 +16,19 @@ namespace OEMEVWarrantyManagement.API.Controllers
         private readonly IWarrantyClaimService _warrantyClaimService;
         private readonly IEmployeeService _employeeService;
         private readonly IWorkOrderService _workOrderService;
-        public WarrantyClaimController(IWarrantyClaimService warrantyClaimService, IEmployeeService employeeService, IWorkOrderService workOrderService)
+        private readonly IClaimPartService _claimPartService;
+        public WarrantyClaimController(IWarrantyClaimService warrantyClaimService, IEmployeeService employeeService, IWorkOrderService workOrderService, IClaimPartService claimPartService)
         {
             _warrantyClaimService = warrantyClaimService;
             _employeeService = employeeService;
             _workOrderService = workOrderService;
+            _claimPartService = claimPartService;
         }
 
         //create : VIN
         [HttpPost]
         [Authorize(policy: "RequireScStaff")]
-        public async Task<IActionResult> Create(RequestWarrantyClaim request)
+        public async Task<IActionResult> Create([FromBody] RequestWarrantyClaim request)
         {
             var result = await _warrantyClaimService.CreateAsync(request);
             return Ok(ApiResponse<object>.Ok(result, "Create Warranty Claim Successfully!"));
@@ -38,8 +40,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         public async Task<IActionResult> GetAllWarrantyClaim()
         {
             var role = User.FindFirstValue(ClaimTypes.Role);
-            var staffId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var status = WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyRequestStatus();
+            
             if (role == RoleIdEnum.Admin.GetRoleId())
             {
                 var result = await _warrantyClaimService.GetAllWarrantyClaimAsync();
@@ -47,12 +48,12 @@ namespace OEMEVWarrantyManagement.API.Controllers
             }
             else if (role == RoleIdEnum.ScStaff.GetRoleId())
             {
-                var result = await _warrantyClaimService.GetAllWarrantyClaimAsync(staffId);
+                var result = await _warrantyClaimService.GetAllWarrantyClaimByOrganizationAsync();
                 return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
             }
             else if (role == RoleIdEnum.Technician.GetRoleId())
             {
-                var result = await _workOrderService.GetWorkOrderByTech(Guid.Parse(staffId));
+                var result = await _workOrderService.GetWorkOrdersByTech();
                 return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
             }
             else return Unauthorized(ApiResponse<object>.Fail(ResponseError.Forbidden));
@@ -77,20 +78,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             else return Unauthorized(ApiResponse<object>.Fail(ResponseError.Forbidden));
         }
 
-        [HttpPut("{claimId}")]
-        //[Authorize(policy: "RequireScStaff")]
-        [Authorize]
-        public async Task<IActionResult> UpdateWarrantyClaim(string claimId, TechUpdateDto dto)
-        {
-            if (!Guid.TryParse(claimId, out var id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
-
-            dto.ClaimId = id;
-
-            var result = await _warrantyClaimService.UpdateAsync(dto);
-
-            return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Update Successfully!"));
-        }
-
         [HttpPut("{claimId}/approve")]
         [Authorize(policy: "RequireEvmStaff")]
         public async Task<IActionResult> ApproveWarrantyClaim(string claimId)
@@ -110,7 +97,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         {
             if (!Guid.TryParse(claimId, out var id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
 
-            var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.Denied.GetWarrantyRequestStatus());
+            var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.Denied.GetWarrantyClaimStatus());
 
             return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Deny Successfully!"));
         }
@@ -121,7 +108,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         {
             if (!Guid.TryParse(claimId, out var id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
 
-            var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.SentToManufacturer.GetWarrantyRequestStatus());
+            var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.SentToManufacturer.GetWarrantyClaimStatus());
 
             return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Send to Manufacturer Successfully!"));
         }
@@ -132,14 +119,14 @@ namespace OEMEVWarrantyManagement.API.Controllers
         {
             if (!Guid.TryParse(claimId, out var id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
 
-            var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.DoneWarranty.GetWarrantyRequestStatus());
+            var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus());
 
             return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Start Inspection Successfully!"));
         }
 
-        [HttpPut("{claimId}/description")]
+        [HttpPut("{claimId}/inspection")]
         [Authorize(policy: "RequireScTech")]
-        public async Task<IActionResult> UpdateDescriptionWarrantyClaim(string claimId, [FromBody] TechUpdateDto request)
+        public async Task<IActionResult> UpdateDescriptionWarrantyClaim(string claimId, [FromBody] InspectionDto request)
         {
             if (!Guid.TryParse(claimId, out var id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
 
@@ -150,6 +137,8 @@ namespace OEMEVWarrantyManagement.API.Controllers
             }
 
             var result = await _warrantyClaimService.UpdateDescription(id, request.Description);
+            await _claimPartService.CreateManyClaimPartsAsync(request);
+
             return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Update Description Successfully!"));
         }
 
@@ -159,9 +148,33 @@ namespace OEMEVWarrantyManagement.API.Controllers
         {
             if (!Guid.TryParse(claimId, out var id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
 
-            var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.CarBackHome.GetWarrantyRequestStatus());
+            var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.CarBackHome.GetWarrantyClaimStatus());
 
-            return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Start Inspection Successfully!"));
+            return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Update Successfully!"));
         }
+
+        [HttpPut("{claimId}/car-back-center")]
+        [Authorize(policy: "RequireScStaff")]
+        public async Task<IActionResult> CarBackCenterWarrantyClaim(string claimId)
+        {
+            if (!Guid.TryParse(claimId, out var id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
+
+            var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.Approved.GetWarrantyClaimStatus());
+
+            // TODO - Approved rồi check kho có đủ phụ tùng không
+
+            return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Update Successfully!"));
+        }
+
+        //[HttpPut("{claimId}/repair")]
+        //[Authorize(policy: "RequireScTech")]
+        //public async Task<IActionResult> RepairWarrantyClaim(string claimId, [FromBody] RepairRequestDto request)
+        //{
+        //    //if (!Guid.TryParse(claimId, out var id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
+
+        //    //var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.UnderRepair.GetWarrantyClaimStatus());
+
+        //    //return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Update Successfully!"));
+        //}
     }
 }

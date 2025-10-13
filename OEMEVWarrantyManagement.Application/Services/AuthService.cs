@@ -5,11 +5,11 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using OEMEVWarrantyManagement.Application.Dtos;
-using OEMEVWarrantyManagement.Application.Dtos.Config;
 using OEMEVWarrantyManagement.Application.Dtos.Request;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Domain.Entities;
+using OEMEVWarrantyManagement.Share.Configs;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
 
@@ -72,7 +72,8 @@ namespace OEMEVWarrantyManagement.Application.Services
             {
                 AccessToken = CreateToken(employee),
                 RefreshToken = await GenerateRefreshTokenAsync(employee),
-                EmployeeId = employee.UserId.ToString()
+                EmployeeId = employee.UserId.ToString(),
+                Role = employee.Role
             };
         }
 

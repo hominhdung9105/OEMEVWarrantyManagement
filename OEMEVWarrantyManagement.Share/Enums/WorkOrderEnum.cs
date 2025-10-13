@@ -1,11 +1,13 @@
-﻿namespace OEMEVWarrantyManagement.Share.Enum
+﻿using System.ComponentModel;
+
+namespace OEMEVWarrantyManagement.Share.Enums
 {
     public enum WorkOrderType
     {
-        [TypeAttr("Inspection")]
+        [Description("Inspection")]
         Inspection,
 
-        [TypeAttr("Repair")]
+        [Description("Repair")]
         Repair
     }
 
@@ -14,22 +16,16 @@
         public static string GetWorkOrderType(this WorkOrderType type)
         {
             var memberInfo = typeof(WorkOrderType).GetField(type.ToString());
-            return ((TypeAttr)Attribute.GetCustomAttribute(memberInfo, typeof(TypeAttr))).Type;
+            return ((DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute))).ToString();
         }
-    }
-
-    [AttributeUsage(AttributeTargets.Field)]
-    public class TypeAttr(string type) : Attribute
-    {
-        public string Type { get; } = type;
     }
 
     public enum WorkOrderTarget
     {
-        [TargetAttr("Warranty")]
+        [Description("Warranty")]
         Warranty,
 
-        [TargetAttr("Campaign")]
+        [Description("Campaign")]
         Campaign
     }
 
@@ -38,21 +34,15 @@
         public static string GetWorkOrderTarget(this WorkOrderTarget target)
         {
             var memberInfo = typeof(WorkOrderTarget).GetField(target.ToString());
-            return ((TargetAttr)Attribute.GetCustomAttribute(memberInfo, typeof(TargetAttr))).Target;
+            return ((DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute))).ToString();
         }
-    }
-
-    [AttributeUsage(AttributeTargets.Field)]
-    public class TargetAttr(string target) : Attribute
-    {
-        public string Target { get; } = target;
     }
 
     public enum WorkOrderStatus
     {
-        [StatusAttr("in progress")]
+        [Description("in progress")]
         InProgress,
-        [StatusAttr("completed")]
+        [Description("completed")]
         Completed
     }
 
@@ -61,7 +51,7 @@
         public static string GetWorkOrderStatus(this WorkOrderStatus status)
         {
             var memberInfo = typeof(WorkOrderStatus).GetField(status.ToString());
-            return ((StatusAttr)Attribute.GetCustomAttribute(memberInfo, typeof(StatusAttr))).Status;
+            return ((DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute))).ToString();
         }
     }
 }

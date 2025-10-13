@@ -11,8 +11,8 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public DateTime CreatedDate { get; set; }
         public string Status { get; set; }
         public string? Description { get; set; }
-        public Guid? ComfirmStatus { get; set; }
-        public DateTime? ApprovedDate { get; set; }
+        public Guid? ConfirmBy { get; set; }
+        public DateTime? ConfirmDate { get; set; }
         public Guid? PolicyId { get; set; }
         public string failureDesc { get; set; }
 
@@ -26,7 +26,7 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         [JsonIgnore]
         public Employee CreatedByEmployee { get; set; }
         [JsonIgnore]
-        public Employee ApprovedByEmployee { get; set; }
+        public Employee ConfirmByEmployee { get; set; }
         [JsonIgnore]
         public ICollection<ClaimAttachment> ClaimAttachments { get; set; } = new List<ClaimAttachment>();
         [JsonIgnore]

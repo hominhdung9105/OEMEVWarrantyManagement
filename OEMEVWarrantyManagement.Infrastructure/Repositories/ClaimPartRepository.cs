@@ -2,11 +2,6 @@
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 {
@@ -23,12 +18,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             var _ = _context.ClaimParts.AddAsync(request);
             await _context.SaveChangesAsync();
             return request;
-        }
-
-        public async Task<IEnumerable<ClaimPart>> GetAllNotEnoughAsync()
-        {
-            var entities =  await _context.ClaimParts.Where(cp => cp.Status == "not enough part").ToListAsync();
-            return entities;
         }
 
         public async Task<IEnumerable<ClaimPart>> GetClaimPartByClaimIdAsync(Guid claimId)

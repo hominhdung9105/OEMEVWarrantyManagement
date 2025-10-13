@@ -20,16 +20,28 @@ namespace OEMEVWarrantyManagement.API.Controllers
             _warrantyClaimService = warrantyClaimService;
         }
 
-        [HttpPost("{claimId}")]
-        [Authorize]
-        public async Task<IActionResult> Create(string claimId, RequestCreateWorkOrderDto dto)
-        {
-            if (!Guid.TryParse(claimId, out var Id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
+        //[HttpPost("claim/{claimId}")]
+        //[Authorize]
+        //public async Task<IActionResult> CreateWorkOrderForClaim(string claimId, RequestCreateWorkOrderDto dto)
+        //{
+        //    if (!Guid.TryParse(claimId, out var Id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
 
-            dto.TargetId = Id;
-            dto.StartDate = DateTime.Now;
-            var result = await _workOrderService.CreateWorkOrderAsync(dto);
-            return Ok(ApiResponse<RequestCreateWorkOrderDto>.Ok(result, "Create Work Order successfully!!"));
-        }
+        //    dto.TargetId = Id;
+        //    dto.StartDate = DateTime.Now;
+        //    var result = await _workOrderService.CreateWorkOrderAsync(dto);
+        //    return Ok(ApiResponse<RequestCreateWorkOrderDto>.Ok(result, "Create Work Order successfully!!"));
+        //}
+
+        //[HttpPost("campaign/{campaignId}")]
+        //[Authorize]
+        //public async Task<IActionResult> CreateWorkOrderForCampaign(string campaignId, RequestCreateWorkOrderDto dto)
+        //{
+        //    if (!Guid.TryParse(campaignId, out var Id)) throw new ApiException(ResponseError.InvalidCampaignId);
+
+        //    dto.TargetId = Id;
+        //    dto.StartDate = DateTime.Now;
+        //    var result = await _workOrderService.CreateWorkOrderAsync(dto);
+        //    return Ok(ApiResponse<RequestCreateWorkOrderDto>.Ok(result, "Create Work Order successfully!!"));
+        //}
     }
 }

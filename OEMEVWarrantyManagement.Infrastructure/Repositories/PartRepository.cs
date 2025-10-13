@@ -2,11 +2,6 @@
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 {
@@ -28,25 +23,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return await _context.Parts.Where(p => p.OrgId == orgId).ToListAsync();
         }
 
-        public async Task<IEnumerable<Part>> GetPartsAsync(string model = null, string category = null)//TODO - 
+        public async Task<IEnumerable<Part>> GetPartsAsync(string model, Guid orgId)
         {
-            var query = _context.Parts.AsQueryable();
-            if(model != null && category != null)
-            {
-                query = query.Where(q =>q.Model ==model && q.Category == category);
-            } 
-            else
-            {
-                if (model != null)
-                {
-                    query = query.Where(q => q.Model == model);
-                }
-                if (category != null)
-                {
-                    query = query.Where(q => q.Category == category);
-                }
-            }
-            return await query.ToListAsync();
+            return await _context.Parts.Where(p => p.Model == model && p.OrgId == orgId).ToListAsync();
         }
 
         public async Task<Part> GetPartsByIdAsync(Guid PartId)

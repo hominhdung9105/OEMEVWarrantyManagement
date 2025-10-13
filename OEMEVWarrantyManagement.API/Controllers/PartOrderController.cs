@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IServices;
-using OEMEVWarrantyManagement.Application.Services;
 using OEMEVWarrantyManagement.Share.Models.Response;
 
 namespace OEMEVWarrantyManagement.API.Controllers
@@ -35,13 +33,13 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<object>.Ok(result, "Get all Successfully"));
         }
 
-        [HttpPut("{orderID}")]
-        public async Task<IActionResult> UpdateStatus(string orderID)
+        [HttpPut("{orderID}/received")]
+        [Authorize(policy: "RequireScStaff")]
+        public async Task<IActionResult> ReceivedPart(string orderID)
         {
             var update = await _partOrderService.UpdateStatusAsync(Guid.Parse(orderID));
             var _ = await _partService.UpdateQuantityAsync(Guid.Parse(orderID));
             return Ok(ApiResponse<object>.Ok(update, "update status successfully"));
-
         }
     }
 }

@@ -21,16 +21,16 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return request;
         }
 
-        public async Task<WorkOrder> GetWorkOrder(Guid claimId, string type, string target)
+        public async Task<IEnumerable<WorkOrder>> GetWorkOrders(Guid claimId, string type, string target)
         {
-            var entity = await _context.WorkOrders.FirstOrDefaultAsync(wo => wo.TargetId == claimId && wo.Target == target && wo.Type == type);
-            return entity;
+            var entities = await _context.WorkOrders.Where(wo => wo.TargetId == claimId && wo.Target == target && wo.Type == type).ToListAsync();
+            return entities;
         }
 
-        public async Task<IEnumerable<WorkOrder>> GetWorkOrderByTech(Guid techId)
+        public async Task<IEnumerable<WorkOrder>> GetWorkOrdersByTech(Guid techId)
         {
-            var entity = await _context.WorkOrders.Where(wo => wo.AssignedTo == techId).ToListAsync();
-            return entity;
+            var entities = await _context.WorkOrders.Where(wo => wo.AssignedTo == techId).ToListAsync();
+            return entities;
         }
 
         public async Task<WorkOrder> GetWorkOrderByWorkOrderIdAsync(Guid id)

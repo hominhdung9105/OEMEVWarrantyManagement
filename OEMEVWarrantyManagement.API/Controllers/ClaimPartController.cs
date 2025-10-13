@@ -1,11 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using OEMEVWarrantyManagement.Application.Dtos;
+﻿using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.IServices;
-using OEMEVWarrantyManagement.Application.Services;
-using OEMEVWarrantyManagement.Share.Exceptions;
-using OEMEVWarrantyManagement.Share.Models.Response;
 
 namespace OEMEVWarrantyManagement.API.Controllers
 {
@@ -26,22 +20,22 @@ namespace OEMEVWarrantyManagement.API.Controllers
         //    return Ok(ApiResponse<RequestClaimPart>.Ok(result, "Create PartOrderItem Successfully!"));
         //}
 
-        [HttpPut("{claimId}")]
-        public async Task<IActionResult> UpdateStatus(string claimId)
-        {
-            var result = await _claimPartService.UpdateStatusClaimPartAsync(Guid.Parse(claimId));
-            return Ok(ApiResponse<object>.Ok(result, "Update status successfully"));
-        }
+        //[HttpPut("{claimId}")]
+        //public async Task<IActionResult> UpdateStatus(string claimId)
+        //{
+        //    var result = await _claimPartService.UpdateStatusClaimPartAsync(Guid.Parse(claimId));
+        //    return Ok(ApiResponse<object>.Ok(result, "Update status successfully"));
+        //}
 
-        [HttpPost("{claimId}")]
-        public async Task<IActionResult> CreatePartOrderItem(string claimId, CreateClaimPartsRequest request)
-        {
-            if (!Guid.TryParse(claimId, out var Id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
+        //[HttpPost("{claimId}")]
+        //public async Task<IActionResult> CreatePartOrderItem(string claimId, CreateClaimPartsRequest request)
+        //{
+        //    if (!Guid.TryParse(claimId, out var Id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
 
-            request.ClaimId = Id;
-            var result = await _claimPartService.CreateManyClaimPartsAsync(request);
-            return Ok(ApiResponse<IEnumerable<RequestClaimPart>>.Ok(result, "Create PartOrderItem Successfully!"));
-        }
+        //    request.ClaimId = Id;
+        //    var result = await _claimPartService.CreateManyClaimPartsAsync(request);
+        //    return Ok(ApiResponse<IEnumerable<RequestClaimPart>>.Ok(result, "Create PartOrderItem Successfully!"));
+        //}
 
         //[HttpPost("{targetId}")]
         //[Authorize(Roles = "RequireScStaff")]

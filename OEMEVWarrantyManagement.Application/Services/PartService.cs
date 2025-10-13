@@ -2,9 +2,10 @@
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
+using OEMEVWarrantyManagement.Domain.Entities;
+using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
-
 
 namespace OEMEVWarrantyManagement.Application.Services
 {
@@ -16,8 +17,8 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IPartOrderRepository _orderRepository;
         private readonly IWarrantyClaimRepository _claimRepository;
         private readonly IClaimPartRepository _claimPartRepository;
-        private readonly CurrentUserService _currentUserService;
-        public PartService(IPartRepository partRepository, IMapper mapper, IPartOrderItemRepository orderItemRepository, IPartOrderRepository orderRepository, IClaimPartRepository claimPartRepository, IWarrantyClaimRepository warrantyClaimRepository, CurrentUserService currentUserService)
+        private readonly ICurrentUserService _currentUserService;
+        public PartService(IPartRepository partRepository, IMapper mapper, IPartOrderItemRepository orderItemRepository, IPartOrderRepository orderRepository, IClaimPartRepository claimPartRepository, IWarrantyClaimRepository warrantyClaimRepository, ICurrentUserService currentUserService)
         {
             _partRepository = partRepository;
             _mapper = mapper;
@@ -43,121 +44,93 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<IEnumerable<PartDto>>(entities);
         }
 
-        public async Task<IEnumerable<PartDto>> GetPartsAsync(string model, string category)
+        public async Task<IEnumerable<PartDto>> GetPartsAsync(string model)
         {
-            var parts = await _partRepository.GetPartsAsync(model, category);
+            var orgId = await _currentUserService.GetOrgId();
+
+            var parts = await _partRepository.GetPartsAsync(model, orgId);
             return _mapper.Map<IEnumerable<PartDto>>(parts);
         }
-
-        public async Task<bool> CheckQuantityClaimPartAsync(Guid claimId)
-        {
-            var claimParts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claimId);
-            var parts = await _partRepository.GetAllAsync();
-            foreach (var cp in claimParts)
-            {
-                var part = parts.FirstOrDefault(p => p.PartId == cp.PartId);
-                if (part == null)
-                    return false;
-                if (part.StockQuantity < cp.Quantity)
-                    return false;
-            }
-            return true;
-        }
-
 
         public async Task<IEnumerable<PartDto>> UpdateQuantityAsync(Guid orderId)
         {
             var partOrderItem = await _orderItemRepository.GetAllByOrderIdAsync(orderId);
-            var partOrder = await _orderRepository.GetPartOrderByIdAsync(orderId);
-            var parts = await _partRepository.GetPartsAsync();
+            var orgId = await _currentUserService.GetOrgId();
+            var parts = await _partRepository.GetByOrgIdAsync(orgId);
 
-            if (partOrder.Status == "shipped")
+            foreach (var partDto in partOrderItem)
             {
-                foreach(var partDto in partOrderItem)
+                var part = parts.FirstOrDefault(p => p.PartId == partDto.PartId);
+                if (part != null)
                 {
-                    var part = parts.FirstOrDefault(p => p.PartId == partDto.PartId);
-                    if (part != null)
-                    {
-                        part.StockQuantity += partDto.Quantity;
-                    }
+                    part.StockQuantity += partDto.Quantity;
                 }
-                await _partRepository.UpdateRangeAsync(parts);
-                await UpdateEnoughClaimPartsAsync();
             }
 
+            await _partRepository.UpdateRangeAsync(parts);
+            await UpdateEnoughClaimPartsAsync(orgId, parts);
+            
             return _mapper.Map<IEnumerable<PartDto>>(parts);
         }
 
-        //public async Task UpdateEnoughClaimPartsAsync()
-        //{
-        //    //list cac claimpart co status = "not enough part"
-        //    var notEnoughPart = await _claimPartRepository.GetAllNotEnoughAsync();
-        //    var parts = await _partRepository.GetAllAsync();
-        //    foreach (var cp in notEnoughPart)
-        //    {
-        //        var part = parts.FirstOrDefault(p => p.PartId == cp.PartId);
-        //        if (part != null)
-        //        {
-        //            if (part.StockQuantity >= cp.Quantity)
-        //            {
-
-        //                part.StockQuantity -= cp.Quantity;
-        //                cp.Status = "enough part";
-        //            }
-        //        }
-        //    }
-        //    await _partRepository.UpdateRangeAsync(parts);
-        //    await _claimPartRepository.UpdateRangeAsync(notEnoughPart);
-        //}
-
-        public async Task UpdateEnoughClaimPartsAsync()
+        public async Task UpdateEnoughClaimPartsAsync(Guid orgId, IEnumerable<Part> parts)
         {
-            //list cac claimpart co status = "not enough part"
-            var notEnoughPart = await _claimPartRepository.GetAllNotEnoughAsync();
-            var parts = await _partRepository.GetAllAsync();
-            var staffId = _currentUserService.GetUserId().ToString();
-            var warrantyClaims = await _claimRepository.GetAllWarrantyClaimAsync(staffId);
-            //foreach (var cp in notEnoughPart)
-            //{
-            //    var part = parts.FirstOrDefault(p => p.PartId == cp.PartId);
-            //    if (part != null)
-            //    {
-            //        if (part.StockQuantity >= cp.Quantity)
-            //        {
+            var warrantyClaims = await _claimRepository.GetAllWarrantyClaimByOrgIdAsync(orgId);
 
-            //            part.StockQuantity -= cp.Quantity;
-            //            cp.Status = "enough part";
-            //        }
-            //    }
-            //}
+            warrantyClaims = warrantyClaims.Where(wc => wc.Status == WarrantyClaimStatus.Approved.GetWarrantyClaimStatus() || wc.Status == WarrantyClaimStatus.CarBackHome.GetWarrantyClaimStatus()).OrderBy(wc => wc.CreatedDate);
 
             foreach(var claim in warrantyClaims)
             {
-                var isEnough = await CheckQuantityClaimPartAsync(claim.ClaimId);
-                var claimParts = notEnoughPart.Where(cp => cp.ClaimId == claim.ClaimId);
+                var claimParts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
+
+                var notEnoughParts = claimParts.Where(cp => cp.Status == ClaimPartStatus.NotEnough.GetClaimPartStatus());
+
+                if(!notEnoughParts.Any())
+                    continue;
+
+                var isEnough = CheckQuantityClaimPart(parts, notEnoughParts);
+
                 if (isEnough)
                 {
+
                     foreach (var cp in claimParts)
                     {
-                        var part = parts.FirstOrDefault(p => p.PartId == cp.PartId);
-                        if (part != null)
-                        {
-                            part.StockQuantity -= cp.Quantity;
-                            cp.Status = "enough part";
-                        }
+                        var part = parts.FirstOrDefault(p => p.Model == cp.Model);
+
+                        part.StockQuantity -= cp.Quantity;
+                        cp.Status = ClaimPartStatus.Enough.GetClaimPartStatus();
                     }
                 }
-                else
-                {
-                    foreach (var cp in claimParts)
-                    {
-                        cp.Status = "not enough part";
-                    }
-                }
+
+                await _claimPartRepository.UpdateRangeAsync(notEnoughParts);
             }
+
             await _partRepository.UpdateRangeAsync(parts);
-            await _claimPartRepository.UpdateRangeAsync(notEnoughPart);
         }
 
+        public static bool CheckQuantityClaimPart(IEnumerable<Part> parts, IEnumerable<ClaimPart> claimParts)
+        {
+            foreach (var cp in claimParts)
+            {
+                var part = parts.FirstOrDefault(p => p.Model == cp.Model);
+                if (part == null || part.StockQuantity < cp.Quantity)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public IEnumerable<string> GetPartCategories()
+        {
+            return PartCategoryExtensions.GetAllCategories();
+        }
+
+        public IEnumerable<string> GetPartModels(string category)
+        {
+            if(string.IsNullOrWhiteSpace(category) || !PartCategoryExtensions.IsValidCategory(category))
+                throw new ApiException(ResponseError.InvalidPartCategory);
+
+            return PartModel.GetModels(category);
+        }
     }
 }

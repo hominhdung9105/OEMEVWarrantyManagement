@@ -1,13 +1,12 @@
 ﻿using System.Text.Json.Serialization;
 
-
 namespace OEMEVWarrantyManagement.Domain.Entities
 {
     public class VehiclePart
     {
         public Guid VehiclePartId { get; set; }
         public string Vin { get; set; }
-        public Guid PartId { get; set; }
+        public Guid PartId { get; set; } // TODO - Model
         public string SerialNumber { get; set; }
         public DateTime InstalledDate { get; set; }
         public string Status { get; set; }

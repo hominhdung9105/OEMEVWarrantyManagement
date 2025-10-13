@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
 
-namespace OEMEVWarrantyManagement.Share.Middleware
+namespace OEMEVWarrantyManagement.Share.Middlewares
 {
     public class GlobalResponseMiddleware
     {

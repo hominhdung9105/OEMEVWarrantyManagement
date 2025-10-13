@@ -87,7 +87,13 @@
         InvalidDescription,
 
         [ResponseErrorAttr("Invalid body", 400, 29)]
-        InvalidJsonFormat
+        InvalidJsonFormat,
+
+        [ResponseErrorAttr("Task not found.", 404, 30)]
+        NotFoundWorkOrder,
+
+        [ResponseErrorAttr("Invalid category.", 400, 31)]
+        InvalidPartCategory
     }
 
     public class ApiResponse<T>
