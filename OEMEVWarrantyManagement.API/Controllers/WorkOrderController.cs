@@ -37,7 +37,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpGet("by-tech")]
         [Authorize(policy: "RequireScTech")]
-        public async Task<IActionResult> GetWorkOrderByTech() // TODO - DONE
+        public async Task<IActionResult> GetWorkOrderByTech() 
         {
             var techId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var result = await _workOrderService.GetWorkOrderByTechAsync(Guid.Parse(techId));
@@ -46,7 +46,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpGet("by-tech/inspection")]
         [Authorize(policy: "RequireScTech")]
-        public async Task<IActionResult> GetWorkOrderTypeInspectionByTech() // TODO - khong tra ve gi
+        public async Task<IActionResult> GetWorkOrderTypeInspectionByTech() 
         {
             var techId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var result = await _workOrderService.GetWorkOrderOfTechByTypeAsync(Guid.Parse(techId), WorkOrderType.Inspection);
@@ -55,7 +55,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpGet("by-tech/repair")]
         [Authorize(policy: "RequireScTech")]
-        public async Task<IActionResult> GetWorkOrderTypeRepairByTech() // TODO - khong tra ve gi
+        public async Task<IActionResult> GetWorkOrderTypeRepairByTech()
         {
             var techId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var result = await _workOrderService.GetWorkOrderOfTechByTypeAsync(Guid.Parse(techId), WorkOrderType.Repair);
@@ -64,7 +64,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpPost("{targetId}")]
         [Authorize(policy: "RequireScStaff")]
-        public async Task<IActionResult> CreateWorkOrders(string targetId, RequestCreateWorkOrdersDto request) // TODO - invalid body
+        public async Task<IActionResult> CreateWorkOrders(string targetId, RequestCreateWorkOrdersDto request) 
         {
             if (!Guid.TryParse(targetId, out var Id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
 

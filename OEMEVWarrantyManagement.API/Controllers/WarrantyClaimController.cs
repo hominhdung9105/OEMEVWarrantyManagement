@@ -176,5 +176,55 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         //    //return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Update Successfully!"));
         //}
+        [HttpGet("filter/{status}")]
+        [Authorize]
+        public async Task<IActionResult> GetAllWarrantyClaimByStatus(string status)
+        {
+            IEnumerable<WarrantyClaimDto> result;
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (role == RoleIdEnum.Technician.GetRoleId())
+                return Unauthorized(ApiResponse<object>.Fail(ResponseError.Forbidden));
+
+            if (!WarrantyClaimStatusExtensions.GetAllStatus().Contains(status))
+                throw new ApiException(ResponseError.InternalServerError); // TODO - can doi loi khac
+
+            if (role == RoleIdEnum.EvmStaff.GetRoleId() && status != WarrantyClaimStatus.PendingConfirmation.GetWarrantyClaimStatus())
+                return Unauthorized(ApiResponse<object>.Fail(ResponseError.Forbidden));
+
+            if (role == RoleIdEnum.ScStaff.GetRoleId())
+            {
+                var employee = await _employeeService.GetEmployeeByIdAsync(Guid.Parse(userId));
+                var orgId = employee.OrgId;
+                result = await _warrantyClaimService.GetWarrantyClaimsByStatusAndOrgIdAsync(status, orgId);
+            }
+            else
+                result = await _warrantyClaimService.GetWarrantyClaimByStatusAsync(status); // Admin xem het con EVM Staff chi xem Pending Confirmation
+
+            return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
+        }
+
+        [HttpGet("need-assgin")]
+        [Authorize(Policy = ("RequireScStaff"))]
+        public async Task<IActionResult> GetAllWarrantyClaimNeedAssign()
+        {
+            IEnumerable<WarrantyClaimDto> result;
+
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var employee = await _employeeService.GetEmployeeByIdAsync(Guid.Parse(userId));
+            var orgId = employee.OrgId;
+            // TODO - con campaign nhung chua xu li nen de tam o day
+            // TODO - chua tich hop phan kiem tra phu tung trong kho vao day
+            result = await _warrantyClaimService.GetWarrantyClaimsByStatusAndOrgIdAsync(WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyClaimStatus(), orgId);
+            if (result != null)
+                result = result.Concat(await _warrantyClaimService.GetWarrantyClaimsByStatusAndOrgIdAsync(WarrantyClaimStatus.Approved.ToString(), orgId));
+            else
+                result = await _warrantyClaimService.GetWarrantyClaimsByStatusAndOrgIdAsync(WarrantyClaimStatus.Approved.ToString(), orgId);
+
+            return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
+        }
     }
 }

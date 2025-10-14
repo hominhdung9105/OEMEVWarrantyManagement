@@ -271,5 +271,16 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             return _mapper.Map<WarrantyClaimDto>(update);
         }
+        public async Task<IEnumerable<WarrantyClaimDto>> GetWarrantyClaimsByStatusAndOrgIdAsync(string status, Guid orgId)
+        {
+            var entities = await _warrantyClaimRepository.GetWarrantyClaimsByStatusAndOrgIdAsync(status, orgId);
+            return _mapper.Map<IEnumerable<WarrantyClaimDto>>(entities);
+        }
+
+        public async Task<IEnumerable<WarrantyClaimDto>> GetWarrantyClaimByStatusAsync(string status)
+        {
+            var entities = await _warrantyClaimRepository.GetWarrantyClaimByStatusAsync(status);
+            return _mapper.Map<IEnumerable<WarrantyClaimDto>>(entities);
+        }
     }
 }

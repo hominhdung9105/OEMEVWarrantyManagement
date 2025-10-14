@@ -50,5 +50,15 @@ namespace OEMEVWarrantyManagement.Share.Enums
             var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute));
             return attribute?.Description ?? status.ToString();
         }
+
+        public static List<string> GetAllStatus()
+        {
+            List<string> statusList = [];
+            foreach (var status in Enum.GetValues<WarrantyClaimStatus>())
+            {
+                statusList.Add(((WarrantyClaimStatus)status).GetWarrantyClaimStatus());
+            }
+            return statusList;
+        }
     }
 }

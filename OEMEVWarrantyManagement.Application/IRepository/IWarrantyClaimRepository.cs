@@ -13,5 +13,7 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<WarrantyClaim> CreateAsync(WarrantyClaim request);
         Task<WarrantyClaim> UpdateAsync(WarrantyClaim request);
         Task<bool> DeleteAsync(WarrantyClaim request);
+        Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimsByStatusAndOrgIdAsync(string status, Guid orgId);
+        Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimByStatusAsync(string status);
     }
 }
