@@ -19,8 +19,9 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly ICurrentUserService _currentUserService;
         private readonly IClaimPartRepository _claimPartRepository;
         private readonly IPartRepository _partRepository;
+        private readonly IWarrantyPolicyRepository _warrantyPolicyRepository;   
         //private readonly IWorkOrderService _workOrderService;
-        public WarrantyClaimService(IMapper mapper, IWarrantyClaimRepository warrantyClaimRepository, IVehicleRepository vehicleRepository, IWorkOrderRepository workOrderRepository, IEmployeeRepository employeeRepository, ICurrentUserService currentUserService, IClaimPartRepository claimPartRepository, IPartRepository partRepository)
+        public WarrantyClaimService(IMapper mapper, IWarrantyClaimRepository warrantyClaimRepository, IVehicleRepository vehicleRepository, IWorkOrderRepository workOrderRepository, IEmployeeRepository employeeRepository, ICurrentUserService currentUserService, IClaimPartRepository claimPartRepository, IPartRepository partRepository, IWarrantyPolicyRepository warrantyPolicyRepository)
         {
             _mapper = mapper;
             _warrantyClaimRepository = warrantyClaimRepository;
@@ -30,6 +31,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             _currentUserService = currentUserService;
             _partRepository = partRepository;
             _claimPartRepository = claimPartRepository;
+            _warrantyPolicyRepository = warrantyPolicyRepository;
         }
         
         public async Task<ResponseWarrantyClaim> CreateAsync(RequestWarrantyClaim request)
@@ -112,13 +114,6 @@ namespace OEMEVWarrantyManagement.Application.Services
         public async Task<IEnumerable<WarrantyClaimDto>> GetAllWarrantyClaimAsync()
         {
             var entities = await _warrantyClaimRepository.GetAllWarrantyClaimAsync();
-            return _mapper.Map<IEnumerable<WarrantyClaimDto>>(entities);
-        }
-
-        public async Task<IEnumerable<WarrantyClaimDto>> GetAllWarrantyClaimByOrganizationAsync()
-        {
-            var orgId = await _currentUserService.GetOrgId();
-            var entities = await _warrantyClaimRepository.GetAllWarrantyClaimByOrgIdAsync(orgId);
             return _mapper.Map<IEnumerable<WarrantyClaimDto>>(entities);
         }
 
@@ -281,6 +276,34 @@ namespace OEMEVWarrantyManagement.Application.Services
         {
             var entities = await _warrantyClaimRepository.GetWarrantyClaimByStatusAsync(status);
             return _mapper.Map<IEnumerable<WarrantyClaimDto>>(entities);
+        }
+
+        public async Task<IEnumerable<WarrantyClaimDto>> GetAllWarrantyClaimByOrganizationAsync()
+        {
+            var orgId = await _currentUserService.GetOrgId();
+            var entities = await _warrantyClaimRepository.GetAllWarrantyClaimByOrgIdAsync(orgId);
+            return _mapper.Map<IEnumerable<WarrantyClaimDto>>(entities);
+        }
+
+        public async Task<IEnumerable<ResponseWarrantyClaimDto>> GetWarrantyClaimHavePolicyAndParts()
+        {
+            var orgId = await _currentUserService.GetOrgId();
+            var entities = await _warrantyClaimRepository.GetAllWarrantyClaimByOrgIdAsync(orgId);
+            var results = _mapper.Map<IEnumerable<ResponseWarrantyClaimDto>>(entities);
+
+            foreach (var claim in results)
+            {
+                var claimParts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
+                claim.ShowClaimParts = _mapper.Map<List<ShowClaimPartDto>>(claimParts);
+
+
+                //var claimPolicies = await _warrantyPolicyRepository.GetByIdAsync(claim.PolicyId);
+                //claim.ShowPolicy = _mapper.Map<List<WarrantyPolicyDto>>(claimPolicies);
+                var policy = await _warrantyPolicyRepository.GetByIdAsync(claim.PolicyId);
+                claim.ShowPolicy = _mapper.Map<WarrantyPolicyDto>(policy);
+            }
+
+            return results;
         }
     }
 }

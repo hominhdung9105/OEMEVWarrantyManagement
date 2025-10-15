@@ -48,7 +48,8 @@ namespace OEMEVWarrantyManagement.API.Controllers
             }
             else if (role == RoleIdEnum.ScStaff.GetRoleId())
             {
-                var result = await _warrantyClaimService.GetAllWarrantyClaimByOrganizationAsync();
+                //var result = await _warrantyClaimService.GetAllWarrantyClaimByOrganizationAsync();
+                var result = await _warrantyClaimService.GetWarrantyClaimHavePolicyAndParts();
                 return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
             }
             else if (role == RoleIdEnum.Technician.GetRoleId())
