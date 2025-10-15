@@ -33,5 +33,7 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public ICollection<ClaimPart> ClaimParts { get; set; } = new List<ClaimPart>();
         [JsonIgnore]
         public WarrantyPolicy WarrantyPolicy { get; set; }
+        [JsonIgnore]
+        public ICollection<BackWarrantyClaim> Feedbacks { get; set; } = new List<BackWarrantyClaim>();
     }
 }
