@@ -27,7 +27,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             entity.CreatedByEmployeeId = _currentUserService.GetUserId();
 
             var warrantyClaim = await _warrantyClaimRepository.GetWarrantyClaimByIdAsync(entity.WarrantyClaimId);
-            warrantyClaim.Status = WarrantyClaimStatus.UnderInspection.GetWarrantyClaimStatus();
+            warrantyClaim.Status = WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyClaimStatus();
             warrantyClaim.ConfirmBy = null;
             warrantyClaim.ConfirmDate = null;
             await _warrantyClaimRepository.UpdateAsync(warrantyClaim);
