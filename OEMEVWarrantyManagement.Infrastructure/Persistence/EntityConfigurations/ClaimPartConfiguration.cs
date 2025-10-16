@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OEMEVWarrantyManagement.Domain.Entities;
 
-
 namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfigurations
 {
     public class ClaimPartConfiguration : IEntityTypeConfiguration<ClaimPart>
@@ -13,18 +12,16 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.HasKey(cp => cp.ClaimPartId);
             builder.Property(cp => cp.ClaimPartId).ValueGeneratedOnAdd();
             builder.Property(cp => cp.ClaimId);
-            builder.Property(cp => cp.PartId);
-            builder.Property(cp => cp.SerialNumber);
+            builder.Property(cp => cp.SerialNumberOld);
+            builder.Property(cp => cp.SerialNumberNew);
+            builder.Property(cp => cp.Model);
             builder.Property(cp => cp.Action);
+            builder.Property(cp => cp.Status);
             builder.Property(cp => cp.Cost).HasColumnType("decimal(18,2)"); ;
 
             builder.HasOne(cp => cp.WarrantyClaim)
                    .WithMany(wc => wc.ClaimParts)
                    .HasForeignKey(cp => cp.ClaimId);
-
-            builder.HasOne(cp => cp.Part)
-                   .WithMany(p => p.ClaimParts)
-                   .HasForeignKey(cp => cp.PartId);
         }
     }
 }

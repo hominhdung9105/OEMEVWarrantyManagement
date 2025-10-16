@@ -19,8 +19,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.Property(wc => wc.CreatedDate);
             builder.Property(wc => wc.Status).IsRequired();
             builder.Property(wc => wc.Description);
-            builder.Property(wc => wc.ApprovedBy);
-            builder.Property(wc => wc.ApprovedDate);
+            builder.Property(wc => wc.ConfirmBy);
+            builder.Property(wc => wc.ConfirmDate);
+            builder.Property(wc => wc.failureDesc);
             builder.Property(wc => wc.PolicyId).HasColumnName("PolicyId");
 
 
@@ -39,9 +40,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
                    .HasForeignKey(wc => wc.CreatedBy)
                    .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(wc => wc.ApprovedByEmployee)
+            builder.HasOne(wc => wc.ConfirmByEmployee)
                    .WithMany(e => e.ApprovedClaims)
-                   .HasForeignKey(wc => wc.ApprovedBy)
+                   .HasForeignKey(wc => wc.ConfirmBy)
                    .IsRequired(false) // Important for nullable FK
                    .OnDelete(DeleteBehavior.Restrict);
 

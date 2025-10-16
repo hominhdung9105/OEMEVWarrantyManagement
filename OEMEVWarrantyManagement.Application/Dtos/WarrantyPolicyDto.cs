@@ -13,4 +13,5 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public int CoveragePeriodMonths { get; set; }
         public string Conditions { get; set; }
     }
+
 }

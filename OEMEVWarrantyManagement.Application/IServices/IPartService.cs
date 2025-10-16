@@ -1,9 +1,6 @@
 ﻿using OEMEVWarrantyManagement.Application.Dtos;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using OEMEVWarrantyManagement.Domain.Entities;
+
 
 namespace OEMEVWarrantyManagement.Application.IServices
 {
@@ -11,5 +8,11 @@ namespace OEMEVWarrantyManagement.Application.IServices
     {
         Task<IEnumerable<PartDto>> GetAllAsync();
         Task<IEnumerable<PartDto>> GetPartByOrgIdAsync(Guid id);
+        Task<IEnumerable<PartDto>> GetPartsAsync(string model);
+        Task <IEnumerable<PartDto>> UpdateQuantityAsync(Guid orderID);
+        Task UpdateEnoughClaimPartsAsync(Guid orgId, IEnumerable<Part> parts);
+
+        IEnumerable<string> GetPartCategories();
+        IEnumerable<string> GetPartModels(string category);
     }
 }

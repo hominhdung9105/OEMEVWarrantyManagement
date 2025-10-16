@@ -13,7 +13,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.HasKey(vp => vp.VehiclePartId);
             builder.Property(vp => vp.VehiclePartId).ValueGeneratedOnAdd();
             builder.Property(vp => vp.Vin);
-            builder.Property(vp => vp.PartId);
+            builder.Property(vp => vp.Model);
             builder.Property(vp => vp.SerialNumber);
             builder.Property(vp => vp.InstalledDate);
             builder.Property(vp => vp.Status);
@@ -21,10 +21,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.HasOne(vp => vp.Vehicle)
                    .WithMany(v => v.VehicleParts)
                    .HasForeignKey(vp => vp.Vin);
-
-            builder.HasOne(vp => vp.Part)
-                   .WithMany(p => p.VehicleParts)
-                   .HasForeignKey(vp => vp.PartId);
         }
     }
 }

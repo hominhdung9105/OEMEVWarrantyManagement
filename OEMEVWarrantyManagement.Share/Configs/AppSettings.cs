@@ -1,4 +1,4 @@
-﻿namespace OEMEVWarrantyManagement.Application.Dtos.Config
+﻿namespace OEMEVWarrantyManagement.Share.Configs
 {
     public class AppSettings
     {

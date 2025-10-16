@@ -2,10 +2,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using OEMEVWarrantyManagement.Application.Dtos;
-using OEMEVWarrantyManagement.Application.Dtos.Config;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
+using OEMEVWarrantyManagement.Share.Configs;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 {

@@ -5,16 +5,15 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OEMEVWarrantyManagement.API.Policy.Role;
-using OEMEVWarrantyManagement.Application.Dtos.Config;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Application.Mapping;
 using OEMEVWarrantyManagement.Application.Services;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
 using OEMEVWarrantyManagement.Infrastructure.Repositories;
-using OEMEVWarrantyManagement.Share.Enum;
-using OEMEVWarrantyManagement.Share.Exceptions;
-using OEMEVWarrantyManagement.Share.Middleware;
+using OEMEVWarrantyManagement.Share.Configs;
+using OEMEVWarrantyManagement.Share.Enums;
+using OEMEVWarrantyManagement.Share.Middlewares;
 using OEMEVWarrantyManagement.Share.Models.Response;
 using Scalar.AspNetCore;
 
@@ -133,7 +132,8 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddSingleton<IAuthorizationHandler, RoleHandler>();
 
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            //builder.Services.AddOpenApi();
+            builder.Services.AddOpenApi();
+            builder.Services.AddHttpContextAccessor();//Use for CurrentUserService 
 
             //Auth
             builder.Services.AddScoped<IAuthService, AuthService>();
@@ -143,6 +143,7 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddScoped<IWarrantyClaimRepository, WarrantyClaimRepository>();
             //Vehicle
             builder.Services.AddScoped<IVehicleRepository, VehicelRepository>();
+            builder.Services.AddScoped<IVehicleService, VehicleService>();
             //Employee
             builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
             builder.Services.AddScoped<IEmployeeService, EmployeeService>();
@@ -155,19 +156,51 @@ namespace OEMEVWarrantyManagement.API
             //Part
             builder.Services.AddScoped<IPartService, PartService>();
             builder.Services.AddScoped<IPartRepository, PartRepository>();
-            //Image
-            builder.Services.AddScoped<IImageService, ImageService>();
-            builder.Services.AddScoped<IImageRepository, ImageRepository>();
+            //Take User
+            builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+            //Claim Part
+            builder.Services.AddScoped<IClaimPartService, ClaimPartService>();
+            builder.Services.AddScoped<IClaimPartRepository, ClaimPartRepository>();
+            //Part ORder
+            builder.Services.AddScoped<IPartOrderRepository, PartOrderRepository>();
+            builder.Services.AddScoped<IPartOrderService, PartOrderService>();
+            //Part Order Item
+            builder.Services.AddScoped<IPartOrderItemRepository, PartOrderItemRepository>();
+            builder.Services.AddScoped<IPartOrderItemService, PartOrderItemService>();
+            //Vehicle Warranty Policy
+            builder.Services.AddScoped<IVehicleWarrantyPolicyRepository, VehicleWarrantyPolicyRepository>();
+            builder.Services.AddScoped<IVehicleWarrantyPolicyService, VehicleWarrantyPolicyService>();
+            //Customer
+            builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+            //builder.Services.AddScoped<ICustomerService, CustomerService>();
+            //Back Warranty Claim
+            builder.Services.AddScoped<IBackWarrantyClaimRepository, BackWarrantyClaimRepository>();
+            builder.Services.AddScoped<IBackWarrantyClaimService, BackWarrantyClaimService>();
+            //Vehicle Part
+            builder.Services.AddScoped<IVehiclePartRepository, VehiclePartRepository>();
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll",
+                    policy => policy
+                        .AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod());
+            });
+
 
             var app = builder.Build();
 
             // Dev
+
+
             if (app.Environment.IsDevelopment())
             {
-                //app.MapOpenApi();
-                //app.MapScalarApiReference();
-            }
+                app.MapOpenApi();
+                app.MapScalarApiReference();
 
+            }
+            app.UseCors("AllowAll");
             // Thay tất cả exception middleware bằng global response
             app.UseMiddleware<GlobalResponseMiddleware>();
 
