@@ -1,9 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36429.23 d17.14
+VisualStudioVersion = 17.14.36429.23
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OEMEVWarrantyManagement.API", "OEMEVWarrantyManagement.API\OEMEVWarrantyManagement.API.csproj", "{7555731A-F86A-46F6-A622-4614F4DFD09C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OEMEVWarrantyManagement.Application", "OEMEVWarrantyManagement.Application\OEMEVWarrantyManagement.Application.csproj", "{77C5A30D-4D9B-4CBD-9CB2-7A3C4D57602E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OEMEVWarrantyManagement.Domain", "OEMEVWarrantyManagement.Domain\OEMEVWarrantyManagement.Domain.csproj", "{E6B68E60-24F9-4B10-AC18-4A41186608C0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OEMEVWarrantyManagement.Infrastructure", "OEMEVWarrantyManagement.Infrastructure\OEMEVWarrantyManagement.Infrastructure.csproj", "{E3CEA164-475F-4707-8E65-3E6DD7A56CCB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OEMEVWarrantyManagement.Share", "OEMEVWarrantyManagement.Share\OEMEVWarrantyManagement.Share.csproj", "{A88DFF1A-45E2-4437-BAC2-7582A28EC20F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +23,22 @@ Global
 		{7555731A-F86A-46F6-A622-4614F4DFD09C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7555731A-F86A-46F6-A622-4614F4DFD09C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7555731A-F86A-46F6-A622-4614F4DFD09C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77C5A30D-4D9B-4CBD-9CB2-7A3C4D57602E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77C5A30D-4D9B-4CBD-9CB2-7A3C4D57602E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77C5A30D-4D9B-4CBD-9CB2-7A3C4D57602E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77C5A30D-4D9B-4CBD-9CB2-7A3C4D57602E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6B68E60-24F9-4B10-AC18-4A41186608C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6B68E60-24F9-4B10-AC18-4A41186608C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6B68E60-24F9-4B10-AC18-4A41186608C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6B68E60-24F9-4B10-AC18-4A41186608C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3CEA164-475F-4707-8E65-3E6DD7A56CCB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3CEA164-475F-4707-8E65-3E6DD7A56CCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3CEA164-475F-4707-8E65-3E6DD7A56CCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3CEA164-475F-4707-8E65-3E6DD7A56CCB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A88DFF1A-45E2-4437-BAC2-7582A28EC20F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A88DFF1A-45E2-4437-BAC2-7582A28EC20F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A88DFF1A-45E2-4437-BAC2-7582A28EC20F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A88DFF1A-45E2-4437-BAC2-7582A28EC20F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

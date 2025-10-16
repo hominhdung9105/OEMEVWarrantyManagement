@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -7,7 +7,28 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Imagekit" Version="5.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.9" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.9">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.9">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Scalar.AspNetCore" Version="2.8.7" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OEMEVWarrantyManagement.Application\OEMEVWarrantyManagement.Application.csproj" />
+    <ProjectReference Include="..\OEMEVWarrantyManagement.Domain\OEMEVWarrantyManagement.Domain.csproj" />
+    <ProjectReference Include="..\OEMEVWarrantyManagement.Infrastructure\OEMEVWarrantyManagement.Infrastructure.csproj" />
+    <ProjectReference Include="..\OEMEVWarrantyManagement.Share\OEMEVWarrantyManagement.Share.csproj" />
   </ItemGroup>
 
 </Project>
