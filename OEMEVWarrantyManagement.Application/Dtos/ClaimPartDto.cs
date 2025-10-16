@@ -36,4 +36,10 @@
         public Guid ClaimPartId { get; set; }
         public required string SerialNumber { get; set; }
     }
+
+    public class ShowClaimPartDto
+    {
+        public Guid ClaimPartId { get; set; }
+        public string Model { get; set; }
+    }
 }

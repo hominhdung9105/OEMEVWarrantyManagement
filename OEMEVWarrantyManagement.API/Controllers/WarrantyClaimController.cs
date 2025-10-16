@@ -48,7 +48,8 @@ namespace OEMEVWarrantyManagement.API.Controllers
             }
             else if (role == RoleIdEnum.ScStaff.GetRoleId())
             {
-                var result = await _warrantyClaimService.GetAllWarrantyClaimByOrganizationAsync();
+                //var result = await _warrantyClaimService.GetAllWarrantyClaimByOrganizationAsync();
+                var result = await _warrantyClaimService.GetWarrantyClaimHavePolicyAndParts();
                 return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
             }
             else if (role == RoleIdEnum.Technician.GetRoleId())
@@ -203,7 +204,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
                 result = await _warrantyClaimService.GetWarrantyClaimsByStatusAndOrgIdAsync(status, orgId);
             }
             else
-                result = await _warrantyClaimService.GetWarrantyClaimByStatusAsync(status); // Admin xem het con EVM Staff chi xem Pending Confirmation
+                result = await _warrantyClaimService.GetWarrantyClaimByStatusAsync(status); // TODO - chua lam Admin xem het con EVM Staff chi xem Pending Confirmation
 
             return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
         }

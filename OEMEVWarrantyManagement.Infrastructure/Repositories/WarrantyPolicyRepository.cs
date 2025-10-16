@@ -21,5 +21,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         {
             return await _context.WarrantyPolicies.ToListAsync();
         }
+
+        public Task<WarrantyPolicy> GetByIdAsync(Guid policyId)
+        {
+            return _context.WarrantyPolicies.FirstOrDefaultAsync(wp => wp.PolicyId == policyId);
+        }
     }
 }

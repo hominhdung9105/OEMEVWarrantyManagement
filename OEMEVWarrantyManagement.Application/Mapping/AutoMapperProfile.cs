@@ -12,6 +12,9 @@ namespace OEMEVWarrantyManagement.Application.Mapping
             CreateMap<WarrantyClaim, WarrantyClaimDto>().ReverseMap();
             CreateMap<WarrantyClaim, RequestWarrantyClaim>().ReverseMap();
             CreateMap<WarrantyClaim, ResponseWarrantyClaim>().ReverseMap();
+            CreateMap<WarrantyClaim, ResponseWarrantyClaimDto>().ReverseMap();
+
+            CreateMap<WarrantyClaim, WarrantyPolicyDto>().ReverseMap();
 
             CreateMap<ClaimAttachment, ImageDto>().ReverseMap();
 
@@ -22,11 +25,13 @@ namespace OEMEVWarrantyManagement.Application.Mapping
             CreateMap<WorkOrder, RequestCreateWorkOrderDto>().ReverseMap();
 
             CreateMap<WarrantyPolicy, WarrantyPolicyDto>().ReverseMap();
+            CreateMap<WarrantyPolicy, VehicleWarrantyPolicy>().ReverseMap();
 
             CreateMap<Part,  PartDto>().ReverseMap();
 
             CreateMap<ClaimPart, ClaimPartDto>().ReverseMap();
             CreateMap<ClaimPart, RequestClaimPart>().ReverseMap();
+            CreateMap<ClaimPart, ShowClaimPartDto>().ReverseMap();
 
             CreateMap<PartOrder, PartOrderDto>().ReverseMap();
             CreateMap<PartOrder, RequestPartOrderDto>().ReverseMap();
@@ -39,6 +44,7 @@ namespace OEMEVWarrantyManagement.Application.Mapping
 
             CreateMap<BackWarrantyClaim, BackWarrantyClaimDto>().ReverseMap();
             CreateMap<BackWarrantyClaim, CreateBackWarrantyClaimRequestDto>().ReverseMap();
+
 
 
         }
