@@ -56,7 +56,7 @@
         public string FailureDesc { get; set; }
         public Guid PolicyId { get; set; }
         public List<ShowClaimPartDto> ShowClaimParts { get; set; }
-        //public List<WarrantyPolicyDto> ShowPolicy { get; set; }
-        public WarrantyPolicyDto ShowPolicy { get; set; }
+        public List<WarrantyPolicyDto> ShowPolicy { get; set; }
+        //public WarrantyPolicyDto ShowPolicy { get; set; }
     }
 }
