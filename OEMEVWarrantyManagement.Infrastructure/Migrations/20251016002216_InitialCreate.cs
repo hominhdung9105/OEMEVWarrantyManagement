@@ -267,10 +267,12 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 {
                     VehiclePartId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Vin = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    PartId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Model = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SerialNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     InstalledDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    UninstalledDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PartId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -279,8 +281,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         name: "FK_VehicleParts_Parts_PartId",
                         column: x => x.PartId,
                         principalTable: "Parts",
-                        principalColumn: "PartId",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "PartId");
                     table.ForeignKey(
                         name: "FK_VehicleParts_Vehicles_Vin",
                         column: x => x.Vin,
@@ -453,7 +454,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     ClaimPartId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ClaimId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Model = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    SerialNumberOld = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SerialNumberNew = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Action = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Cost = table.Column<decimal>(type: "decimal(18,2)", nullable: false),

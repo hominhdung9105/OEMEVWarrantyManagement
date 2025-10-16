@@ -14,8 +14,8 @@ namespace OEMEVWarrantyManagement.Share.Enums
         [Description("Enough")]
         Enough,
 
-        [Description("Installed")]
-        Installed
+        [Description("Done")]
+        Done
     }
 
     public static class ClaimPartStatusExtensions

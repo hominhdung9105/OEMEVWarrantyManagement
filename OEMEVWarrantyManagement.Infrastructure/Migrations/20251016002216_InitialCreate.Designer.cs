@@ -12,7 +12,7 @@ using OEMEVWarrantyManagement.Infrastructure.Persistence;
 namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251015115942_InitialCreate")]
+    [Migration("20251016002216_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -197,8 +197,12 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<Guid?>("PartId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
+                    b.Property<string>("SerialNumberNew")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SerialNumberOld")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
@@ -432,7 +436,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<DateTime>("InstalledDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("PartId")
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("PartId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("SerialNumber")
@@ -442,6 +450,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UninstalledDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Vin")
                         .IsRequired()
@@ -788,19 +799,15 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.VehiclePart", b =>
                 {
-                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Part", "Part")
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Part", null)
                         .WithMany("VehicleParts")
-                        .HasForeignKey("PartId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PartId");
 
                     b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Vehicle", "Vehicle")
                         .WithMany("VehicleParts")
                         .HasForeignKey("Vin")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Part");
 
                     b.Navigation("Vehicle");
                 });

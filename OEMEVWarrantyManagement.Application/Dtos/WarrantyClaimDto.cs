@@ -44,9 +44,9 @@
         public List<PartsInClaimPartDto> Parts { get; set; }
     }
 
-    //public class RepairRequestDto
-    //{
-    //    public Guid ClaimId { get; set; }
-    //    public List<> Parts { get; set; }
-    //}
+    public class RepairRequestDto
+    {
+        public Guid ClaimId { get; set; }
+        public List<UpdateClaimPartDto> Parts { get; set; }
+    }
 }

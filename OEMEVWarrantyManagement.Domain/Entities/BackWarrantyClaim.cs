@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace OEMEVWarrantyManagement.Domain.Entities
 {
@@ -11,9 +7,11 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public string Description { get; set; }
         public DateTime CreatedDate { get; set; }
         public Guid WarrantyClaimId { get; set; }
-        public WarrantyClaim WarrantyClaim { get; set; }
-
         public Guid CreatedByEmployeeId { get; set; }
+
+        [JsonIgnore]
+        public WarrantyClaim WarrantyClaim { get; set; }
+        [JsonIgnore]
         public Employee CreatedByEmployee { get; set; }
     }
 }

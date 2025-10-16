@@ -6,6 +6,8 @@ namespace OEMEVWarrantyManagement.Application.IServices
     {
         Task<IEnumerable<RequestClaimPart>> GetClaimPartsAsync(Guid claimId);
         Task<List<RequestClaimPart>> CreateManyClaimPartsAsync(InspectionDto dto);
+
+        Task UpdateClaimPartsAsync(RepairRequestDto dto);
     }   
         
 }

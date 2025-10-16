@@ -38,6 +38,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return requests;
         }
 
-
+        public async Task<ClaimPart> GetByIdAsync(Guid id)
+        {
+            return await _context.ClaimParts.FirstOrDefaultAsync(cp => cp.ClaimPartId == id);
+        }
     }
 }

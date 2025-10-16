@@ -25,7 +25,8 @@
     {
         public Guid PartId { get; set; }
         public string Model { get; set; }
-        public int Quantity { get; set; }
+        //public int Quantity { get; set; }
+        public string SerialNumber { get; set; }
         public string Action { get; set; }
         public string? Status { get; set; }
     }
@@ -33,6 +34,6 @@
     public class UpdateClaimPartDto
     {
         public Guid ClaimPartId { get; set; }
-        public string? SerialNumber { get; set; }
+        public required string SerialNumber { get; set; }
     }
 }

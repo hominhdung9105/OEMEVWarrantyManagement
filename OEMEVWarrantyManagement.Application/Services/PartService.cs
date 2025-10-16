@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Collections.Generic;
+using AutoMapper;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
@@ -88,19 +89,43 @@ namespace OEMEVWarrantyManagement.Application.Services
                 if(!notEnoughParts.Any())
                     continue;
 
-                var isEnough = CheckQuantityClaimPart(parts, notEnoughParts);
+                var isEnough = HasEnoughPartsForClaim(notEnoughParts, parts);
 
-                if (isEnough)
-                {
+                if (!isEnough)
+                    continue;
 
-                    foreach (var cp in claimParts)
+                // Gom nhóm theo model để tính số lượng yêu cầu
+                var requiredByModel = claimParts
+                    .GroupBy(cp => cp.Model)
+                    .Select(g => new
                     {
-                        var part = parts.FirstOrDefault(p => p.Model == cp.Model);
+                        Model = g.Key,
+                        RequiredCount = g.Count()
+                    })
+                    .ToList();
 
-                        part.StockQuantity -= cp.Quantity;
-                        cp.Status = ClaimPartStatus.Enough.GetClaimPartStatus();
-                    }
+                foreach (var req in requiredByModel)
+                {
+                    var part = parts.FirstOrDefault(p => p.Model == req.Model);
+
+                    part.StockQuantity -= req.RequiredCount;
                 }
+
+                foreach (var cp in notEnoughParts)
+                {
+                    cp.Status = ClaimPartStatus.Enough.GetClaimPartStatus();
+                }
+                
+                //if (isEnough)
+                //{
+                //    foreach (var cp in claimParts)
+                //    {
+                //        var part = parts.FirstOrDefault(p => p.Model == cp.Model);
+
+                //        part.StockQuantity -= cp.Quantity;
+                //        cp.Status = ClaimPartStatus.Enough.GetClaimPartStatus();
+                //    }
+                //}
 
                 await _claimPartRepository.UpdateRangeAsync(notEnoughParts);
             }
@@ -108,17 +133,84 @@ namespace OEMEVWarrantyManagement.Application.Services
             await _partRepository.UpdateRangeAsync(parts);
         }
 
-        public static bool CheckQuantityClaimPart(IEnumerable<Part> parts, IEnumerable<ClaimPart> claimParts)
+        /// <summary>
+        /// Kiểm tra xem tất cả các phụ tùng trong 1 claim có đủ tồn kho hay không.
+        /// Gom nhóm theo Model để so sánh số lượng yêu cầu và tồn kho.
+        /// </summary>
+        public static bool HasEnoughPartsForClaim(IEnumerable<ClaimPart> claimParts, IEnumerable<Part> partsInStock)
         {
-            foreach (var cp in claimParts)
+            // Gom nhóm theo model để tính số lượng yêu cầu
+            var requiredByModel = claimParts
+                .GroupBy(cp => cp.Model)
+                .Select(g => new
+                {
+                    Model = g.Key,
+                    RequiredCount = g.Count()
+                })
+                .ToList();
+
+            // Kiểm tra từng model
+            foreach (var req in requiredByModel)
             {
-                var part = parts.FirstOrDefault(p => p.Model == cp.Model);
-                if (part == null || part.StockQuantity < cp.Quantity)
+                var stock = partsInStock.FirstOrDefault(p => p.Model == req.Model);
+                if (stock == null || stock.StockQuantity < req.RequiredCount)
+                {
+                    // Chỉ cần 1 cái không đủ là fail
                     return false;
+                }
             }
 
             return true;
         }
+
+
+        //public static bool CheckQuantityClaimPart(IEnumerable<Part> parts, List<(string Model, int Count)> claimParts)
+        //{
+        //    var totalByModel = claimParts
+        //        .GroupBy(p => p.Model)
+        //        .Select(g => new { Model = g.Key, Count = g.Count() })
+        //        .ToList();
+
+        //    foreach (var item in totalByModel)
+        //    {
+        //        var part = parts.FirstOrDefault(p => p.Model == item.Model);
+        //        if (part == null || part.StockQuantity < item.Count)
+        //            return false;
+        //    }
+
+        //    //foreach (var cp in claimParts)
+        //    //{
+        //    //    var part = parts.FirstOrDefault(p => p.Model == cp.Model);
+        //    //    if (part == null || part.StockQuantity < cp.Quantity)
+        //    //        return false;
+        //    //}
+
+        //    return true;
+        //}
+
+        //public static bool CheckQuantityClaimPart(IEnumerable<Part> parts, IEnumerable<ClaimPart> claimParts)
+        //{
+        //    var totalByModel = claimParts
+        //        .GroupBy(p => p.Model)
+        //        .Select(g => new { Model = g.Key, Count = g.Count() })
+        //        .ToList();
+
+        //    foreach (var item in totalByModel)
+        //    {
+        //        var part = parts.FirstOrDefault(p => p.Model == item.Model);
+        //        if (part == null || part.StockQuantity < item.Count)
+        //            return false;
+        //    }
+
+        //    //foreach (var cp in claimParts)
+        //    //{
+        //    //    var part = parts.FirstOrDefault(p => p.Model == cp.Model);
+        //    //    if (part == null || part.StockQuantity < cp.Quantity)
+        //    //        return false;
+        //    //}
+
+        //    return true;
+        //}
 
         public IEnumerable<string> GetPartCategories()
         {

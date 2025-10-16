@@ -12,7 +12,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.HasKey(cp => cp.ClaimPartId);
             builder.Property(cp => cp.ClaimPartId).ValueGeneratedOnAdd();
             builder.Property(cp => cp.ClaimId);
-            builder.Property(cp => cp.Quantity);
+            builder.Property(cp => cp.SerialNumberOld);
+            builder.Property(cp => cp.SerialNumberNew);
             builder.Property(cp => cp.Model);
             builder.Property(cp => cp.Action);
             builder.Property(cp => cp.Status);

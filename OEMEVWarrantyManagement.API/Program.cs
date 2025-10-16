@@ -176,8 +176,8 @@ namespace OEMEVWarrantyManagement.API
             //Back Warranty Claim
             builder.Services.AddScoped<IBackWarrantyClaimRepository, BackWarrantyClaimRepository>();
             builder.Services.AddScoped<IBackWarrantyClaimService, BackWarrantyClaimService>();
-            //Current User Service
-            builder.Services.AddScoped<CurrentUserService>();
+            //Vehicle Part
+            builder.Services.AddScoped<IVehiclePartRepository, VehiclePartRepository>();
 
             builder.Services.AddCors(options =>
             {

@@ -1,4 +1,5 @@
 ﻿using OEMEVWarrantyManagement.Application.Dtos;
+using OEMEVWarrantyManagement.Share.Enums;
 
 namespace OEMEVWarrantyManagement.Application.IServices
 {
@@ -11,8 +12,8 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<WarrantyClaimDto> GetWarrantyClaimByIdAsync(Guid id);
         Task<bool> HasWarrantyClaim(Guid warrantyClaimId);
         Task<ResponseWarrantyClaim> CreateAsync(RequestWarrantyClaim request);
-        Task<WarrantyClaimDto> UpdateStatusAsync(Guid claimId, string status);
-        Task<WarrantyClaimDto> UpdateApproveStatusAsync(Guid claimId, Guid staffId);
+        Task<WarrantyClaimDto> UpdateStatusAsync(Guid claimId, WarrantyClaimStatus status);
+        //Task<WarrantyClaimDto> UpdateApproveStatusAsync(Guid claimId, Guid staffId);
         Task<bool> DeleteAsync(Guid id);
         Task<WarrantyClaimDto> UpdateDescription(Guid claimId, string description);
         Task<IEnumerable<WarrantyClaimDto>> GetWarrantyClaimsByStatusAndOrgIdAsync(string status, Guid orgId);

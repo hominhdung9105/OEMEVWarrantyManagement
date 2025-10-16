@@ -155,55 +155,30 @@ namespace OEMEVWarrantyManagement.Application.Services
             return entitie != null ? true : false;
         }
 
-        public async Task<WarrantyClaimDto> UpdateStatusAsync(Guid claimId, string status)
+        public async Task<WarrantyClaimDto> UpdateStatusAsync(Guid claimId, WarrantyClaimStatus status)
         {
             var entity = await _warrantyClaimRepository.GetWarrantyClaimByIdAsync(claimId) ?? throw new ApiException(ResponseError.NotFoundWarrantyClaim);
 
-            entity.Status = status;
+            entity.Status = status.GetWarrantyClaimStatus();
 
-            if(status == WarrantyClaimStatus.Denied.GetWarrantyClaimStatus())
+            if(status == WarrantyClaimStatus.Denied)
             {
                 entity.ConfirmBy = _currentUserService.GetUserId();
                 entity.ConfirmDate = DateTime.Now;
             }
-            else if(status == WarrantyClaimStatus.Approved.GetWarrantyClaimStatus())
+            else if(status == WarrantyClaimStatus.Approved)
             {
+                if (entity.ConfirmBy == null) // Neu chua duoc phe duyet thi moi cap nhat
+                {
+                    entity.ConfirmBy = _currentUserService.GetUserId();
+                    entity.ConfirmDate = DateTime.Now;
+                }
+
                 var canExcute = await UpdateStatusClaimPartAsync(claimId);
                 if (canExcute)
                 {
                     entity.Status = WarrantyClaimStatus.WaitingForUnassignedRepair.GetWarrantyClaimStatus();
                 }
-            }
-
-            var update = await _warrantyClaimRepository.UpdateAsync(entity);
-            return _mapper.Map<WarrantyClaimDto>(update);
-        }
-
-        public async Task<WarrantyClaimDto> UpdateApproveStatusAsync(Guid claimId, Guid staffId)
-        {
-            var entity = await _warrantyClaimRepository.GetWarrantyClaimByIdAsync(claimId) ?? throw new ApiException(ResponseError.NotFoundWarrantyClaim);
-
-            entity.ConfirmBy = staffId;
-            entity.ConfirmDate = DateTime.Now;
-            entity.Status = WarrantyClaimStatus.Approved.GetWarrantyClaimStatus();
-
-            //var claimParts =
-            //    (await _claimPartRepository.GetClaimPartByClaimIdAsync(claimId))
-            //    .Where(cp => cp.Action == ClaimPartAction.Repair.GetClaimPartAction());
-
-            //if (claimParts.Any())
-            //{
-            //    foreach (var cp in claimParts)
-            //    {
-            //        cp.Status = ClaimPartStatus.Enough.GetClaimPartStatus();
-            //    }
-            //    await _claimPartRepository.UpdateRangeAsync(claimParts);
-            //}
-
-            var canExcute = await UpdateStatusClaimPartAsync(claimId);
-            if(canExcute)
-            {
-                entity.Status = WarrantyClaimStatus.WaitingForUnassignedRepair.GetWarrantyClaimStatus();
             }
 
             var update = await _warrantyClaimRepository.UpdateAsync(entity);
@@ -220,19 +195,33 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             var orgId = await _currentUserService.GetOrgId();
             var parts = await _partRepository.GetByOrgIdAsync(orgId);
-            var isEnoughInStock = PartService.CheckQuantityClaimPart(parts, claimParts);
 
+            var isEnoughInStock = PartService.HasEnoughPartsForClaim(claimParts, parts);
+            
             if (isEnoughInStock)
             {
+                // Gom nhóm theo model để tính số lượng yêu cầu
+                var requiredByModel = claimParts
+                    .GroupBy(cp => cp.Model)
+                    .Select(g => new
+                    {
+                        Model = g.Key,
+                        RequiredCount = g.Count()
+                    })
+                    .ToList();
+
                 foreach (var cp in claimParts)
                 {
                     cp.Status = ClaimPartStatus.Enough.GetClaimPartStatus();
-
-                    var part = parts.FirstOrDefault(p => p.Model == cp.Model);
-
-                    part.StockQuantity -= cp.Quantity;
                 }
-                
+
+                foreach (var req in requiredByModel)
+                {
+                    var part = parts.FirstOrDefault(p => p.Model == req.Model);
+
+                    part.StockQuantity -= req.RequiredCount;
+                }
+
                 await _partRepository.UpdateRangeAsync(parts);
             }
             else
