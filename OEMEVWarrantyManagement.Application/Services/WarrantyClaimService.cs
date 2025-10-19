@@ -22,8 +22,9 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IWarrantyPolicyRepository _warrantyPolicyRepository;   
         private readonly IVehicleWarrantyPolicyRepository _vehicleWarrantyPolicyRepository;
         private readonly ICustomerRepository _customerRepository;
+        private readonly IBackWarrantyClaimRepository _backWarrantyClaimRepository;
         //private readonly IWorkOrderService _workOrderService;
-        public WarrantyClaimService(IMapper mapper, IWarrantyClaimRepository warrantyClaimRepository, IVehicleRepository vehicleRepository, IWorkOrderRepository workOrderRepository, IEmployeeRepository employeeRepository, ICurrentUserService currentUserService, IClaimPartRepository claimPartRepository, IPartRepository partRepository, IWarrantyPolicyRepository warrantyPolicyRepository, IVehicleWarrantyPolicyRepository vehicleWarrantyPolicyRepository, ICustomerRepository customerRepository)
+        public WarrantyClaimService(IMapper mapper, IWarrantyClaimRepository warrantyClaimRepository, IVehicleRepository vehicleRepository, IWorkOrderRepository workOrderRepository, IEmployeeRepository employeeRepository, ICurrentUserService currentUserService, IClaimPartRepository claimPartRepository, IPartRepository partRepository, IWarrantyPolicyRepository warrantyPolicyRepository, IVehicleWarrantyPolicyRepository vehicleWarrantyPolicyRepository, ICustomerRepository customerRepository, IBackWarrantyClaimRepository backWarrantyClaimRepository)
         {
             _mapper = mapper;
             _warrantyClaimRepository = warrantyClaimRepository;
@@ -36,6 +37,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             _warrantyPolicyRepository = warrantyPolicyRepository;
             _vehicleWarrantyPolicyRepository = vehicleWarrantyPolicyRepository;
             _customerRepository = customerRepository;
+            _backWarrantyClaimRepository = backWarrantyClaimRepository;
         }
 
         public async Task<ResponseWarrantyClaim> CreateAsync(RequestWarrantyClaim request)
@@ -376,6 +378,19 @@ namespace OEMEVWarrantyManagement.Application.Services
                             EndDate = vp.EndDate
                         };
                     }).ToList();
+
+                //Lấy note nếu có backWarrantyClaim
+                if (claim.Status == WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyClaimStatus())
+                {
+                    var backClaims = await _backWarrantyClaimRepository.GetBackWarrantyClaimsByIdAsync(claim.ClaimId);
+                    var latestBackClaim = backClaims.FirstOrDefault();
+                    if (latestBackClaim != null)
+                    {
+                        claim.Notes = latestBackClaim.Description;
+                    }
+    
+                }
+
             }
 
             return claimDtos;

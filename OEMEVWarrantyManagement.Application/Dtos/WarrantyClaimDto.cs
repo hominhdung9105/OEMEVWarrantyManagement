@@ -61,6 +61,7 @@
         public string Status { get; set; }
         public string FailureDesc { get; set; }
         public Guid PolicyId { get; set; }
+        public string? Notes { get; set; }
         public List<ShowClaimPartDto> ShowClaimParts { get; set; }
         public List<PolicyInformationDto> ShowPolicy { get; set; }
     }
