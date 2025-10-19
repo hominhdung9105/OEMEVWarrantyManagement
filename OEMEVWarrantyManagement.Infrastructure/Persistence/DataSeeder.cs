@@ -1,10 +1,8 @@
-﻿// OEMEVWarrantyManagement.Infrastructure.Persistence/DataSeeder.cs
-
-namespace OEMEVWarrantyManagement.Infrastructure.Persistence
+﻿namespace OEMEVWarrantyManagement.Infrastructure.Persistence
 {
     using Bogus;
     using Microsoft.EntityFrameworkCore;
-    using OEMEVWarrantyManagement.Domain.Entities; // <-- Giữ nguyên using của bạn
+    using OEMEVWarrantyManagement.Domain.Entities;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -16,6 +14,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             // --- CÀI ĐẶT ---
             const int primaryRecordCount = 100;
             const int joinRecordCount = 300;
+            const int employeeCount = 20;
             Randomizer.Seed = new Random(8675309);
 
             if (context.Organizations.Any())
@@ -24,7 +23,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             }
 
             // --- CẤP 1: BẢNG KHÔNG PHỤ THUỘC ---
-            var orgFaker = new Faker<Organization>("en") // <-- SỬA TIẾNG ANH
+            var orgFaker = new Faker<Organization>("en")
                 .RuleFor(o => o.OrgId, f => f.Database.Random.Guid())
                 .RuleFor(o => o.Name, f => f.Company.CompanyName())
                 .RuleFor(o => o.Type, f => f.PickRandom(new[] { "OEM", "ServiceCenter", "Supplier" }))
@@ -36,20 +35,17 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             context.SaveChanges();
 
             // --- CẤP 2: PHỤ THUỘC VÀO CẤP 1 ---
-            var employeeFaker = new Faker<Employee>("en") // <-- SỬA TIẾNG ANH
+            var employeeFaker = new Faker<Employee>("en")
                 .RuleFor(e => e.UserId, f => f.Database.Random.Guid())
                 .RuleFor(e => e.Email, (f, u) => f.Internet.Email(f.Name.FirstName(), f.Name.LastName()))
-                // --- SỬA PASSWORD ---
-                // Đây là hash .NET Identity V3 hợp lệ cho "pass123"
-                .RuleFor(e => e.PasswordHash, f => "AQAAAAIAAYagAAAAEEfWv12/aVIy/ncy39WJjA/Oq9hBIvA9sbeDxfWxtTR39sD/TjD+fG5qjGhb/Nn1Yg==")
-                .RuleFor(e => e.Role, f => f.PickRandom(new[] { "Admin", "Manager", "Technician" }))
-                .RuleFor(e => e.OrgId, (f, u) => f.PickRandom(organizations).OrgId)
-                .RuleFor(e => e.RefreshToken, f => f.Random.AlphaNumeric(32))
-                .RuleFor(e => e.RefreshTokenExpiryTime, f => DateTime.UtcNow.AddDays(7));
-            var employees = employeeFaker.Generate(primaryRecordCount);
+                .RuleFor(e => e.PasswordHash, f => "pass123")
+                // Giữ nguyên Role của bạn
+                .RuleFor(e => e.Role, f => f.PickRandom(new[] { "ADMIN", "SC_STAFF", "SC_TECH", "EVM_STAFF" }))
+                .RuleFor(e => e.OrgId, (f, u) => f.PickRandom(organizations).OrgId);
+            var employees = employeeFaker.Generate(employeeCount);
             context.Employees.AddRange(employees);
 
-            var customerFaker = new Faker<Customer>("en") // <-- SỬA TIẾNG ANH
+            var customerFaker = new Faker<Customer>("en")
                 .RuleFor(c => c.CustomerId, f => f.Database.Random.Guid())
                 .RuleFor(c => c.Name, f => f.Name.FullName())
                 .RuleFor(c => c.Phone, f => f.Phone.PhoneNumber())
@@ -59,7 +55,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var customers = customerFaker.Generate(primaryRecordCount);
             context.Customers.AddRange(customers);
 
-            var partFaker = new Faker<Part>("en") // <-- SỬA TIẾNG ANH
+            var partFaker = new Faker<Part>("en")
                 .RuleFor(p => p.PartId, f => f.Database.Random.Guid())
                 .RuleFor(p => p.Model, f => f.Vehicle.Model() + "-" + f.Random.AlphaNumeric(5))
                 .RuleFor(p => p.Name, f => f.Commerce.ProductName())
@@ -69,7 +65,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var parts = partFaker.Generate(primaryRecordCount);
             context.Parts.AddRange(parts);
 
-            var policyFaker = new Faker<WarrantyPolicy>("en") // <-- SỬA TIẾNG ANH
+            var policyFaker = new Faker<WarrantyPolicy>("en")
                 .RuleFor(p => p.PolicyId, f => f.Database.Random.Guid())
                 .RuleFor(p => p.Name, f => f.Commerce.ProductName() + " Warranty")
                 .RuleFor(p => p.CoveragePeriodMonths, f => f.PickRandom(new[] { 12, 24, 36, 48 }))
@@ -78,7 +74,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var policies = policyFaker.Generate(primaryRecordCount);
             context.WarrantyPolicies.AddRange(policies);
 
-            var campaignFaker = new Faker<Campaign>("en") // <-- SỬA TIẾNG ANH
+            var campaignFaker = new Faker<Campaign>("en")
                 .RuleFor(c => c.CampaignId, f => f.Database.Random.Guid())
                 .RuleFor(c => c.Name, f => f.Company.Bs() + " Campaign")
                 .RuleFor(c => c.Type, f => f.PickRandom(new[] { "Recall", "Service", "Update" }))
@@ -90,20 +86,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var campaigns = campaignFaker.Generate(primaryRecordCount);
             context.Campaigns.AddRange(campaigns);
 
-            var workOrderFaker = new Faker<WorkOrder>("en") // <-- SỬA TIẾNG ANH
-                .RuleFor(w => w.WorkOrderId, f => f.Database.Random.Guid())
-                .RuleFor(w => w.AssignedTo, (f, u) => f.PickRandom(employees).UserId)
-                .RuleFor(w => w.Type, f => f.PickRandom(new[] { "Repair", "Maintenance", "Inspection" }))
-                .RuleFor(w => w.Target, f => f.PickRandom(new[] { "Vehicle", "Claim" }))
-                .RuleFor(w => w.TargetId, f => f.Database.Random.Guid())
-                .RuleFor(w => w.Status, f => f.PickRandom(new[] { "Pending", "InProgress", "Completed" }))
-                .RuleFor(w => w.StartDate, f => f.Date.Past(1))
-                .RuleFor(w => w.EndDate, (f, w) => w.Status == "Completed" ? f.Date.Recent() : (DateTime?)null)
-                .RuleFor(w => w.Notes, f => f.Lorem.Sentence());
-            var workOrders = workOrderFaker.Generate(primaryRecordCount);
-            context.WorkOrders.AddRange(workOrders);
+            // --- WORKORDER ĐÃ BỊ XÓA KHỎI ĐÂY ---
 
-            var partOrderFaker = new Faker<PartOrder>("en") // <-- SỬA TIẾNG ANH
+            var partOrderFaker = new Faker<PartOrder>("en")
                 .RuleFor(p => p.OrderId, f => f.Database.Random.Guid())
                 .RuleFor(p => p.ServiceCenterId, (f, u) => f.PickRandom(organizations).OrgId)
                 .RuleFor(p => p.RequestDate, f => f.Date.Past(1))
@@ -117,7 +102,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             context.SaveChanges(); // Lưu thay đổi CẤP 2
 
             // --- CẤP 3: PHỤ THUỘC VÀO CẤP 2 ---
-            var vehicleFaker = new Faker<Vehicle>("en") // <-- SỬA TIẾNG ANH
+            var vehicleFaker = new Faker<Vehicle>("en")
                 .RuleFor(v => v.Vin, f => f.Random.AlphaNumeric(17).ToUpper())
                 .RuleFor(v => v.Model, f => f.Vehicle.Model())
                 .RuleFor(v => v.Year, f => f.Random.Int(2020, 2025))
@@ -125,7 +110,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var vehicles = vehicleFaker.Generate(primaryRecordCount);
             context.Vehicles.AddRange(vehicles);
 
-            var campaignTargetFaker = new Faker<CampaignTarget>("en") // <-- SỬA TIẾNG ANH
+            var campaignTargetFaker = new Faker<CampaignTarget>("en")
                 .RuleFor(ct => ct.CampaignTargetId, f => f.Database.Random.Guid())
                 .RuleFor(ct => ct.CampaignId, (f, u) => f.PickRandom(campaigns).CampaignId)
                 .RuleFor(ct => ct.TargetType, f => f.PickRandom(new[] { "Model", "YearRange", "VIN" }))
@@ -135,7 +120,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var campaignTargets = campaignTargetFaker.Generate(joinRecordCount);
             context.CampaignTargets.AddRange(campaignTargets);
 
-            var partOrderItemFaker = new Faker<PartOrderItem>("en") // <-- SỬA TIẾNG ANH
+            var partOrderItemFaker = new Faker<PartOrderItem>("en")
                 .RuleFor(poi => poi.OrderItemId, f => f.Database.Random.Guid())
                 .RuleFor(poi => poi.OrderId, (f, u) => f.PickRandom(partOrders).OrderId)
                 .RuleFor(poi => poi.PartId, (f, u) => f.PickRandom(parts).PartId)
@@ -147,7 +132,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             context.SaveChanges(); // Lưu thay đổi CẤP 3
 
             // --- CẤP 4: PHỤ THUỘC VÀO CẤP 3 ---
-            var campaignVehicleFaker = new Faker<CampaignVehicle>("en") // <-- SỬA TIẾNG ANH
+            var campaignVehicleFaker = new Faker<CampaignVehicle>("en")
                 .RuleFor(cv => cv.CampaignVehicleId, f => f.Database.Random.Guid())
                 .RuleFor(cv => cv.CampaignId, (f, u) => f.PickRandom(campaigns).CampaignId)
                 .RuleFor(cv => cv.Vin, (f, u) => f.PickRandom(vehicles).Vin)
@@ -157,7 +142,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var campaignVehicles = campaignVehicleFaker.Generate(joinRecordCount);
             context.CampaignVehicles.AddRange(campaignVehicles);
 
-            var vehiclePartFaker = new Faker<VehiclePart>("en") // <-- SỬA TIẾNG ANH
+            var vehiclePartFaker = new Faker<VehiclePart>("en")
                 .RuleFor(vp => vp.VehiclePartId, f => f.Database.Random.Guid())
                 .RuleFor(vp => vp.Vin, (f, u) => f.PickRandom(vehicles).Vin)
                 .RuleFor(vp => vp.Model, f => f.Vehicle.Model())
@@ -169,7 +154,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var vehicleParts = vehiclePartFaker.Generate(joinRecordCount);
             context.VehicleParts.AddRange(vehicleParts);
 
-            var vehiclePolicyFaker = new Faker<VehicleWarrantyPolicy>("en") // <-- SỬA TIẾNG ANH
+            var vehiclePolicyFaker = new Faker<VehicleWarrantyPolicy>("en")
                 .RuleFor(vp => vp.VehicleWarrantyId, f => f.Database.Random.Guid())
                 .RuleFor(vp => vp.Vin, (f, u) => f.PickRandom(vehicles).Vin)
                 .RuleFor(vp => vp.PolicyId, (f, u) => f.PickRandom(policies).PolicyId)
@@ -179,7 +164,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var vehiclePolicies = vehiclePolicyFaker.Generate(joinRecordCount);
             context.VehicleWarrantyPolicies.AddRange(vehiclePolicies);
 
-            var claimFaker = new Faker<WarrantyClaim>("en") // <-- SỬA TIẾNG ANH
+            var claimFaker = new Faker<WarrantyClaim>("en")
                 .RuleFor(c => c.ClaimId, f => f.Database.Random.Guid())
                 .RuleFor(c => c.Vin, (f, u) => f.PickRandom(vehicles).Vin)
                 .RuleFor(c => c.ServiceCenterId, (f, u) => f.PickRandom(organizations.Where(o => o.Type == "ServiceCenter")).OrgId)
@@ -197,7 +182,33 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             context.SaveChanges(); // Lưu thay đổi CẤP 4
 
             // --- CẤP 5: PHỤ THUỘC VÀO CẤP 4 ---
-            var backClaimFaker = new Faker<BackWarrantyClaim>("en") // <-- SỬA TIẾNG ANH
+
+            // --- WORKORDER ĐÃ ĐƯỢC DI CHUYỂN XUỐNG ĐÂY ---
+            var workOrderFaker = new Faker<WorkOrder>("en")
+                .RuleFor(w => w.WorkOrderId, f => f.Database.Random.Guid())
+                .RuleFor(w => w.AssignedTo, (f, u) => f.PickRandom(employees).UserId)
+                .RuleFor(w => w.Type, f => f.PickRandom(new[] { "Repair", "Inspection" })) // Giữ nguyên Type của bạn
+                .RuleFor(w => w.Status, f => f.PickRandom(new[] { "Pending", "InProgress", "Completed" }))
+                .RuleFor(w => w.StartDate, f => f.Date.Past(1))
+                .RuleFor(w => w.EndDate, (f, w) => w.Status == "Completed" ? f.Date.Recent() : (DateTime?)null)
+                .RuleFor(w => w.Notes, f => f.Lorem.Sentence())
+                // --- SỬA LOGIC TARGET ID ---
+                .RuleFor(w => w.Target, f => f.PickRandom(new[] { "Campaign", "Claim" })) // Giữ nguyên Target của bạn
+                .RuleFor(w => w.TargetId, (f, w) =>
+                {
+                    // Nếu Target là "Claim", chọn 1 ClaimId ngẫu nhiên
+                    if (w.Target == "Claim")
+                    {
+                        return f.PickRandom(claims).ClaimId; // 'claims' từ Cấp 4
+                    }
+                    // Ngược lại, Target là "Campaign", chọn 1 CampaignId ngẫu nhiên
+                    return f.PickRandom(campaigns).CampaignId; // 'campaigns' từ Cấp 2
+                });
+            var workOrders = workOrderFaker.Generate(primaryRecordCount);
+            context.WorkOrders.AddRange(workOrders);
+
+
+            var backClaimFaker = new Faker<BackWarrantyClaim>("en")
                 .RuleFor(b => b.WarrantyClaimId, (f, u) => f.PickRandom(claims).ClaimId)
                 .RuleFor(b => b.CreatedDate, f => f.Date.Recent())
                 .RuleFor(b => b.Description, f => f.Lorem.Sentence(10))
@@ -208,7 +219,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                                            .ToList();
             context.BackWarrantyClaims.AddRange(backClaims);
 
-            var attachmentFaker = new Faker<ClaimAttachment>("en") // <-- SỬA TIẾNG ANH
+            var attachmentFaker = new Faker<ClaimAttachment>("en")
                 .RuleFor(a => a.AttachmentId, f => f.Database.Random.Guid().ToString())
                 .RuleFor(a => a.ClaimId, (f, u) => f.PickRandom(claims).ClaimId)
                 .RuleFor(a => a.URL, f => f.Image.PicsumUrl())
@@ -216,7 +227,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var attachments = attachmentFaker.Generate(joinRecordCount);
             context.ClaimAttachments.AddRange(attachments);
 
-            var claimPartFaker = new Faker<ClaimPart>("en") // <-- SỬA TIẾNG ANH
+            var claimPartFaker = new Faker<ClaimPart>("en")
                 .RuleFor(cp => cp.ClaimPartId, f => f.Database.Random.Guid())
                 .RuleFor(cp => cp.ClaimId, (f, u) => f.PickRandom(claims).ClaimId)
                 .RuleFor(cp => cp.Model, f => f.Vehicle.Model())

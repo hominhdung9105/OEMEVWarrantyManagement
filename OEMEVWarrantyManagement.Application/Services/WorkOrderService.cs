@@ -104,7 +104,7 @@ namespace OEMEVWarrantyManagement.Application.Services
 
                 if (claim.Status == WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyClaimStatus())
                     type = WorkOrderType.Inspection.GetWorkOrderType();
-                else if (claim.Status == WarrantyClaimStatus.Approved.GetWarrantyClaimStatus())
+                else if (claim.Status == WarrantyClaimStatus.WaitingForUnassignedRepair.GetWarrantyClaimStatus())
                     type = WorkOrderType.Repair.GetWorkOrderType();
                 else
                     throw new ApiException(ResponseError.InternalServerError);

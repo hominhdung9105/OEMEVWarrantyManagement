@@ -10,8 +10,8 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public string PasswordHash { get; set; }
         public string Role { get; set; }
         public Guid OrgId { get; set; }
-        public string RefreshToken { get; set; }
-        public DateTime RefreshTokenExpiryTime { get; set; }
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiryTime { get; set; }
 
         // Navigation Properties
         [JsonIgnore]
