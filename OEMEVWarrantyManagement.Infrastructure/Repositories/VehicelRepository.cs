@@ -24,5 +24,12 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         {
             return await _context.Vehicles.FindAsync(Vin);
         }
+        public async Task<List<Vehicle>> GetVehiclesByVinsAsync(List<string> vins)
+        {
+            return await _context.Vehicles
+                .Where(v => vins.Contains(v.Vin))
+                .ToListAsync();
+        }
+
     }
 }

@@ -21,5 +21,12 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         {
             return await _context.Customers.FirstOrDefaultAsync(c => c.CustomerId == customerId);
         }
+        public async Task<List<Customer>> GetCustomersByIdsAsync(List<Guid> customerIds)
+        {
+            return await _context.Customers
+                .Where(c => customerIds.Contains(c.CustomerId))
+                .ToListAsync();
+        }
+
     }
 }

@@ -13,5 +13,11 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public int CoveragePeriodMonths { get; set; }
         public string Conditions { get; set; }
     }
+    //public class PolicyInformationDto
+    //{
+    //    public string PolicyName { get; set; }
+    //    public DateTime StartDate { get; set; }
+    //    public DateTime EndDate { get; set; }
+    //}
 
 }

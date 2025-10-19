@@ -9,5 +9,7 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<IEnumerable<Part>> GetPartsAsync(string model, Guid orgId);
         Task<Part> GetPartsByIdAsync(Guid PartId);
         Task UpdateRangeAsync(IEnumerable<Part> entities);
+
+        Task<Part> GetPartByModelAsync(string model);
     }
 }

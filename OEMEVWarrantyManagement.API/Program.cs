@@ -16,6 +16,8 @@ using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Middlewares;
 using OEMEVWarrantyManagement.Share.Models.Response;
 using Scalar.AspNetCore;
+using OEMEVWarrantyManagement.Infrastructure.Persistence; // <-- Thêm using này
+using Microsoft.EntityFrameworkCore; // <-- Thêm using này
 
 namespace OEMEVWarrantyManagement.API
 {
@@ -30,21 +32,22 @@ namespace OEMEVWarrantyManagement.API
                 builder.Configuration.GetSection("AppSettings"));
 
             // Add Controllers - ignore null value in response
+
             builder.Services.AddControllers()
                 .ConfigureApiBehaviorOptions(options =>
                 {
-                    options.InvalidModelStateResponseFactory = context =>
-                    {
-                        var errors = context.ModelState
-                            .Where(x => x.Value?.Errors.Count > 0)
-                            .Select(x => new
-                            {
-                                field = x.Key,
-                                messages = x.Value!.Errors.Select(e => e.ErrorMessage)
-                            });
+                    //options.InvalidModelStateResponseFactory = context =>
+                    //{
+                    //    var errors = context.ModelState
+                    //        .Where(x => x.Value?.Errors.Count > 0)
+                    //        .Select(x => new
+                    //        {
+                    //            field = x.Key,
+                    //            messages = x.Value!.Errors.Select(e => e.ErrorMessage)
+                    //        });
 
-                        return new BadRequestObjectResult(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
-                    };
+                    //    return new BadRequestObjectResult(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
+                    //};
                 })
                 .AddJsonOptions(options =>
                 {
@@ -191,6 +194,33 @@ namespace OEMEVWarrantyManagement.API
 
             var app = builder.Build();
 
+            //// =================================================================
+            //// KHỐI MÃ SEEDING: Thêm khối này vào | chạy 1 lần nếu muốn lấy data mẫu
+            //// =================================================================
+            //using (var scope = app.Services.CreateScope())
+            //{
+            //    var services = scope.ServiceProvider;
+            //    try
+            //    {
+            //        var dbContext = services.GetRequiredService<AppDbContext>();
+
+            //        // 1. Tự động chạy migration để tạo bảng
+            //        dbContext.Database.Migrate();
+
+            //        // 2. Gọi Seeder để thêm data (nó sẽ tự kiểm tra nếu DB trống)
+            //        DataSeeder.SeedDatabase(dbContext);
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        // Ghi log lỗi nếu có
+            //        var logger = services.GetRequiredService<ILogger<Program>>();
+            //        logger.LogError(ex, "Đã xảy ra lỗi khi seeding database.");
+            //    }
+            //}
+            //// =================================================================
+            //// KẾT THÚC KHỐI MÃ SEEDING
+            //// =================================================================
+
             // Dev
 
 
@@ -202,7 +232,8 @@ namespace OEMEVWarrantyManagement.API
             }
             app.UseCors("AllowAll");
             // Thay tất cả exception middleware bằng global response
-            app.UseMiddleware<GlobalResponseMiddleware>();
+
+            //app.UseMiddleware<GlobalResponseMiddleware>();
 
             //app.UseHttpsRedirection();
 

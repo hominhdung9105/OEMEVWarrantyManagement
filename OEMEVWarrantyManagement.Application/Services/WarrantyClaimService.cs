@@ -21,8 +21,9 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IPartRepository _partRepository;
         private readonly IWarrantyPolicyRepository _warrantyPolicyRepository;   
         private readonly IVehicleWarrantyPolicyRepository _vehicleWarrantyPolicyRepository;
+        private readonly ICustomerRepository _customerRepository;
         //private readonly IWorkOrderService _workOrderService;
-        public WarrantyClaimService(IMapper mapper, IWarrantyClaimRepository warrantyClaimRepository, IVehicleRepository vehicleRepository, IWorkOrderRepository workOrderRepository, IEmployeeRepository employeeRepository, ICurrentUserService currentUserService, IClaimPartRepository claimPartRepository, IPartRepository partRepository, IWarrantyPolicyRepository warrantyPolicyRepository, IVehicleWarrantyPolicyRepository vehicleWarrantyPolicyRepository)
+        public WarrantyClaimService(IMapper mapper, IWarrantyClaimRepository warrantyClaimRepository, IVehicleRepository vehicleRepository, IWorkOrderRepository workOrderRepository, IEmployeeRepository employeeRepository, ICurrentUserService currentUserService, IClaimPartRepository claimPartRepository, IPartRepository partRepository, IWarrantyPolicyRepository warrantyPolicyRepository, IVehicleWarrantyPolicyRepository vehicleWarrantyPolicyRepository, ICustomerRepository customerRepository)
         {
             _mapper = mapper;
             _warrantyClaimRepository = warrantyClaimRepository;
@@ -34,8 +35,9 @@ namespace OEMEVWarrantyManagement.Application.Services
             _claimPartRepository = claimPartRepository;
             _warrantyPolicyRepository = warrantyPolicyRepository;
             _vehicleWarrantyPolicyRepository = vehicleWarrantyPolicyRepository;
+            _customerRepository = customerRepository;
         }
-        
+
         public async Task<ResponseWarrantyClaim> CreateAsync(RequestWarrantyClaim request)
         {
 
@@ -276,34 +278,108 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<IEnumerable<WarrantyClaimDto>>(entities);
         }
 
+        //public async Task<IEnumerable<ResponseWarrantyClaimDto>> GetWarrantyClaimHavePolicyAndParts()
+        //{
+        //    var orgId = await _currentUserService.GetOrgId();
+        //    var entities = await _warrantyClaimRepository.GetAllWarrantyClaimByOrgIdAsync(orgId);
+        //    var results = _mapper.Map<IEnumerable<ResponseWarrantyClaimDto>>(entities);
+
+        //    foreach (var claim in results)
+        //    {
+        //        var claimParts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
+        //        claim.ShowClaimParts = _mapper.Map<List<ShowClaimPartDto>>(claimParts);
+
+        //        var vehiclePolicies = await _vehicleWarrantyPolicyRepository.GetAllVehicleWarrantyPolicyByVinAsync(claim.Vin);
+
+        //        var policyDtos = new List<WarrantyPolicyDto>();
+        //        foreach (var vp in vehiclePolicies)
+        //        {
+        //            var policy = await _warrantyPolicyRepository.GetByIdAsync(vp.PolicyId);
+        //            if (policy != null)
+        //            {
+        //                var mapped = _mapper.Map<WarrantyPolicyDto>(policy);
+        //                policyDtos.Add(mapped);
+        //            }
+        //        }
+
+        //        claim.ShowPolicy = policyDtos;
+        //    }
+
+        //    return results;
+        //}
+        // OEMEVWarrantyManagement.Application.Services/WarrantyClaimService.cs
+
+        // ... (Các Repository và Dependency Injection khác)
+
+        // Trong OEMEVWarrantyManagement.Application.Services/WarrantyClaimService.cs
+
         public async Task<IEnumerable<ResponseWarrantyClaimDto>> GetWarrantyClaimHavePolicyAndParts()
         {
             var orgId = await _currentUserService.GetOrgId();
-            var entities = await _warrantyClaimRepository.GetAllWarrantyClaimByOrgIdAsync(orgId);
-            var results = _mapper.Map<IEnumerable<ResponseWarrantyClaimDto>>(entities);
+            //var claims = await _warrantyClaimRepository.GetAllWarrantyClaimByOrgIdAsync(orgId);
+            var claims = await _warrantyClaimRepository.GetAllWarrantyClaimAsync();//test toan bo
 
-            foreach (var claim in results)
+            var claimDtos = _mapper.Map<List<ResponseWarrantyClaimDto>>(claims);
+
+            var vins = claimDtos.Select(c => c.Vin).Distinct().ToList();
+            var vehicles = await _vehicleRepository.GetVehiclesByVinsAsync(vins);
+            var vehicleDict = vehicles.ToDictionary(v => v.Vin);
+
+            var customerIds = vehicles.Select(v => v.CustomerId).Distinct().ToList();
+            var customers = await _customerRepository.GetCustomersByIdsAsync(customerIds);
+            var customerDict = customers.ToDictionary(c => c.CustomerId);
+
+            var allPolicies = await _warrantyPolicyRepository.GetAllAsync();
+            var policyLookup = allPolicies.ToDictionary(p => p.PolicyId);
+
+            foreach (var claim in claimDtos)
             {
-                var claimParts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
-                claim.ShowClaimParts = _mapper.Map<List<ShowClaimPartDto>>(claimParts);
-
-                var vehiclePolicies = await _vehicleWarrantyPolicyRepository.GetAllVehicleWarrantyPolicyByVinAsync(claim.Vin);
-
-                var policyDtos = new List<WarrantyPolicyDto>();
-                foreach (var vp in vehiclePolicies)
+                // Gán thông tin từ vehicle
+                if (vehicleDict.TryGetValue(claim.Vin, out var vehicle))
                 {
-                    var policy = await _warrantyPolicyRepository.GetByIdAsync(vp.PolicyId);
-                    if (policy != null)
+                    claim.Model = vehicle.Model;
+                    claim.Year = vehicle.Year;
+
+                    // Gán thông tin từ customer
+                    if (customerDict.TryGetValue(vehicle.CustomerId, out var customer))
                     {
-                        var mapped = _mapper.Map<WarrantyPolicyDto>(policy);
-                        policyDtos.Add(mapped);
+                        claim.CustomerName = customer.Name;
+                        claim.CustomerPhoneNumber = customer.Phone;
                     }
                 }
 
-                claim.ShowPolicy = policyDtos;
+                // Lấy claim parts
+                var claimParts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
+                var showClaimParts = new List<ShowClaimPartDto>();
+
+                foreach (var cp in claimParts)
+                {
+                    var dto = _mapper.Map<ShowClaimPartDto>(cp);
+                    var part = await _partRepository.GetPartByModelAsync(cp.Model); // giữ tuần tự
+                    dto.Category = part?.Category ?? "N/A";
+                    showClaimParts.Add(dto);
+                }
+                claim.ShowClaimParts = showClaimParts;
+
+                // Lấy vehicle policies
+                var vehiclePolicies = await _vehicleWarrantyPolicyRepository.GetAllVehicleWarrantyPolicyByVinAsync(claim.Vin);
+
+                claim.ShowPolicy = vehiclePolicies
+                    .Where(vp => policyLookup.ContainsKey(vp.PolicyId))
+                    .Select(vp =>
+                    {
+                        var policyInfo = policyLookup[vp.PolicyId];
+                        return new PolicyInformationDto
+                        {
+                            PolicyName = policyInfo.Name,
+                            StartDate = vp.StartDate,
+                            EndDate = vp.EndDate
+                        };
+                    }).ToList();
             }
 
-            return results;
+            return claimDtos;
         }
+
     }
 }
