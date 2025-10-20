@@ -145,7 +145,7 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddScoped<IWarrantyClaimService, WarrantyClaimService>();
             builder.Services.AddScoped<IWarrantyClaimRepository, WarrantyClaimRepository>();
             //Vehicle
-            builder.Services.AddScoped<IVehicleRepository, VehicelRepository>();
+            builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
             builder.Services.AddScoped<IVehicleService, VehicleService>();
             //Employee
             builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
@@ -181,6 +181,10 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddScoped<IBackWarrantyClaimService, BackWarrantyClaimService>();
             //Vehicle Part
             builder.Services.AddScoped<IVehiclePartRepository, VehiclePartRepository>();
+            builder.Services.AddScoped<IVehiclePartService, VehiclePartService>();
+            // Attechment
+            builder.Services.AddScoped<IImageRepository, ImageRepository>();
+            builder.Services.AddScoped<IImageService, ImageService>();
 
             builder.Services.AddCors(options =>
             {
