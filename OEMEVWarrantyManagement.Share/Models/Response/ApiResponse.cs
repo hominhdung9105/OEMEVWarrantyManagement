@@ -11,10 +11,10 @@
         [ResponseErrorAttr("Invalid token.", 401, 3)]
         AuthenticationFailed,
 
-        [ResponseErrorAttr("Access token is required.", 400, 4)]
+        [ResponseErrorAttr("Access token is required.", 401, 4)]
         AccessTokenRequired,
 
-        [ResponseErrorAttr("Refresh token is required.", 400, 5)]
+        [ResponseErrorAttr("Refresh token is required.", 401, 5)]
         RefreshTokenRequired,
 
         [ResponseErrorAttr("Invalid refresh token.", 400, 6)]
@@ -47,7 +47,7 @@
         [ResponseErrorAttr("Invalid update request.", 400, 15)]
         InvalidUpdateCarCondition,
 
-        [ResponseErrorAttr("Car condition not found.", 400, 16)]
+        [ResponseErrorAttr("Car condition not found.", 404, 16)]
         NotFoundCarCondition,
 
         [ResponseErrorAttr("Employee is technical.", 400, 17)]
@@ -95,11 +95,20 @@
         [ResponseErrorAttr("Invalid category.", 400, 31)]
         InvalidPartCategory,
 
-        [ResponseErrorAttr("Vehicle part not found.", 400, 32)]
+        [ResponseErrorAttr("Vehicle part not found.", 404, 32)]
         NotFoundVehiclePart,
 
         [ResponseErrorAttr("Claim part not found.", 404, 33)]
-        NotFoundClaimPart
+        NotFoundClaimPart,
+
+        [ResponseErrorAttr("Invalid part model.", 400, 34)]
+        InvalidPartModel,
+
+        [ResponseErrorAttr("Invalid vehicle policy id.", 400, 35)]
+        InvalidVehiclePolicyId,
+
+        [ResponseErrorAttr("Invalid policy", 400, 36)]
+        InvalidPolicy
     }
 
     public class ApiResponse<T>

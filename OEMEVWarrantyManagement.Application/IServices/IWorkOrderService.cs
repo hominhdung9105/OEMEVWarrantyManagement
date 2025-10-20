@@ -12,5 +12,7 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<IEnumerable<WorkOrderDto>> GetWorkOrderByTechAsync(Guid techId);
         Task<IEnumerable<WorkOrderDto>> GetWorkOrderOfTechByTypeAsync(Guid techId, WorkOrderType type);
         Task<IEnumerable<WorkOrderDto>> CreateWorkOrdersAsync(RequestCreateWorkOrdersDto workOrdersDto);
+        Task<WorkOrderDetailDto> GetWorkOrderDetailAsync(Guid workOrderId);
+        Task<IEnumerable<WorkOrderDetailDto>> GetWorkOrdersDetailByTechAsync(string? type = null, string? status = null, DateTime? from = null, DateTime? to = null);
     }
 }

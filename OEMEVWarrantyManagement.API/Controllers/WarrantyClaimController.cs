@@ -17,12 +17,14 @@ namespace OEMEVWarrantyManagement.API.Controllers
         private readonly IEmployeeService _employeeService;
         private readonly IWorkOrderService _workOrderService;
         private readonly IClaimPartService _claimPartService;
-        public WarrantyClaimController(IWarrantyClaimService warrantyClaimService, IEmployeeService employeeService, IWorkOrderService workOrderService, IClaimPartService claimPartService)
+        private readonly IVehicleWarrantyPolicyService _vehicleWarrantyPolicyService;
+        public WarrantyClaimController(IWarrantyClaimService warrantyClaimService, IEmployeeService employeeService, IWorkOrderService workOrderService, IClaimPartService claimPartService, IVehicleWarrantyPolicyService vehicleWarrantyPolicyService)
         {
             _warrantyClaimService = warrantyClaimService;
             _employeeService = employeeService;
             _workOrderService = workOrderService;
             _claimPartService = claimPartService;
+            _vehicleWarrantyPolicyService = vehicleWarrantyPolicyService;
         }
 
         //create : VIN
@@ -48,7 +50,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
             }
             else if (role == RoleIdEnum.ScStaff.GetRoleId())
             {
-                //var result = await _warrantyClaimService.GetAllWarrantyClaimByOrganizationAsync();
+                //var result = await _warranty_claimService.GetAllWarrantyClaimByOrganizationAsync();
                 var result = await _warrantyClaimService.GetWarrantyClaimHavePolicyAndParts();
                 return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
             }
@@ -79,13 +81,22 @@ namespace OEMEVWarrantyManagement.API.Controllers
             else return Unauthorized(ApiResponse<object>.Fail(ResponseError.Forbidden));
         }
 
+        [HttpGet("vehicle-policies/{vin}")]
+        [Authorize]
+        public async Task<IActionResult> GetVehiclePolicies(string vin)
+        {
+            var policies = await _vehicleWarrantyPolicyService.GetAllByVinAsync(vin);
+            return Ok(ApiResponse<IEnumerable<VehicleWarrantyPolicyDto>>.Ok(policies, "Get vehicle policies"));
+        }
+
         [HttpPut("{claimId}/approve")]
         [Authorize(policy: "RequireEvmStaff")]
-        public async Task<IActionResult> ApproveWarrantyClaim(string claimId)
+        public async Task<IActionResult> ApproveWarrantyClaim(string claimId, [FromBody] ApproveWarrantyClaimRequest request)
         {
             if (!Guid.TryParse(claimId, out var id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
+            if(request.PolicyId == null) throw new ApiException(ResponseError.InvalidVehiclePolicyId);
 
-            var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.Approved);
+            var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.Approved, request?.PolicyId);
 
             return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Accept Successfully!"));
         }

@@ -22,31 +22,35 @@ namespace OEMEVWarrantyManagement.API.Controllers
             _warrantyClaimService = warrantyClaimService;
         }
 
-        // TODO - claimId nay nen doi thanh targetId va can truyen ca type vao de biet la claim hay campaign
-        //[HttpPost("{claimId}")]
-        //[Authorize]
-        //public async Task<IActionResult> Create(string claimId, RequestCreateWorkOrderDto dto)
-        //{
-        //    if (!Guid.TryParse(claimId, out var Id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId); // TODO - chua biet claim hay campaign ma bao loi
-
-        //    dto.TargetId = Id;
-        //    dto.StartDate = DateTime.Now;
-        //    var result = await _workOrderService.CreateWorkOrderAsync(dto);
-        //    return Ok(ApiResponse<RequestCreateWorkOrderDto>.Ok(result, "Create Work Order successfully!!"));
-        //}
-
         [HttpGet("by-tech")]
         [Authorize(policy: "RequireScTech")]
-        public async Task<IActionResult> GetWorkOrderByTech() 
+        public async Task<IActionResult> GetWorkOrderByTech()
         {
             var techId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var result = await _workOrderService.GetWorkOrderByTechAsync(Guid.Parse(techId));
             return Ok(ApiResponse<IEnumerable<WorkOrderDto>>.Ok(result, "Get Work Order by Tech successfully!!"));
         }
 
+        [HttpGet("by-tech/detail")]
+        [Authorize(policy: "RequireScTech")]
+        public async Task<IActionResult> GetWorkOrdersDetailByTech([FromQuery] string? type = null, [FromQuery] string? status = null, [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null)
+        {
+            var result = await _workOrderService.GetWorkOrdersDetailByTechAsync(type, status, from, to);
+            return Ok(ApiResponse<IEnumerable<WorkOrderDetailDto>>.Ok(result, "Get Work Orders detail by Tech successfully"));
+        }
+
+        [HttpGet("detail/{workOrderId}")]
+        [Authorize(policy: "RequireScTech")]
+        public async Task<IActionResult> GetWorkOrderDetail(string workOrderId)
+        {
+            if (!Guid.TryParse(workOrderId, out var id)) throw new ApiException(ResponseError.NotFoundWorkOrder);
+            var result = await _workOrderService.GetWorkOrderDetailAsync(id);
+            return Ok(ApiResponse<WorkOrderDetailDto>.Ok(result, "Get work order detail successfully"));
+        }
+
         [HttpGet("by-tech/inspection")]
         [Authorize(policy: "RequireScTech")]
-        public async Task<IActionResult> GetWorkOrderTypeInspectionByTech() 
+        public async Task<IActionResult> GetWorkOrderTypeInspectionByTech()
         {
             var techId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var result = await _workOrderService.GetWorkOrderOfTechByTypeAsync(Guid.Parse(techId), WorkOrderType.Inspection);
@@ -64,7 +68,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpPost("{targetId}")]
         [Authorize(policy: "RequireScStaff")]
-        public async Task<IActionResult> CreateWorkOrders(string targetId, RequestCreateWorkOrdersDto request) 
+        public async Task<IActionResult> CreateWorkOrders(string targetId, RequestCreateWorkOrdersDto request)
         {
             if (!Guid.TryParse(targetId, out var Id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
 

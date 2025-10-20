@@ -14,6 +14,8 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public string Status { get; set; }
+        // new: include policy name from WarrantyPolicy table
+        public string? PolicyName { get; set; }
     }
 
     public class PolicyInformationDto

@@ -60,10 +60,12 @@
         public Guid? AssignTo { get; set; }
         public string Status { get; set; }
         public string FailureDesc { get; set; }
+        public string Description { get; set; }
         public Guid PolicyId { get; set; }
         public string? Notes { get; set; }
         public List<ShowClaimPartDto> ShowClaimParts { get; set; }
         public List<PolicyInformationDto> ShowPolicy { get; set; }
+        public List<ImageDto> Attachments { get; set; } // Added: image URLs for the claim
     }
     public class RepairRequestDto
     {

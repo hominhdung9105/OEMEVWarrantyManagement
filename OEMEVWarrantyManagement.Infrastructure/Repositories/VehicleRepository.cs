@@ -1,16 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OEMEVWarrantyManagement.Application.IRepository;
-using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
 
 
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 {
-    public class VehicelRepository : IVehicleRepository
+    public class VehicleRepository : IVehicleRepository
     {
         private readonly AppDbContext _context;
-        public VehicelRepository(AppDbContext context)
+        public VehicleRepository(AppDbContext context)
         {
             _context = context;
         }

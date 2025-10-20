@@ -52,7 +52,7 @@ namespace OEMEVWarrantyManagement.Share.Enums
                 {
                     PartCategory.Battery.GetPartCategory(), new List<string>
                     {
-                        "Battery Model A",
+                        "P-VFE34-CHARGER",
                         "Battery Model B",
                         "Battery Model C"
                     }
@@ -79,6 +79,16 @@ namespace OEMEVWarrantyManagement.Share.Enums
             return ModelsByCategory.TryGetValue(category, out var models)
                 ? models
                 : new List<string>(); // nếu không có thì trả list rỗng
+        }
+
+        // Check if a model exists across all categories (case-insensitive)
+        public static bool IsValidModel(string model)
+        {
+            if (string.IsNullOrWhiteSpace(model)) return false;
+
+            return ModelsByCategory.Values
+                .SelectMany(list => list)
+                .Any(m => string.Equals(m, model, StringComparison.OrdinalIgnoreCase));
         }
     }
 }

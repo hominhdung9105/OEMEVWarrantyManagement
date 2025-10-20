@@ -36,7 +36,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
     {
         public List<Guid> AssignedTo { get; set; }
         public string Target { get; set; }// claim hay campaign
-        public Guid TargetId { get; set; }
+        public Guid? TargetId { get; set; }
     }
 
     public class RequestCreateAndUpdateDto

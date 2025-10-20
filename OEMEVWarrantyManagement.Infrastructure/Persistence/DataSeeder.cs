@@ -1,12 +1,8 @@
-﻿namespace OEMEVWarrantyManagement.Infrastructure.Persistence
-{
-    using Bogus;
-    using Microsoft.EntityFrameworkCore;
-    using OEMEVWarrantyManagement.Domain.Entities;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
+﻿using Bogus;
+using OEMEVWarrantyManagement.Domain.Entities;
 
+namespace OEMEVWarrantyManagement.Infrastructure.Persistence
+{
     public static class DataSeeder
     {
         public static void SeedDatabase(AppDbContext context)
@@ -149,7 +145,7 @@
                 .RuleFor(vp => vp.SerialNumber, f => f.Random.AlphaNumeric(12))
                 .RuleFor(vp => vp.InstalledDate, f => f.Date.Past(2))
                 .RuleFor(vp => vp.UninstalledDate, (f, vp) => f.Date.Between(vp.InstalledDate.AddDays(1), vp.InstalledDate.AddYears(5)))
-                .RuleFor(vp => vp.Status, (f, vp) => vp.UninstalledDate > DateTime.UtcNow ? "Active" : "Uninstalled")
+                .RuleFor(vp => vp.Status, (f, vp) => vp.UninstalledDate > DateTime.Now ? "Active" : "Uninstalled")
                 .RuleFor(vp => vp.PartId, (f, u) => f.PickRandom(parts).PartId);
             var vehicleParts = vehiclePartFaker.Generate(joinRecordCount);
             context.VehicleParts.AddRange(vehicleParts);
