@@ -50,8 +50,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
             }
             else if (role == RoleIdEnum.ScStaff.GetRoleId())
             {
-                //var result = await _warranty_claimService.GetAllWarrantyClaimByOrganizationAsync();
-                var result = await _warrantyClaimService.GetWarrantyClaimHavePolicyAndParts();
+                var result = await _warrantyClaimService.GetWarrantyClaimHavePolicyAndPartsAndOrg();
                 return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
             }
             else if (role == RoleIdEnum.Technician.GetRoleId())
@@ -87,6 +86,15 @@ namespace OEMEVWarrantyManagement.API.Controllers
         {
             var policies = await _vehicleWarrantyPolicyService.GetAllByVinAsync(vin);
             return Ok(ApiResponse<IEnumerable<VehicleWarrantyPolicyDto>>.Ok(policies, "Get vehicle policies"));
+        }
+
+        // EVM staff: get all claims in SentToManufacturer status across all orgs with full info
+        [HttpGet("need-confirm")]
+        [Authorize(policy: "RequireEvmStaff")]
+        public async Task<IActionResult> GetAllWarrantyClaimNeedConfirm()
+        {
+            var result = await _warrantyClaimService.GetWarrantyClaimsSentToManufacturerAsync();
+            return Ok(ApiResponse<IEnumerable<ResponseWarrantyClaimDto>>.Ok(result, "Get SentToManufacturer claims successfully!"));
         }
 
         [HttpPut("{claimId}/approve")]
@@ -220,25 +228,25 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
         }
 
-        [HttpGet("need-assgin")]
-        [Authorize(Policy = ("RequireScStaff"))]
-        public async Task<IActionResult> GetAllWarrantyClaimNeedAssign()
-        {
-            IEnumerable<WarrantyClaimDto> result;
+        //[HttpGet("need-assgin")]
+        //[Authorize(Policy = ("RequireScStaff"))]
+        //public async Task<IActionResult> GetAllWarrantyClaimNeedAssign()
+        //{
+        //    IEnumerable<WarrantyClaimDto> result;
 
-            var role = User.FindFirstValue(ClaimTypes.Role);
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        //    var role = User.FindFirstValue(ClaimTypes.Role);
+        //    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var employee = await _employeeService.GetEmployeeByIdAsync(Guid.Parse(userId));
-            var orgId = employee.OrgId;
-            // TODO - con campaign nhung chua xu li nen de tam o day
-            result = await _warrantyClaimService.GetWarrantyClaimsByStatusAndOrgIdAsync(WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyClaimStatus(), orgId);
-            if (result != null)
-                result = result.Concat(await _warrantyClaimService.GetWarrantyClaimsByStatusAndOrgIdAsync(WarrantyClaimStatus.WaitingForUnassignedRepair.GetWarrantyClaimStatus(), orgId));
-            else
-                result = await _warrantyClaimService.GetWarrantyClaimsByStatusAndOrgIdAsync(WarrantyClaimStatus.WaitingForUnassignedRepair.GetWarrantyClaimStatus(), orgId);
+        //    var employee = await _employeeService.GetEmployeeByIdAsync(Guid.Parse(userId));
+        //    var orgId = employee.OrgId;
+        //    // TODO - con campaign nhung chua xu li nen de tam o day
+        //    result = await _warrantyClaimService.GetWarrantyClaimsByStatusAndOrgIdAsync(WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyClaimStatus(), orgId);
+        //    if (result != null)
+        //        result = result.Concat(await _warrantyClaimService.GetWarrantyClaimsByStatusAndOrgIdAsync(WarrantyClaimStatus.WaitingForUnassignedRepair.GetWarrantyClaimStatus(), orgId));
+        //    else
+        //        result = await _warrantyClaimService.GetWarrantyClaimsByStatusAndOrgIdAsync(WarrantyClaimStatus.WaitingForUnassignedRepair.GetWarrantyClaimStatus(), orgId);
 
-            return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
-        }
+        //    return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
+        //}
     }
 }

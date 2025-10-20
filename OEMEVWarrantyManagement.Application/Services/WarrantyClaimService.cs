@@ -15,11 +15,11 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IWarrantyClaimRepository _warrantyClaimRepository;
         private readonly IVehicleRepository _vehicleRepository;
         private readonly IWorkOrderRepository _workOrderRepository;
-        private readonly IEmployeeRepository _employeeRepository;
+        private readonly IEmployeeRepository _employee_repository;
         private readonly ICurrentUserService _currentUserService;
         private readonly IClaimPartRepository _claimPartRepository;
         private readonly IPartRepository _partRepository;
-        private readonly IWarrantyPolicyRepository _warrantyPolicyRepository;   
+        private readonly IWarrantyPolicyRepository _warranty_policyRepository;   
         private readonly IVehicleWarrantyPolicyRepository _vehicleWarrantyPolicyRepository;
         private readonly ICustomerRepository _customerRepository;
         private readonly IBackWarrantyClaimRepository _backWarrantyClaimRepository;
@@ -31,11 +31,11 @@ namespace OEMEVWarrantyManagement.Application.Services
             _warrantyClaimRepository = warrantyClaimRepository;
             _vehicleRepository = vehicleRepository;
             _workOrderRepository = workOrderRepository;
-            _employeeRepository = employeeRepository;
+            _employee_repository = employeeRepository;
             _currentUserService = currentUserService;
             _partRepository = partRepository;
             _claimPartRepository = claimPartRepository;
-            _warrantyPolicyRepository = warrantyPolicyRepository;
+            _warranty_policyRepository = warrantyPolicyRepository;
             _vehicleWarrantyPolicyRepository = vehicleWarrantyPolicyRepository;
             _customerRepository = customerRepository;
             _imageRepository = imageRepository;
@@ -49,12 +49,12 @@ namespace OEMEVWarrantyManagement.Application.Services
             if (request.AssignTo != null || (request.AssignsTo != null && request.AssignsTo.Count > 0)) //Neu co giao cho ai thi tao work order luon
             {
                 if(request.AssignTo != null)
-                    _ = await _employeeRepository.GetEmployeeByIdAsync((Guid)request.AssignTo) ?? throw new ApiException(ResponseError.NotFoundEmployee);
+                    _ = await _employee_repository.GetEmployeeByIdAsync((Guid)request.AssignTo) ?? throw new ApiException(ResponseError.NotFoundEmployee);
                 else
                 {
                     foreach (var item in request.AssignsTo)
                     {
-                        _ = await _employeeRepository.GetEmployeeByIdAsync((Guid)item) ?? throw new ApiException(ResponseError.NotFoundEmployee);
+                        _ = await _employee_repository.GetEmployeeByIdAsync((Guid)item) ?? throw new ApiException(ResponseError.NotFoundEmployee);
                     }
                 }
             }
@@ -62,7 +62,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             var entity = _mapper.Map<WarrantyClaim>(request);
 
             var userId = _currentUserService.GetUserId();
-            var employee = await _employeeRepository.GetEmployeeByIdAsync(userId);
+            var employee = await _employee_repository.GetEmployeeByIdAsync(userId);
             entity.CreatedBy = userId;
             entity.Status = WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyClaimStatus();
             entity.ServiceCenterId = employee.OrgId;
@@ -327,7 +327,7 @@ namespace OEMEVWarrantyManagement.Application.Services
 
         // Trong OEMEVWarrantyManagement.Application.Services.WarrantyClaimService.cs
 
-        public async Task<IEnumerable<ResponseWarrantyClaimDto>> GetWarrantyClaimHavePolicyAndParts()
+        public async Task<IEnumerable<ResponseWarrantyClaimDto>> GetWarrantyClaimHavePolicyAndPartsAndOrg()
         {
             var orgId = await _currentUserService.GetOrgId();
             var claims = await _warrantyClaimRepository.GetAllWarrantyClaimByOrgIdAsync(orgId);
@@ -342,7 +342,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             var customers = await _customerRepository.GetCustomersByIdsAsync(customerIds);
             var customerDict = customers.ToDictionary(c => c.CustomerId);
 
-            var allPolicies = await _warrantyPolicyRepository.GetAllAsync();
+            var allPolicies = await _warranty_policyRepository.GetAllAsync();
             var policyLookup = allPolicies.ToDictionary(p => p.PolicyId);
 
             foreach (var claim in claimDtos)
@@ -404,6 +404,80 @@ namespace OEMEVWarrantyManagement.Application.Services
 
 
                 // Load attachments for claim
+                var attachments = await _imageRepository.GetImagesByWarrantyClaimIdAsync(claim.ClaimId);
+                claim.Attachments = attachments.Select(a => _mapper.Map<ImageDto>(a)).ToList();
+            }
+
+            return claimDtos;
+        }
+
+        // New: get all claims across all organizations that are in SentToManufacturer status
+        public async Task<IEnumerable<ResponseWarrantyClaimDto>> GetWarrantyClaimsSentToManufacturerAsync()
+        {
+            var status = WarrantyClaimStatus.SentToManufacturer.GetWarrantyClaimStatus();
+            var claims = await _warrantyClaimRepository.GetWarrantyClaimByStatusAsync(status);
+
+            var claimDtos = _mapper.Map<List<ResponseWarrantyClaimDto>>(claims);
+
+            var vins = claimDtos.Select(c => c.Vin).Where(v => !string.IsNullOrEmpty(v)).Distinct().ToList();
+            var vehicles = await _vehicleRepository.GetVehiclesByVinsAsync(vins);
+            var vehicleDict = vehicles.ToDictionary(v => v.Vin);
+
+            var customerIds = vehicles.Select(v => v.CustomerId).Distinct().ToList();
+            var customers = await _customerRepository.GetCustomersByIdsAsync(customerIds);
+            var customerDict = customers.ToDictionary(c => c.CustomerId);
+
+            var allPolicies = await _warranty_policyRepository.GetAllAsync();
+            var policyLookup = allPolicies.ToDictionary(p => p.PolicyId);
+
+            foreach (var claim in claimDtos)
+            {
+                if (!string.IsNullOrEmpty(claim.Vin) && vehicleDict.TryGetValue(claim.Vin, out var vehicle))
+                {
+                    claim.Model = vehicle.Model;
+                    claim.Year = vehicle.Year;
+
+                    if (customerDict.TryGetValue(vehicle.CustomerId, out var customer))
+                    {
+                        claim.CustomerName = customer.Name;
+                        claim.CustomerPhoneNumber = customer.Phone;
+                    }
+                }
+
+                var claimParts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
+                var showClaimParts = new List<ShowClaimPartDto>();
+
+                foreach (var cp in claimParts)
+                {
+                    var dto = _mapper.Map<ShowClaimPartDto>(cp);
+                    var part = await _partRepository.GetPartByModelAsync(cp.Model);
+                    dto.Category = part?.Category ?? "N/A";
+                    showClaimParts.Add(dto);
+                }
+                claim.ShowClaimParts = showClaimParts;
+
+                var vehiclePolicies = await _vehicleWarrantyPolicyRepository.GetAllVehicleWarrantyPolicyByVinAsync(claim.Vin);
+
+                claim.ShowPolicy = vehiclePolicies
+                    .Where(vp => policyLookup.ContainsKey(vp.PolicyId))
+                    .Select(vp =>
+                    {
+                        var policyInfo = policyLookup[vp.PolicyId];
+                        return new PolicyInformationDto
+                        {
+                            PolicyName = policyInfo.Name,
+                            StartDate = vp.StartDate,
+                            EndDate = vp.EndDate
+                        };
+                    }).ToList();
+
+                var backClaims = await _backWarrantyClaimRepository.GetBackWarrantyClaimsByIdAsync(claim.ClaimId);
+                var latestBackClaim = backClaims?.OrderByDescending(b => b.CreatedDate).FirstOrDefault();
+                if (latestBackClaim != null)
+                {
+                    claim.Notes = latestBackClaim.Description;
+                }
+
                 var attachments = await _imageRepository.GetImagesByWarrantyClaimIdAsync(claim.ClaimId);
                 claim.Attachments = attachments.Select(a => _mapper.Map<ImageDto>(a)).ToList();
             }
