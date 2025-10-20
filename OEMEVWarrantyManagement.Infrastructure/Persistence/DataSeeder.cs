@@ -10,6 +10,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             // --- CÀI ĐẶT ---
             const int primaryRecordCount = 100;
             const int joinRecordCount = 300;
+            const int warrantyCLaimCount = 500;
             const int employeeCount = 20;
             Randomizer.Seed = new Random(8675309);
 
@@ -166,13 +167,13 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 .RuleFor(c => c.ServiceCenterId, (f, u) => f.PickRandom(organizations.Where(o => o.Type == "ServiceCenter")).OrgId)
                 .RuleFor(c => c.CreatedBy, (f, u) => f.PickRandom(employees).UserId)
                 .RuleFor(c => c.CreatedDate, f => f.Date.Past(1))
-                .RuleFor(c => c.Status, f => f.PickRandom(new[] { "Submitted", "Approved", "Rejected", "Processing" }))
+                .RuleFor(c => c.Status, f => f.PickRandom(new[] { "waiting for unassigned", "under inspection", "pending confirmation", "sent to manufacturer", "denied", "approved", "waiting for unassigned repair", "under repair", "repaired", "car back home", "hold customer car", "done warranty" }))
                 .RuleFor(c => c.Description, f => f.Lorem.Paragraph())
-                .RuleFor(c => c.ConfirmBy, (f, c) => c.Status == "Approved" || c.Status == "Rejected" ? f.PickRandom(employees).UserId : (Guid?)null)
+                .RuleFor(c => c.ConfirmBy, (f, c) => c.Status == "approved" || c.Status == "denied" ? f.PickRandom(employees).UserId : (Guid?)null)
                 .RuleFor(c => c.ConfirmDate, (f, c) => c.ConfirmBy.HasValue ? f.Date.Recent() : (DateTime?)null)
                 .RuleFor(c => c.PolicyId, (f, u) => f.PickRandom(policies).PolicyId)
                 .RuleFor(c => c.failureDesc, f => f.Lorem.Sentence());
-            var claims = claimFaker.Generate(primaryRecordCount);
+            var claims = claimFaker.Generate(warrantyCLaimCount);
             context.WarrantyClaims.AddRange(claims);
 
             context.SaveChanges(); // Lưu thay đổi CẤP 4

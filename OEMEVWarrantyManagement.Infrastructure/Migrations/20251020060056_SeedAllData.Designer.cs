@@ -12,7 +12,7 @@ using OEMEVWarrantyManagement.Infrastructure.Persistence;
 namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251019102425_SeedAllData")]
+    [Migration("20251020060056_SeedAllData")]
     partial class SeedAllData
     {
         /// <inheritdoc />
