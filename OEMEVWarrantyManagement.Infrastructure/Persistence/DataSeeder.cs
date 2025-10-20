@@ -1,5 +1,6 @@
 ﻿using Bogus;
 using OEMEVWarrantyManagement.Domain.Entities;
+using OEMEVWarrantyManagement.Share.Enums;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Persistence
 {
@@ -54,9 +55,13 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
 
             var partFaker = new Faker<Part>("en")
                 .RuleFor(p => p.PartId, f => f.Database.Random.Guid())
-                .RuleFor(p => p.Model, f => f.Vehicle.Model() + "-" + f.Random.AlphaNumeric(5))
-                .RuleFor(p => p.Name, f => f.Commerce.ProductName())
-                .RuleFor(p => p.Category, f => f.PickRandom(new[] { "Battery", "Motor", "Inverter", "Body", "Sensor" }))
+                .RuleFor(p => p.Category, f => f.PickRandom<PartCategory>().GetPartCategory())
+                .RuleFor(p => p.Model, (f, p) =>
+                {
+                    var validModels = PartModel.ModelsByCategory.GetValueOrDefault(p.Category, new List<string> { "Generic Model" });
+                    return f.PickRandom(validModels);
+                })
+                .RuleFor(p => p.Name, (f, p) => $"{p.Category} - {p.Model}") // Tạo tên dựa trên Category và Model
                 .RuleFor(p => p.StockQuantity, f => f.Random.Number(50, 500))
                 .RuleFor(p => p.OrgId, (f, u) => f.PickRandom(organizations).OrgId);
             var parts = partFaker.Generate(primaryRecordCount);
@@ -140,14 +145,19 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             context.CampaignVehicles.AddRange(campaignVehicles);
 
             var vehiclePartFaker = new Faker<VehiclePart>("en")
-                .RuleFor(vp => vp.VehiclePartId, f => f.Database.Random.Guid())
-                .RuleFor(vp => vp.Vin, (f, u) => f.PickRandom(vehicles).Vin)
-                .RuleFor(vp => vp.Model, f => f.Vehicle.Model())
-                .RuleFor(vp => vp.SerialNumber, f => f.Random.AlphaNumeric(12))
-                .RuleFor(vp => vp.InstalledDate, f => f.Date.Past(2))
-                .RuleFor(vp => vp.UninstalledDate, (f, vp) => f.Date.Between(vp.InstalledDate.AddDays(1), vp.InstalledDate.AddYears(5)))
-                .RuleFor(vp => vp.Status, (f, vp) => vp.UninstalledDate > DateTime.Now ? "Active" : "Uninstalled")
-                .RuleFor(vp => vp.PartId, (f, u) => f.PickRandom(parts).PartId);
+                 .RuleFor(vp => vp.VehiclePartId, f => f.Database.Random.Guid())
+                 .RuleFor(vp => vp.Vin, (f, u) => f.PickRandom(vehicles).Vin)
+                 // Chọn một Part ngẫu nhiên từ danh sách đã tạo
+                 .FinishWith((f, vp) => {
+                     var selectedPart = f.PickRandom(parts); // Lấy một Part ngẫu nhiên
+                     vp.PartId = selectedPart.PartId;        // Gán PartId từ Part đó
+                     vp.Model = selectedPart.Model;          // Gán Model từ Part đó
+                 })
+                 .RuleFor(vp => vp.SerialNumber, f => f.Random.AlphaNumeric(12))
+                 .RuleFor(vp => vp.InstalledDate, f => f.Date.Past(2))
+                 .RuleFor(vp => vp.UninstalledDate, (f, vp) => f.Date.Between(vp.InstalledDate.AddDays(1), vp.InstalledDate.AddYears(5)))
+                 .RuleFor(vp => vp.Status, (f, vp) => vp.UninstalledDate > DateTime.UtcNow ? "Active" : "Uninstalled");
+
             var vehicleParts = vehiclePartFaker.Generate(joinRecordCount);
             context.VehicleParts.AddRange(vehicleParts);
 
