@@ -7,5 +7,6 @@ namespace OEMEVWarrantyManagement.Application.IRepository
     {
         Task<Vehicle> GetVehicleByVinAsync(string Vin);
         Task<IEnumerable <Vehicle>> GetAllVehicleAsync();
+        Task<List<Vehicle>> GetVehiclesByVinsAsync(List<string> vins);
     }
 }

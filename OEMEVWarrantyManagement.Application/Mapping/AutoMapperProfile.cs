@@ -22,7 +22,10 @@ namespace OEMEVWarrantyManagement.Application.Mapping
             CreateMap<Employee, AllTech>().ReverseMap();
 
             CreateMap<WorkOrder, WorkOrderDto>().ReverseMap();
+            CreateMap<WorkOrder, WorkOrderDetailDto>().ReverseMap();
             CreateMap<WorkOrder, RequestCreateWorkOrderDto>().ReverseMap();
+
+            CreateMap<VehicleWarrantyPolicy, VehicleWarrantyPolicyDto>().ReverseMap();
 
             CreateMap<WarrantyPolicy, WarrantyPolicyDto>().ReverseMap();
             CreateMap<WarrantyPolicy, VehicleWarrantyPolicy>().ReverseMap();

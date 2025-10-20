@@ -45,5 +45,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             _context.Parts.UpdateRange(entities);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<Part> GetPartByModelAsync(string model)
+        {
+            return await _context.Parts.FirstOrDefaultAsync(p => p.Model == model);
+        }
     }
 }

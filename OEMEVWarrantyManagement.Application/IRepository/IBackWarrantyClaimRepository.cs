@@ -11,5 +11,6 @@ namespace OEMEVWarrantyManagement.Application.IRepository
     {
         Task<IEnumerable <BackWarrantyClaim>> GetAllBackWarrantyClaimsAsync();
         Task<BackWarrantyClaim> CreateBackWarrantyClaimAsync(BackWarrantyClaim entity);
+        Task<IEnumerable<BackWarrantyClaim>> GetBackWarrantyClaimsByIdAsync(Guid warrantyClaimId);
     }
 }

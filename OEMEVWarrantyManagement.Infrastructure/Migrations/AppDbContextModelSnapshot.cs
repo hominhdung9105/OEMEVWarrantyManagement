@@ -263,10 +263,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RefreshToken")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("RefreshTokenExpiryTime")
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Role")
@@ -705,9 +704,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Part", null)
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Part", "Part")
                         .WithMany("ClaimParts")
                         .HasForeignKey("PartId");
+
+                    b.Navigation("Part");
 
                     b.Navigation("WarrantyClaim");
                 });
@@ -796,7 +797,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.VehiclePart", b =>
                 {
-                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Part", null)
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Part", "Part")
                         .WithMany("VehicleParts")
                         .HasForeignKey("PartId");
 
@@ -805,6 +806,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .HasForeignKey("Vin")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Part");
 
                     b.Navigation("Vehicle");
                 });

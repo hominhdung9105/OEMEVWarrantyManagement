@@ -13,7 +13,8 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<WarrantyClaimDto> GetWarrantyClaimByIdAsync(Guid id);
         Task<bool> HasWarrantyClaim(Guid warrantyClaimId);
         Task<ResponseWarrantyClaim> CreateAsync(RequestWarrantyClaim request);
-        Task<WarrantyClaimDto> UpdateStatusAsync(Guid claimId, WarrantyClaimStatus status);
+        // policyId is optional and used when approving a claim to associate a vehicle policy
+        Task<WarrantyClaimDto> UpdateStatusAsync(Guid claimId, WarrantyClaimStatus status, Guid? policyId = null);
         //Task<WarrantyClaimDto> UpdateApproveStatusAsync(Guid claimId, Guid staffId);
         Task<bool> DeleteAsync(Guid id);
         Task<WarrantyClaimDto> UpdateDescription(Guid claimId, string description);

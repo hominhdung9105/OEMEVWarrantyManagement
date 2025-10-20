@@ -16,13 +16,22 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IMapper _mapper;
         private readonly IWarrantyClaimRepository _claimRepository;
         private readonly ICurrentUserService _currentUserService;
-        public WorkOrderService(IWorkOrderRepository workOrderRepository, IMapper mapper, IWarrantyClaimService warrantyClaimService, IWarrantyClaimRepository claimRepository, ICurrentUserService currentUserService)
+        private readonly IClaimPartRepository _claimPartRepository;
+        private readonly IImageRepository _imageRepository;
+        private readonly IVehicleRepository _vehicleRepository;
+        private readonly IEmployeeRepository _employeeRepository;
+
+        public WorkOrderService(IWorkOrderRepository workOrderRepository, IMapper mapper, IWarrantyClaimService warrantyClaimService, IWarrantyClaimRepository claimRepository, ICurrentUserService currentUserService, IClaimPartRepository claimPartRepository, IImageRepository imageRepository, IVehicleRepository vehicleRepository, IEmployeeRepository employeeRepository)
         {
             _workOrderRepository = workOrderRepository;
             _mapper = mapper;
             _claimService = warrantyClaimService;
             _claimRepository = claimRepository;
             _currentUserService = currentUserService;
+            _claimPartRepository = claimPartRepository;
+            _imageRepository = imageRepository;
+            _vehicleRepository = vehicleRepository;
+            _employeeRepository = employeeRepository;
         }
 
         //public async Task<RequestCreateWorkOrderDto> CreateWorkOrderAsync(RequestCreateWorkOrderDto request)
@@ -86,58 +95,186 @@ namespace OEMEVWarrantyManagement.Application.Services
 
         public async Task<IEnumerable<WorkOrderDto>> CreateWorkOrdersAsync(RequestCreateWorkOrdersDto workOrdersDto)
         {
-            List<WorkOrder> createdWorkOrders = [];
+            var createdWorkOrders = new List<WorkOrder>();
 
             if (workOrdersDto.Target == WorkOrderTarget.Warranty.GetWorkOrderTarget())
             {
-                var claim = await _claimRepository.GetWarrantyClaimByIdAsync(workOrdersDto.TargetId) ?? throw new ApiException(ResponseError.InvalidWarrantyClaimId);
-                //var claim = await _claimRepository.GetWarrantyClaimByIdAsync(workOrdersDto.TargetId);
+                // validate target id
+                if (workOrdersDto.TargetId == null) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
 
-                //if (claim == null)
-                //{
-                //    throw new Exception($"Claim not found. TargetId: {workOrdersDto.TargetId}");
-                //}
+                var claim = await _claimRepository.GetWarrantyClaimByIdAsync(workOrdersDto.TargetId.Value) ?? throw new ApiException(ResponseError.InvalidWarrantyClaimId);
 
+                if (workOrdersDto.AssignedTo == null || !workOrdersDto.AssignedTo.Any())
+                    throw new ApiException(ResponseError.InternalServerError); // assigned list required
+
+                // determine type from claim status
                 string type;
-                var dateNow = DateTime.Now;
-                var workOrderStatus = WorkOrderStatus.InProgress.GetWorkOrderStatus();
-
                 if (claim.Status == WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyClaimStatus())
                     type = WorkOrderType.Inspection.GetWorkOrderType();
-                else if (claim.Status == WarrantyClaimStatus.Approved.GetWarrantyClaimStatus())
+                else if (claim.Status == WarrantyClaimStatus.WaitingForUnassignedRepair.GetWarrantyClaimStatus())
                     type = WorkOrderType.Repair.GetWorkOrderType();
                 else
                     throw new ApiException(ResponseError.InternalServerError);
 
+                var now = DateTime.UtcNow;
+                var workOrderStatus = WorkOrderStatus.InProgress.GetWorkOrderStatus();
+
+                // validate assigned technicians and build work orders
                 foreach (var assigned in workOrdersDto.AssignedTo)
                 {
-                    WorkOrder workOrder = new()
+                    var tech = await _employeeRepository.GetEmployeeByIdAsync(assigned);
+                    if (tech == null) throw new ApiException(ResponseError.NotFoundEmployee);
+
+                    var workOrder = new WorkOrder
                     {
                         AssignedTo = assigned,
                         Type = type,
                         Target = workOrdersDto.Target,
-                        TargetId = workOrdersDto.TargetId,
+                        TargetId = workOrdersDto.TargetId.Value,
                         Status = workOrderStatus,
-                        StartDate = dateNow
+                        StartDate = now
                     };
 
                     createdWorkOrders.Add(workOrder);
                 }
+
+                // persist work orders
+                var result = await _workOrderRepository.CreateRangeAsync(createdWorkOrders);
+
+                // update claim status
+                if (type == WorkOrderType.Inspection.GetWorkOrderType())
+                    claim.Status = WarrantyClaimStatus.UnderInspection.GetWarrantyClaimStatus();
+                else if (type == WorkOrderType.Repair.GetWorkOrderType())
+                    claim.Status = WarrantyClaimStatus.UnderRepair.GetWarrantyClaimStatus();
+
+                await _claimRepository.UpdateAsync(claim);
+
+                return _mapper.Map<IEnumerable<WorkOrderDto>>(result);
             }
             else if (workOrdersDto.Target == WorkOrderTarget.Campaign.GetWorkOrderTarget())
             {
-                // TODO - chua xu li campaign nen chua lam gi het
+                // TODO - campaign not handled yet
                 throw new NotImplementedException();
             }
             else
+            {
                 throw new ApiException(ResponseError.InternalServerError);
+            }
+        }
 
-            if (createdWorkOrders.Count == 0)
-                throw new ApiException(ResponseError.InternalServerError);
+        public async Task<WorkOrderDetailDto> GetWorkOrderDetailAsync(Guid workOrderId)
+        {
+            var workOrder = await _workOrderRepository.GetWorkOrderByWorkOrderIdAsync(workOrderId);
+            if (workOrder == null) throw new ApiException(ResponseError.NotFoundWorkOrder);
 
-            var result = await _workOrderRepository.CreateRangeAsync(createdWorkOrders);
+            var dto = _mapper.Map<WorkOrderDetailDto>(workOrder);
 
-            return _mapper.Map<IEnumerable<WorkOrderDto>>(result);
+            if (workOrder.Target == WorkOrderTarget.Warranty.GetWorkOrderTarget())
+            {
+                var claim = await _claimRepository.GetWarrantyClaimByIdAsync(workOrder.TargetId);
+                if (claim != null)
+                {
+                    var claimDto = new WarrantyClaimInfoDto
+                    {
+                        ClaimId = claim.ClaimId,
+                        Vin = claim.Vin,
+                        FailureDesc = claim.failureDesc,
+                        Description = claim.Description,
+                        Status = claim.Status
+                    };
+
+                    // vehicle
+                    var vehicle = await _vehicleRepository.GetVehicleByVinAsync(claim.Vin);
+                    if (vehicle != null)
+                    {
+                        claimDto.Model = vehicle.Model;
+                        claimDto.Year = vehicle.Year;
+                    }
+
+                    // if repair, include claim parts
+                    if (workOrder.Type == WorkOrderType.Repair.GetWorkOrderType())
+                    {
+                        var parts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
+                        claimDto.ClaimParts = parts.Select(p => _mapper.Map<ShowClaimPartDto>(p));
+                    }
+
+                    // attachments
+                    var attachments = await _imageRepository.GetImagesByWarrantyClaimIdAsync(claim.ClaimId);
+                    claimDto.Attachments = attachments.Select(a => _mapper.Map<ImageDto>(a));
+
+                    dto.WarrantyClaim = claimDto;
+                }
+            }
+
+            return dto;
+        }
+
+        public async Task<IEnumerable<WorkOrderDetailDto>> GetWorkOrdersDetailByTechAsync(string? type = null, string? status = null, DateTime? from = null, DateTime? to = null)
+        {
+            var techId = _currentUserService.GetUserId();
+            var workOrders = await _workOrderRepository.GetWorkOrderByTech(techId);
+
+            // apply filters
+            if (!string.IsNullOrWhiteSpace(type))
+            {
+                workOrders = workOrders.Where(wo => string.Equals(wo.Type, type, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                workOrders = workOrders.Where(wo => string.Equals(wo.Status, status, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (from.HasValue)
+                workOrders = workOrders.Where(wo => wo.StartDate >= from.Value);
+
+            if (to.HasValue)
+                workOrders = workOrders.Where(wo => wo.StartDate <= to.Value);
+
+            var result = new List<WorkOrderDetailDto>();
+
+            foreach (var wo in workOrders)
+            {
+                var dto = _mapper.Map<WorkOrderDetailDto>(wo);
+
+                if (wo.Target == WorkOrderTarget.Warranty.GetWorkOrderTarget())
+                {
+                    var claim = await _claimRepository.GetWarrantyClaimByIdAsync(wo.TargetId);
+                    if (claim != null)
+                    {
+                        var claimDto = new WarrantyClaimInfoDto
+                        {
+                            ClaimId = claim.ClaimId,
+                            Vin = claim.Vin,
+                            FailureDesc = claim.failureDesc,
+                            Description = claim.Description,
+                            Status = claim.Status
+                        };
+
+                        var vehicle = await _vehicleRepository.GetVehicleByVinAsync(claim.Vin);
+                        if (vehicle != null)
+                        {
+                            claimDto.Model = vehicle.Model;
+                            claimDto.Year = vehicle.Year;
+                        }
+
+                        if (wo.Type == WorkOrderType.Repair.GetWorkOrderType())
+                        {
+                            var parts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
+                            claimDto.ClaimParts = parts.Select(p => _mapper.Map<ShowClaimPartDto>(p));
+                        }
+
+                        var attachments = await _imageRepository.GetImagesByWarrantyClaimIdAsync(claim.ClaimId);
+                        claimDto.Attachments = attachments.Select(a => _mapper.Map<ImageDto>(a));
+
+                        dto.WarrantyClaim = claimDto;
+                    }
+                }
+
+                result.Add(dto);
+            }
+
+            return result;
         }
     }
 }

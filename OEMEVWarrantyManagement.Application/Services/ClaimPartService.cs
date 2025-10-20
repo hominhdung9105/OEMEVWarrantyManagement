@@ -99,7 +99,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                 cp.Status = ClaimPartStatus.Done.GetClaimPartStatus();
             }
 
-            var workOrders = await _workOrderRepository.GetWorkOrders(dto.ClaimId, WorkOrderType.Inspection.GetWorkOrderType(), WorkOrderTarget.Warranty.GetWorkOrderTarget());
+            var workOrders = await _workOrderRepository.GetWorkOrders(dto.ClaimId, WorkOrderType.Repair.GetWorkOrderType(), WorkOrderTarget.Warranty.GetWorkOrderTarget());
 
             if (workOrders == null || !workOrders.Any())
                 throw new ApiException(ResponseError.NotFoundWorkOrder);

@@ -1,4 +1,6 @@
-﻿namespace OEMEVWarrantyManagement.Application.Dtos
+﻿using System;
+
+namespace OEMEVWarrantyManagement.Application.Dtos
 {
     public class WorkOrderDto
     {
@@ -11,6 +13,13 @@
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public string? Notes { get; set; }
+
+        // Vehicle information - added so inspection/repair responses include vehicle + customer info
+        public string? Vin { get; set; }
+        public string? Model { get; set; }
+        public int? Year { get; set; }
+        public string? CustomerName { get; set; }
+        public string? CustomerPhoneNumber { get; set; }
     }
     public class RequestCreateWorkOrderDto
     {
@@ -27,7 +36,7 @@
     {
         public List<Guid> AssignedTo { get; set; }
         public string Target { get; set; }// claim hay campaign
-        public Guid TargetId { get; set; }
+        public Guid? TargetId { get; set; }
     }
 
     public class RequestCreateAndUpdateDto

@@ -46,18 +46,26 @@
 
     public class ResponseWarrantyClaimDto
     {
+        public string? Model { get; set; } // Thông tin xe
+        public string? CustomerName { get; set; } // Thông tin khách hàng
+        public string? CustomerPhoneNumber { get; set; } // Thông tin khách hàng
+
         public Guid ClaimId { get; set; }
         public string Vin { get; set; }
+        public string description { get; set; }
+        public int Year { get; set; }
         public Guid ServiceCenterId { get; set; }
         public Guid CreatedBy { get; set; }
         public DateTime CreatedDate { get; set; }
         public Guid? AssignTo { get; set; }
         public string Status { get; set; }
         public string FailureDesc { get; set; }
+        public string Description { get; set; }
         public Guid PolicyId { get; set; }
+        public string? Notes { get; set; }
         public List<ShowClaimPartDto> ShowClaimParts { get; set; }
-        public List<WarrantyPolicyDto> ShowPolicy { get; set; }
-        //public WarrantyPolicyDto ShowPolicy { get; set; }
+        public List<PolicyInformationDto> ShowPolicy { get; set; }
+        public List<ImageDto> Attachments { get; set; } // Added: image URLs for the claim
     }
     public class RepairRequestDto
     {

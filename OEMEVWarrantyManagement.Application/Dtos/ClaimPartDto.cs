@@ -37,9 +37,23 @@
         public required string SerialNumber { get; set; }
     }
 
+    //public class ShowClaimPartDto
+    //{
+    //    public Guid ClaimPartId { get; set; }
+    //    public string SerialNumberOld { get; set; }
+    //    public string SerialNumberNew { get; set; }
+    //    public string Model { get; set; }
+    //}
+
+
     public class ShowClaimPartDto
     {
         public Guid ClaimPartId { get; set; }
         public string Model { get; set; }
+        public string SerialNumberOld { get; set; }
+        public string SerialNumberNew { get; set; }
+        public string Action { get; set; } // repair | replace
+        public string? Status { get; set; } // Trạng thái kiểm kho (ví dụ: Enough/NotEnough)
+        public string Category { get; set; } // Ví dụ: "Engine", "Brake Pad"
     }
 }
