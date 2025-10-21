@@ -12,7 +12,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             const int primaryRecordCount = 100;
             const int joinRecordCount = 300;
             const int warrantyCLaimCount = 500;
-            const int employeeCount = 20;
+            //const int employeeCount = 20;
+            //const int organizationCount = 5;
             Randomizer.Seed = new Random(8675309);
 
             if (context.Organizations.Any())
@@ -21,26 +22,92 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             }
 
             // --- CẤP 1: BẢNG KHÔNG PHỤ THUỘC ---
-            var orgFaker = new Faker<Organization>("en")
+
+            // --- SỬA LOGIC TẠO ORGANIZATION ---
+            // 1. Tạo Faker chung (không có Type)
+            var baseOrgFaker = new Faker<Organization>("en")
                 .RuleFor(o => o.OrgId, f => f.Database.Random.Guid())
                 .RuleFor(o => o.Name, f => f.Company.CompanyName())
-                .RuleFor(o => o.Type, f => f.PickRandom(new[] { "OEM", "ServiceCenter", "Supplier" }))
+                // .RuleFor(o => o.Type, ...) // Xóa dòng chọn Type ngẫu nhiên
                 .RuleFor(o => o.Region, f => f.Address.State())
                 .RuleFor(o => o.ContactInfo, f => f.Phone.PhoneNumber());
 
-            var organizations = orgFaker.Generate(primaryRecordCount);
+            // 2. Tạo 2 OEM
+            var oems = baseOrgFaker
+                .RuleFor(o => o.Type, "OEM") // Gán cứng Type là OEM
+                .Generate(2);               // Tạo 2 bản ghi
+
+            // 3. Tạo 3 ServiceCenter
+            var serviceCenters = baseOrgFaker
+                .RuleFor(o => o.Type, "ServiceCenter") // Gán cứng Type là ServiceCenter
+                .Generate(3);                      // Tạo 3 bản ghi
+
+            // 4. Gộp danh sách và lưu
+            var organizations = new List<Organization>();
+            organizations.AddRange(oems);
+            organizations.AddRange(serviceCenters);
+
             context.Organizations.AddRange(organizations);
-            context.SaveChanges();
+            // ------------------------------------
+
+            context.SaveChanges(); // Lưu cả 5 organizations
 
             // --- CẤP 2: PHỤ THUỘC VÀO CẤP 1 ---
-            var employeeFaker = new Faker<Employee>("en")
+
+            // --- SỬA LOGIC TẠO EMPLOYEE ---
+            // 1. Lấy danh sách OEM và ServiceCenter đã tạo
+            var oemOrgs = organizations.Where(o => o.Type == "OEM").ToList();
+            var scOrgs = organizations.Where(o => o.Type == "ServiceCenter").ToList();
+
+            // 2. Tạo Faker cơ bản cho Employee
+            var baseEmployeeFaker = new Faker<Employee>("en")
                 .RuleFor(e => e.UserId, f => f.Database.Random.Guid())
                 .RuleFor(e => e.Email, (f, u) => f.Internet.Email(f.Name.FirstName(), f.Name.LastName()))
-                .RuleFor(e => e.PasswordHash, f => "pass123")
-                // Giữ nguyên Role của bạn
-                .RuleFor(e => e.Role, f => f.PickRandom(new[] { "ADMIN", "SC_STAFF", "SC_TECH", "EVM_STAFF" }))
-                .RuleFor(e => e.OrgId, (f, u) => f.PickRandom(organizations).OrgId);
-            var employees = employeeFaker.Generate(employeeCount);
+                .RuleFor(e => e.Name, f => f.Name.FullName())
+                .RuleFor(e => e.PasswordHash, f => "pass123");
+
+            // 3. Tạo danh sách tổng hợp employee
+            var employees = new List<Employee>();
+
+            // 4. Tạo 1 ADMIN (gán vào OEM đầu tiên)
+            if (oemOrgs.Any())
+            {
+                var admin = baseEmployeeFaker
+                    .RuleFor(e => e.Role, "ADMIN")
+                    .RuleFor(e => e.OrgId, oemOrgs.First().OrgId) // Gán vào OEM đầu tiên
+                    .Generate();
+                employees.Add(admin);
+            }
+
+            // 5. Tạo 4 EVM_STAFF (2 cho mỗi OEM)
+            foreach (var oem in oemOrgs)
+            {
+                var evmStaff = baseEmployeeFaker
+                    .RuleFor(e => e.Role, "EVM_STAFF")
+                    .RuleFor(e => e.OrgId, oem.OrgId) // Gán vào OEM hiện tại
+                    .Generate(2); // Tạo 2 người
+                employees.AddRange(evmStaff);
+            }
+
+            // 6. Tạo 6 SC_STAFF và 15 SC_TECH (chia đều cho 3 ServiceCenter)
+            foreach (var sc in scOrgs)
+            {
+                // Tạo 2 SC_STAFF cho Service Center này
+                var scStaff = baseEmployeeFaker
+                    .RuleFor(e => e.Role, "SC_STAFF")
+                    .RuleFor(e => e.OrgId, sc.OrgId) // Gán vào SC hiện tại
+                    .Generate(2);
+                employees.AddRange(scStaff);
+
+                // Tạo 5 SC_TECH cho Service Center này
+                var scTech = baseEmployeeFaker
+                    .RuleFor(e => e.Role, "SC_TECH")
+                    .RuleFor(e => e.OrgId, sc.OrgId) // Gán vào SC hiện tại
+                    .Generate(5);
+                employees.AddRange(scTech);
+            }
+
+            // 7. Lưu tất cả Employee đã tạo
             context.Employees.AddRange(employees);
 
             var customerFaker = new Faker<Customer>("en")
