@@ -338,7 +338,8 @@ namespace OEMEVWarrantyManagement.Application.Services
         public async Task<IEnumerable<ResponseWarrantyClaimDto>> GetWarrantyClaimHavePolicyAndPartsAndOrg()
         {
             var orgId = await _currentUserService.GetOrgId();
-            var claims = await _warrantyClaimRepository.GetAllWarrantyClaimByOrgIdAsync(orgId);
+            //var claims = await _warrantyClaimRepository.GetAllWarrantyClaimByOrgIdAsync(orgId);
+            var claims = await _warrantyClaimRepository.GetAllWarrantyClaimAsync();//test lấy tất cả claim
 
             var claimDtos = _mapper.Map<List<ResponseWarrantyClaimDto>>(claims);
 
