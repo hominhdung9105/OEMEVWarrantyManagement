@@ -6,6 +6,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
 {
     public static class DataSeeder
     {
+        //TODO - check logic
         public static void SeedDatabase(AppDbContext context)
         {
             // --- CÀI ĐẶT ---
@@ -267,7 +268,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 .RuleFor(w => w.EndDate, (f, w) => w.Status == "Completed" ? f.Date.Recent() : (DateTime?)null)
                 .RuleFor(w => w.Notes, f => f.Lorem.Sentence())
                 // --- SỬA LOGIC TARGET ID ---
-                .RuleFor(w => w.Target, f => f.PickRandom(new[] { "Campaign", "Claim" })) // Giữ nguyên Target của bạn
+                .RuleFor(w => w.Target, f => f.PickRandom(new[] { "Campaign", "Warranty" })) // Giữ nguyên Target của bạn
                 .RuleFor(w => w.TargetId, (f, w) =>
                 {
                     // Nếu Target là "Claim", chọn 1 ClaimId ngẫu nhiên

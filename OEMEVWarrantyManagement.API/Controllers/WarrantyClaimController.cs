@@ -218,7 +218,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         }
 
         // New endpoint: get all warranty claim statuses
-        [HttpGet("statuses")]
+        [HttpGet("status")]
         //[Authorize]
         public IActionResult GetAllWarrantyClaimStatuses()
         {

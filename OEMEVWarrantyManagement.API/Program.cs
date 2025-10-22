@@ -36,18 +36,18 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddControllers()
                 .ConfigureApiBehaviorOptions(options =>
                 {
-                    //options.InvalidModelStateResponseFactory = context =>
-                    //{
-                    //    var errors = context.ModelState
-                    //        .Where(x => x.Value?.Errors.Count > 0)
-                    //        .Select(x => new
-                    //        {
-                    //            field = x.Key,
-                    //            messages = x.Value!.Errors.Select(e => e.ErrorMessage)
-                    //        });
+                    options.InvalidModelStateResponseFactory = context =>
+                    {
+                        var errors = context.ModelState
+                            .Where(x => x.Value?.Errors.Count > 0)
+                            .Select(x => new
+                            {
+                                field = x.Key,
+                                messages = x.Value!.Errors.Select(e => e.ErrorMessage)
+                            });
 
-                    //    return new BadRequestObjectResult(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
-                    //};
+                        return new BadRequestObjectResult(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
+                    };
                 })
                 .AddJsonOptions(options =>
                 {
@@ -235,9 +235,9 @@ namespace OEMEVWarrantyManagement.API
 
             }
             app.UseCors("AllowAll");
-            // Thay tất cả exception middleware bằng global response
 
-            //app.UseMiddleware<GlobalResponseMiddleware>();
+            // Thay tất cả exception middleware bằng global response
+            app.UseMiddleware<GlobalResponseMiddleware>();
 
             //app.UseHttpsRedirection();
 

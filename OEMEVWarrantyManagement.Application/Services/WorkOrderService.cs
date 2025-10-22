@@ -307,7 +307,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                 var emp = await _employeeRepository.GetEmployeeByIdAsync(techId);
                 if (emp != null)
                 {
-                    result.Add(new AssignedTechDto { UserId = emp.UserId, Name = emp.Email }); // no name field in Employee entity so use Email as identifier
+                    result.Add(new AssignedTechDto { UserId = emp.UserId, Name = emp.Name, Email = emp.Email });
                 }
             }
 
