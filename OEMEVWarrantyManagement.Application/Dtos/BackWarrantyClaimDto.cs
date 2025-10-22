@@ -19,5 +19,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
     {
         public Guid? WarrantyClaimId { get; set; }
         public string Description { get; set; }
+        public Guid? AssignTo { get; set; }
+        public List<Guid>? AssignsTo { get; set; }
     }
 }

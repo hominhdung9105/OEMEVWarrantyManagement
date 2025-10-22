@@ -276,5 +276,42 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             return result;
         }
+
+        public async Task<IEnumerable<WorkOrderDto>> GetWorkOrdersByClaimIdAsync(Guid claimId)
+        {
+            // only work orders for warranty target
+            var entities = await _workOrderRepository.GetWorkOrders(claimId, WorkOrderType.Inspection.GetWorkOrderType(), WorkOrderTarget.Warranty.GetWorkOrderTarget());
+            // include both inspection and repair types if needed, so also check repair
+            var repairEntities = await _workOrderRepository.GetWorkOrders(claimId, WorkOrderType.Repair.GetWorkOrderType(), WorkOrderTarget.Warranty.GetWorkOrderTarget());
+
+            var all = entities.Concat(repairEntities).ToList();
+
+            return _mapper.Map<IEnumerable<WorkOrderDto>>(all);
+        }
+
+        public async Task<IEnumerable<AssignedTechDto>> GetAssignedTechsByClaimIdAsync(Guid claimId)
+        {
+            // get both inspection & repair work orders for the claim
+            var inspection = await _workOrderRepository.GetWorkOrders(claimId, WorkOrderType.Inspection.GetWorkOrderType(), WorkOrderTarget.Warranty.GetWorkOrderTarget());
+            var repair = await _workOrderRepository.GetWorkOrders(claimId, WorkOrderType.Repair.GetWorkOrderType(), WorkOrderTarget.Warranty.GetWorkOrderTarget());
+
+            var all = inspection.Concat(repair)
+                .Where(wo => wo.AssignedTo != null && wo.Status == WorkOrderStatus.InProgress.GetWorkOrderStatus())
+                .Select(wo => wo.AssignedTo.Value)
+                .Distinct()
+                .ToList();
+
+            var result = new List<AssignedTechDto>();
+            foreach (var techId in all)
+            {
+                var emp = await _employeeRepository.GetEmployeeByIdAsync(techId);
+                if (emp != null)
+                {
+                    result.Add(new AssignedTechDto { UserId = emp.UserId, Name = emp.Email }); // no name field in Employee entity so use Email as identifier
+                }
+            }
+
+            return result;
+        }
     }
 }

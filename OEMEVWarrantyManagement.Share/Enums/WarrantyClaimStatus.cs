@@ -52,10 +52,10 @@ namespace OEMEVWarrantyManagement.Share.Enums
 
         public static List<string> GetAllStatus()
         {
-            List<string> statusList = [];
+            var statusList = new List<string>();
             foreach (var status in Enum.GetValues<WarrantyClaimStatus>())
             {
-                statusList.Add(((WarrantyClaimStatus)status).GetWarrantyClaimStatus());
+                statusList.Add(status.GetWarrantyClaimStatus());
             }
             return statusList;
         }

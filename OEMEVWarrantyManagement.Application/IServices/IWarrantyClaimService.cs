@@ -10,6 +10,7 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<IEnumerable<WarrantyClaimDto>> GetWarrantyClaimByVinAsync(string vin, string staffId);
         Task<IEnumerable<WarrantyClaimDto>> GetWarrantyClaimByVinAsync(string vin);
         Task<IEnumerable<ResponseWarrantyClaimDto>> GetWarrantyClaimHavePolicyAndPartsAndOrg();
+        Task<IEnumerable<ResponseWarrantyClaimDto>> GetWarrantyClaimHavePolicyAndPartsAndOrgByStatus(string status);
         Task<WarrantyClaimDto> GetWarrantyClaimByIdAsync(Guid id);
         Task<bool> HasWarrantyClaim(Guid warrantyClaimId);
         Task<ResponseWarrantyClaim> CreateAsync(RequestWarrantyClaim request);

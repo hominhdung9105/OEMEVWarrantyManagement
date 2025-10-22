@@ -76,5 +76,26 @@ namespace OEMEVWarrantyManagement.API.Controllers
             var result = await _workOrderService.CreateWorkOrdersAsync(request);
             return Ok(ApiResponse<IEnumerable<WorkOrderDto>>.Ok(result, "Create Work Orders successfully!!"));
         }
+
+        // New endpoint: get assigned technicians for a given warranty claim
+        [HttpGet("assigned-techs/{claimId}")]
+        //[Authorize]
+        public async Task<IActionResult> GetAssignedTechniciansByClaim(string claimId)
+        {
+            if (!Guid.TryParse(claimId, out var id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
+
+            var claim = await _warrantyClaimService.GetWarrantyClaimByIdAsync(id);
+            if (claim == null) throw new ApiException(ResponseError.NotFoundWarrantyClaim);
+
+            var underInspection = WarrantyClaimStatus.UnderInspection.GetWarrantyClaimStatus();
+            var underRepair = WarrantyClaimStatus.UnderRepair.GetWarrantyClaimStatus();
+
+            if (claim.Status != underInspection && claim.Status != underRepair)
+                return Unauthorized(ApiResponse<object>.Fail(ResponseError.Forbidden));
+
+            var assignedTechs = await _workOrderService.GetAssignedTechsByClaimIdAsync(id);
+
+            return Ok(ApiResponse<IEnumerable<AssignedTechDto>>.Ok(assignedTechs, "Get assigned technicians successfully"));
+        }
     }
 }
