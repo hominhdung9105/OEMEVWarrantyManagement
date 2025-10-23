@@ -49,10 +49,9 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             // get current user and their employee to obtain org for validation
             var userId = _currentUserService.GetUserId();
-            var employee = await _employee_repository.GetEmployeeByIdAsync(userId);
-            if (employee == null) throw new ApiException(ResponseError.NotFoundEmployee);
+            var employee = await _employee_repository.GetEmployeeByIdAsync(userId) ?? throw new ApiException(ResponseError.NotFoundEmployee);
 
-            if (request.AssignTo != null || (request.AssignsTo != null && request.AssignsTo.Count > 0)) //Neu co giao cho ai thi tao work order luon
+            if (request.AssignTo != null || (request.AssignsTo != null && request.AssignsTo.Count > 0))
             {
                 if(request.AssignTo != null)
                 {
@@ -166,7 +165,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             return entitie != null ? true : false;
         }
 
-        public async Task<WarrantyClaimDto> UpdateStatusAsync(Guid claimId, WarrantyClaimStatus status, Guid? policyId = null)
+        public async Task<WarrantyClaimDto> UpdateStatusAsync(Guid claimId, WarrantyClaimStatus status, Guid? vehicleWarrantyId = null)
         {
             var entity = await _warrantyClaimRepository.GetWarrantyClaimByIdAsync(claimId) ?? throw new ApiException(ResponseError.NotFoundWarrantyClaim);
 
@@ -183,16 +182,12 @@ namespace OEMEVWarrantyManagement.Application.Services
                 {
                     entity.ConfirmBy = _currentUserService.GetUserId();
                     entity.ConfirmDate = DateTime.Now;
-                }
 
-                // If policyId provided, validate that the vehicle (vin) has this policy in VehicleWarrantyPolicies
-                if (policyId.HasValue)
-                {
                     var vehiclePolicies = await _vehicleWarrantyPolicyRepository.GetAllVehicleWarrantyPolicyByVinAsync(entity.Vin);
-                    var hasPolicy = vehiclePolicies.Any(vp => vp.PolicyId == policyId.Value && vp.StartDate <= DateTime.Now && vp.EndDate >= DateTime.Now);
+                    var hasPolicy = vehiclePolicies.Any(vp => vp.VehicleWarrantyId == vehicleWarrantyId.Value && vp.StartDate <= DateTime.Now && vp.EndDate >= DateTime.Now);
                     if (!hasPolicy) throw new ApiException(ResponseError.InvalidPolicy);
 
-                    entity.PolicyId = policyId;
+                    entity.VehicleWarrantyId = vehicleWarrantyId; // TODO - doi cot PolicyId thanh vehicleWarrantyId
                 }
 
                 var canExcute = await UpdateStatusClaimPartAsync(claimId);
@@ -338,8 +333,7 @@ namespace OEMEVWarrantyManagement.Application.Services
         public async Task<IEnumerable<ResponseWarrantyClaimDto>> GetWarrantyClaimHavePolicyAndPartsAndOrg()
         {
             var orgId = await _currentUserService.GetOrgId();
-            //var claims = await _warrantyClaimRepository.GetAllWarrantyClaimByOrgIdAsync(orgId);
-            var claims = await _warrantyClaimRepository.GetAllWarrantyClaimAsync();//test lấy tất cả claim
+            var claims = await _warrantyClaimRepository.GetAllWarrantyClaimAsync();
 
             var claimDtos = _mapper.Map<List<ResponseWarrantyClaimDto>>(claims);
 
@@ -356,13 +350,16 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             foreach (var claim in claimDtos)
             {
-                // Gán thông tin từ vehicle
+                if (claim.PolicyId != Guid.Empty && policyLookup.TryGetValue(claim.PolicyId, out var policy))
+                {
+                    claim.PolicyName = policy.Name;
+                }
+
                 if (vehicleDict.TryGetValue(claim.Vin, out var vehicle))
                 {
                     claim.Model = vehicle.Model;
                     claim.Year = vehicle.Year;
 
-                    // Gán thông tin từ customer
                     if (customerDict.TryGetValue(vehicle.CustomerId, out var customer))
                     {
                         claim.CustomerName = customer.Name;
@@ -370,20 +367,18 @@ namespace OEMEVWarrantyManagement.Application.Services
                     }
                 }
 
-                // Lấy claim parts
                 var claimParts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
                 var showClaimParts = new List<ShowClaimPartDto>();
 
                 foreach (var cp in claimParts)
                 {
                     var dto = _mapper.Map<ShowClaimPartDto>(cp);
-                    var part = await _partRepository.GetPartByModelAsync(cp.Model); // giữ tuần tự
+                    var part = await _partRepository.GetPartByModelAsync(cp.Model);
                     dto.Category = part?.Category ?? "N/A";
                     showClaimParts.Add(dto);
                 }
                 claim.ShowClaimParts = showClaimParts;
 
-                // Lấy vehicle policies
                 var vehiclePolicies = await _vehicleWarrantyPolicyRepository.GetAllVehicleWarrantyPolicyByVinAsync(claim.Vin);
 
                 claim.ShowPolicy = vehiclePolicies
@@ -393,13 +388,13 @@ namespace OEMEVWarrantyManagement.Application.Services
                         var policyInfo = policyLookup[vp.PolicyId];
                         return new PolicyInformationDto
                         {
+                            VehicleWarrantyId = vp.VehicleWarrantyId,
                             PolicyName = policyInfo.Name,
                             StartDate = vp.StartDate,
                             EndDate = vp.EndDate
                         };
                     }).ToList();
 
-                //Lấy note nếu có backWarrantyClaim
                 if (claim.Status == WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyClaimStatus())
                 {
                     var backClaims = await _backWarrantyClaimRepository.GetBackWarrantyClaimsByIdAsync(claim.ClaimId);
@@ -408,11 +403,8 @@ namespace OEMEVWarrantyManagement.Application.Services
                     {
                         claim.Notes = latestBackClaim.Description;
                     }
-    
                 }
 
-
-                // Load attachments for claim
                 var attachments = await _imageRepository.GetImagesByWarrantyClaimIdAsync(claim.ClaimId);
                 claim.Attachments = attachments.Select(a => _mapper.Map<ImageDto>(a)).ToList();
             }
@@ -474,6 +466,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                         var policyInfo = policyLookup[vp.PolicyId];
                         return new PolicyInformationDto
                         {
+                            VehicleWarrantyId = vp.VehicleWarrantyId,
                             PolicyName = policyInfo.Name,
                             StartDate = vp.StartDate,
                             EndDate = vp.EndDate
@@ -513,13 +506,16 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             foreach (var claim in claimDtos)
             {
-                // Gán thông tin từ vehicle
+                if (claim.PolicyId != Guid.Empty && policyLookup.TryGetValue(claim.PolicyId, out var policy))
+                {
+                    claim.PolicyName = policy.Name;
+                }
+
                 if (!string.IsNullOrEmpty(claim.Vin) && vehicleDict.TryGetValue(claim.Vin, out var vehicle))
                 {
                     claim.Model = vehicle.Model;
                     claim.Year = vehicle.Year;
 
-                    // Gán thông tin từ customer
                     if (customerDict.TryGetValue(vehicle.CustomerId, out var customer))
                     {
                         claim.CustomerName = customer.Name;
@@ -527,20 +523,18 @@ namespace OEMEVWarrantyManagement.Application.Services
                     }
                 }
 
-                // Lấy claim parts
                 var claimParts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
                 var showClaimParts = new List<ShowClaimPartDto>();
 
                 foreach (var cp in claimParts)
                 {
                     var dto = _mapper.Map<ShowClaimPartDto>(cp);
-                    var part = await _partRepository.GetPartByModelAsync(cp.Model); // giữ tuần tự
+                    var part = await _partRepository.GetPartByModelAsync(cp.Model);
                     dto.Category = part?.Category ?? "N/A";
                     showClaimParts.Add(dto);
                 }
                 claim.ShowClaimParts = showClaimParts;
 
-                // Lấy vehicle policies
                 var vehiclePolicies = await _vehicleWarrantyPolicyRepository.GetAllVehicleWarrantyPolicyByVinAsync(claim.Vin);
 
                 claim.ShowPolicy = vehiclePolicies
@@ -550,13 +544,13 @@ namespace OEMEVWarrantyManagement.Application.Services
                         var policyInfo = policyLookup[vp.PolicyId];
                         return new PolicyInformationDto
                         {
+                            VehicleWarrantyId = vp.VehicleWarrantyId,
                             PolicyName = policyInfo.Name,
                             StartDate = vp.StartDate,
                             EndDate = vp.EndDate
                         };
                     }).ToList();
 
-                //Lấy note nếu có backWarrantyClaim
                 if (claim.Status == WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyClaimStatus())
                 {
                     var backClaims = await _backWarrantyClaimRepository.GetBackWarrantyClaimsByIdAsync(claim.ClaimId);
@@ -565,17 +559,13 @@ namespace OEMEVWarrantyManagement.Application.Services
                     {
                         claim.Notes = latestBackClaim.Description;
                     }
-    
                 }
 
-
-                // Load attachments for claim
                 var attachments = await _imageRepository.GetImagesByWarrantyClaimIdAsync(claim.ClaimId);
                 claim.Attachments = attachments.Select(a => _mapper.Map<ImageDto>(a)).ToList();
             }
 
             return claimDtos;
         }
-
     }
 }

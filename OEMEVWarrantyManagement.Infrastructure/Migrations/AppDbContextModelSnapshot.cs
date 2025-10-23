@@ -520,10 +520,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("PolicyId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("PolicyId");
-
                     b.Property<Guid?>("ServiceCenterId")
                         .HasColumnType("uniqueidentifier");
 
@@ -531,9 +527,16 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid?>("VehicleWarrantyId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("VehicleWarrantyId");
+
                     b.Property<string>("Vin")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid?>("WarrantyPolicyPolicyId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("failureDesc")
                         .IsRequired()
@@ -545,11 +548,13 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
                     b.HasIndex("CreatedBy");
 
-                    b.HasIndex("PolicyId");
-
                     b.HasIndex("ServiceCenterId");
 
+                    b.HasIndex("VehicleWarrantyId");
+
                     b.HasIndex("Vin");
+
+                    b.HasIndex("WarrantyPolicyPolicyId");
 
                     b.ToTable("WarrantyClaims", (string)null);
                 });
@@ -848,14 +853,14 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.WarrantyPolicy", "WarrantyPolicy")
-                        .WithMany("WarrantyClaims")
-                        .HasForeignKey("PolicyId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Organization", "ServiceCenter")
                         .WithMany("ServicedWarrantyClaims")
                         .HasForeignKey("ServiceCenterId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.VehicleWarrantyPolicy", "VehicleWarrantyPolicy")
+                        .WithMany()
+                        .HasForeignKey("VehicleWarrantyId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Vehicle", "Vehicle")
@@ -863,6 +868,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .HasForeignKey("Vin")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.WarrantyPolicy", null)
+                        .WithMany("WarrantyClaims")
+                        .HasForeignKey("WarrantyPolicyPolicyId");
 
                     b.Navigation("ConfirmByEmployee");
 
@@ -872,7 +881,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
                     b.Navigation("Vehicle");
 
-                    b.Navigation("WarrantyPolicy");
+                    b.Navigation("VehicleWarrantyPolicy");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.WarrantyPolicy", b =>

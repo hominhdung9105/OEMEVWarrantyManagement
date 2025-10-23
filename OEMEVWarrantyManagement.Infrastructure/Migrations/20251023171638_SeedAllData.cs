@@ -319,57 +319,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "WarrantyClaims",
-                columns: table => new
-                {
-                    ClaimId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Vin = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ServiceCenterId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ConfirmBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    ConfirmDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    PolicyId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    failureDesc = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_WarrantyClaims", x => x.ClaimId);
-                    table.ForeignKey(
-                        name: "FK_WarrantyClaims_Employee_ConfirmBy",
-                        column: x => x.ConfirmBy,
-                        principalTable: "Employee",
-                        principalColumn: "UserId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_WarrantyClaims_Employee_CreatedBy",
-                        column: x => x.CreatedBy,
-                        principalTable: "Employee",
-                        principalColumn: "UserId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_WarrantyClaims_Organizations_ServiceCenterId",
-                        column: x => x.ServiceCenterId,
-                        principalTable: "Organizations",
-                        principalColumn: "OrgId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_WarrantyClaims_Vehicles_Vin",
-                        column: x => x.Vin,
-                        principalTable: "Vehicles",
-                        principalColumn: "Vin",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_WarrantyClaims_WarrantyPolicies_PolicyId",
-                        column: x => x.PolicyId,
-                        principalTable: "WarrantyPolicies",
-                        principalColumn: "PolicyId",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "PartOrderItems",
                 columns: table => new
                 {
@@ -394,6 +343,63 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         principalTable: "Parts",
                         principalColumn: "PartId",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WarrantyClaims",
+                columns: table => new
+                {
+                    ClaimId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Vin = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ServiceCenterId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ConfirmBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    ConfirmDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    VehicleWarrantyId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    failureDesc = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    WarrantyPolicyPolicyId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WarrantyClaims", x => x.ClaimId);
+                    table.ForeignKey(
+                        name: "FK_WarrantyClaims_Employee_ConfirmBy",
+                        column: x => x.ConfirmBy,
+                        principalTable: "Employee",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_WarrantyClaims_Employee_CreatedBy",
+                        column: x => x.CreatedBy,
+                        principalTable: "Employee",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_WarrantyClaims_Organizations_ServiceCenterId",
+                        column: x => x.ServiceCenterId,
+                        principalTable: "Organizations",
+                        principalColumn: "OrgId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_WarrantyClaims_VehicleWarrantyPolicies_VehicleWarrantyId",
+                        column: x => x.VehicleWarrantyId,
+                        principalTable: "VehicleWarrantyPolicies",
+                        principalColumn: "VehicleWarrantyId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_WarrantyClaims_Vehicles_Vin",
+                        column: x => x.Vin,
+                        principalTable: "Vehicles",
+                        principalColumn: "Vin",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_WarrantyClaims_WarrantyPolicies_WarrantyPolicyPolicyId",
+                        column: x => x.WarrantyPolicyPolicyId,
+                        principalTable: "WarrantyPolicies",
+                        principalColumn: "PolicyId");
                 });
 
             migrationBuilder.CreateTable(
@@ -599,19 +605,24 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 column: "CreatedBy");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WarrantyClaims_PolicyId",
-                table: "WarrantyClaims",
-                column: "PolicyId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_WarrantyClaims_ServiceCenterId",
                 table: "WarrantyClaims",
                 column: "ServiceCenterId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_WarrantyClaims_VehicleWarrantyId",
+                table: "WarrantyClaims",
+                column: "VehicleWarrantyId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_WarrantyClaims_Vin",
                 table: "WarrantyClaims",
                 column: "Vin");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WarrantyClaims_WarrantyPolicyPolicyId",
+                table: "WarrantyClaims",
+                column: "WarrantyPolicyPolicyId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WarrantyPolicies_OrganizationOrgId",
@@ -649,9 +660,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 name: "VehicleParts");
 
             migrationBuilder.DropTable(
-                name: "VehicleWarrantyPolicies");
-
-            migrationBuilder.DropTable(
                 name: "WorkOrders");
 
             migrationBuilder.DropTable(
@@ -667,13 +675,16 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 name: "Parts");
 
             migrationBuilder.DropTable(
+                name: "VehicleWarrantyPolicies");
+
+            migrationBuilder.DropTable(
+                name: "Employee");
+
+            migrationBuilder.DropTable(
                 name: "Vehicles");
 
             migrationBuilder.DropTable(
                 name: "WarrantyPolicies");
-
-            migrationBuilder.DropTable(
-                name: "Employee");
 
             migrationBuilder.DropTable(
                 name: "Customers");

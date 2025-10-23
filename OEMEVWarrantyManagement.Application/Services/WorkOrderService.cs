@@ -20,8 +20,9 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IImageRepository _imageRepository;
         private readonly IVehicleRepository _vehicleRepository;
         private readonly IEmployeeRepository _employeeRepository;
+        private readonly IBackWarrantyClaimRepository _backWarrantyClaimRepository;
 
-        public WorkOrderService(IWorkOrderRepository workOrderRepository, IMapper mapper, IWarrantyClaimService warrantyClaimService, IWarrantyClaimRepository claimRepository, ICurrentUserService currentUserService, IClaimPartRepository claimPartRepository, IImageRepository imageRepository, IVehicleRepository vehicleRepository, IEmployeeRepository employeeRepository)
+        public WorkOrderService(IWorkOrderRepository workOrderRepository, IMapper mapper, IWarrantyClaimService warrantyClaimService, IWarrantyClaimRepository claimRepository, ICurrentUserService currentUserService, IClaimPartRepository claimPartRepository, IImageRepository imageRepository, IVehicleRepository vehicleRepository, IEmployeeRepository employeeRepository, IBackWarrantyClaimRepository backWarrantyClaimRepository)
         {
             _workOrderRepository = workOrderRepository;
             _mapper = mapper;
@@ -32,6 +33,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             _imageRepository = imageRepository;
             _vehicleRepository = vehicleRepository;
             _employeeRepository = employeeRepository;
+            _backWarrantyClaimRepository = backWarrantyClaimRepository;
         }
 
         //public async Task<RequestCreateWorkOrderDto> CreateWorkOrderAsync(RequestCreateWorkOrderDto request)
@@ -120,14 +122,15 @@ namespace OEMEVWarrantyManagement.Application.Services
                 var workOrderStatus = WorkOrderStatus.InProgress.GetWorkOrderStatus();
 
                 // validate assigned technicians and build work orders
-                foreach (var assigned in workOrdersDto.AssignedTo)
+                foreach (var id in workOrdersDto.AssignedTo)
                 {
-                    var tech = await _employeeRepository.GetEmployeeByIdAsync(assigned);
-                    if (tech == null) throw new ApiException(ResponseError.NotFoundEmployee);
+                    if (!Guid.TryParse(id, out var claimId)) throw new ApiException(ResponseError.NotFoundEmployee);
+
+                    var tech = await _employeeRepository.GetEmployeeByIdAsync(claimId) ?? throw new ApiException(ResponseError.NotFoundEmployee);
 
                     var workOrder = new WorkOrder
                     {
-                        AssignedTo = assigned,
+                        AssignedTo = claimId,
                         Type = type,
                         Target = workOrdersDto.Target,
                         TargetId = workOrdersDto.TargetId.Value,
@@ -191,13 +194,17 @@ namespace OEMEVWarrantyManagement.Application.Services
                         claimDto.Year = vehicle.Year;
                     }
 
-                    // if repair, include claim parts
-                    if (workOrder.Type == WorkOrderType.Repair.GetWorkOrderType())
+                    // latest back-claim note
+                    var backClaims = await _backWarrantyClaimRepository.GetBackWarrantyClaimsByIdAsync(claim.ClaimId);
+                    var latestBackClaim = backClaims?.OrderByDescending(b => b.CreatedDate).FirstOrDefault();
+                    if (latestBackClaim != null)
                     {
-                        var parts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
-                        claimDto.ClaimParts = parts.Select(p => _mapper.Map<ShowClaimPartDto>(p));
+                        claimDto.Notes = latestBackClaim.Description;
                     }
 
+                    var parts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
+                    claimDto.ClaimParts = parts.Select(p => _mapper.Map<ShowClaimPartDto>(p));
+                 
                     // attachments
                     var attachments = await _imageRepository.GetImagesByWarrantyClaimIdAsync(claim.ClaimId);
                     claimDto.Attachments = attachments.Select(a => _mapper.Map<ImageDto>(a));
@@ -258,11 +265,17 @@ namespace OEMEVWarrantyManagement.Application.Services
                             claimDto.Year = vehicle.Year;
                         }
 
-                        if (wo.Type == WorkOrderType.Repair.GetWorkOrderType())
+                        // latest back-claim note
+                        var backClaims = await _backWarrantyClaimRepository.GetBackWarrantyClaimsByIdAsync(claim.ClaimId);
+                        var latestBackClaim = backClaims?.OrderByDescending(b => b.CreatedDate).FirstOrDefault();
+                        if (latestBackClaim != null)
                         {
-                            var parts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
-                            claimDto.ClaimParts = parts.Select(p => _mapper.Map<ShowClaimPartDto>(p));
+                            claimDto.Notes = latestBackClaim.Description;
                         }
+
+                        var parts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
+                        claimDto.ClaimParts = parts.Select(p => _mapper.Map<ShowClaimPartDto>(p));
+                        
 
                         var attachments = await _imageRepository.GetImagesByWarrantyClaimIdAsync(claim.ClaimId);
                         claimDto.Attachments = attachments.Select(a => _mapper.Map<ImageDto>(a));

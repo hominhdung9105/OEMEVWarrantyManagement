@@ -30,6 +30,8 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string? Model { get; set; }
         public int? Year { get; set; }
 
+        public string? Notes { get; set; } // latest back-claim note
+
         public IEnumerable<ShowClaimPartDto>? ClaimParts { get; set; }
         public IEnumerable<ImageDto>? Attachments { get; set; }
     }

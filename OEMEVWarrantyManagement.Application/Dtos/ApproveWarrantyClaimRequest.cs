@@ -4,6 +4,6 @@ namespace OEMEVWarrantyManagement.Application.Dtos
 {
     public class ApproveWarrantyClaimRequest
     {
-        public Guid? PolicyId { get; set; }
+        public string? VehicleWarrantyId { get; set; }
     }
 }

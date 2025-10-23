@@ -28,11 +28,11 @@ namespace OEMEVWarrantyManagement.Application.Services
             _workOrderRepository = workOrderRepository;
         }
 
-        public async Task<List<RequestClaimPart>> CreateManyClaimPartsAsync(InspectionDto dto)
+        public async Task<List<RequestClaimPart>> CreateManyClaimPartsAsync(Guid claimId, List<PartsInClaimPartDto> dto)
         {
-            var entities = dto.Parts.Select(p => new ClaimPart
+            var entities = dto.Select(p => new ClaimPart
             {
-                ClaimId = (Guid)dto.ClaimId,
+                ClaimId = claimId,
                 Model = p.Model,
                 SerialNumberOld = p.SerialNumber,
                 Action = p.Action,

@@ -23,7 +23,6 @@
 
     public class PartsInClaimPartDto
     {
-        public Guid PartId { get; set; }
         public string Model { get; set; }
         //public int Quantity { get; set; }
         public string SerialNumber { get; set; }

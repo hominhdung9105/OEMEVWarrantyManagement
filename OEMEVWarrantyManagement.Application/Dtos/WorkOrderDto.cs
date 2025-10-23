@@ -34,8 +34,8 @@ namespace OEMEVWarrantyManagement.Application.Dtos
 
     public class RequestCreateWorkOrdersDto
     {
-        public List<Guid> AssignedTo { get; set; }
-        public string Target { get; set; }// claim hay campaign
+        public List<string> AssignedTo { get; set; }
+        public string? Target { get; set; }// claim hay campaign
         public Guid? TargetId { get; set; }
     }
 

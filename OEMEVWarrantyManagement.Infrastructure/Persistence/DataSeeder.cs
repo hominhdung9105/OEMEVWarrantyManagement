@@ -249,7 +249,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 .RuleFor(c => c.Description, f => f.Lorem.Paragraph())
                 .RuleFor(c => c.ConfirmBy, (f, c) => c.Status == "approved" || c.Status == "denied" ? f.PickRandom(employees).UserId : (Guid?)null)
                 .RuleFor(c => c.ConfirmDate, (f, c) => c.ConfirmBy.HasValue ? f.Date.Recent() : (DateTime?)null)
-                .RuleFor(c => c.PolicyId, (f, u) => f.PickRandom(policies).PolicyId)
+                .RuleFor(c => c.VehicleWarrantyId, (f, u) => f.PickRandom(vehiclePolicies).VehicleWarrantyId)
                 .RuleFor(c => c.failureDesc, f => f.Lorem.Sentence());
             var claims = claimFaker.Generate(warrantyCLaimCount);
             context.WarrantyClaims.AddRange(claims);

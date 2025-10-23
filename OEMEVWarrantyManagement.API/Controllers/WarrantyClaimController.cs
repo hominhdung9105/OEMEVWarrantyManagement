@@ -55,7 +55,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
             }
             else if (role == RoleIdEnum.Technician.GetRoleId())
             {
-                var result = await _workOrderService.GetWorkOrdersByTech();
+                var result = await _workOrderService.GetWorkOrdersDetailByTechAsync();
                 return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
             }
             else return Unauthorized(ApiResponse<object>.Fail(ResponseError.Forbidden));
@@ -93,6 +93,8 @@ namespace OEMEVWarrantyManagement.API.Controllers
         [Authorize(policy: "RequireEvmStaff")]
         public async Task<IActionResult> GetAllWarrantyClaimNeedConfirm()
         {
+            System.Diagnostics.Debug.WriteLine("lay evm");
+
             var result = await _warrantyClaimService.GetWarrantyClaimsSentToManufacturerAsync();
             return Ok(ApiResponse<IEnumerable<ResponseWarrantyClaimDto>>.Ok(result, "Get SentToManufacturer claims successfully!"));
         }
@@ -102,9 +104,10 @@ namespace OEMEVWarrantyManagement.API.Controllers
         public async Task<IActionResult> ApproveWarrantyClaim(string claimId, [FromBody] ApproveWarrantyClaimRequest request)
         {
             if (!Guid.TryParse(claimId, out var id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
-            if(request.PolicyId == null) throw new ApiException(ResponseError.InvalidVehiclePolicyId);
+            if(request.VehicleWarrantyId == null) throw new ApiException(ResponseError.InvalidVehiclePolicyId);
+            if (!Guid.TryParse(request?.VehicleWarrantyId, out var vehicleWarrantyId)) throw new ApiException(ResponseError.InvalidVehiclePolicyId);
 
-            var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.Approved, request?.PolicyId);
+            var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.Approved, vehicleWarrantyId);
 
             return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Accept Successfully!"));
         }
@@ -155,7 +158,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
             }
 
             var result = await _warrantyClaimService.UpdateDescription(id, request.Description);
-            await _claimPartService.CreateManyClaimPartsAsync(request);
+            await _claimPartService.CreateManyClaimPartsAsync(id, request.Parts);
 
             return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Update Description Successfully!"));
         }

@@ -34,9 +34,6 @@ namespace OEMEVWarrantyManagement.Share.Enums
         [Description("car back home")]
         CarBackHome, // Khách lấy xe về
 
-        [Description("hold customer car")]
-        HoldCustomerCar, // Giữ xe khách để bảo hành
-
         [Description("done warranty")]
         DoneWarranty // Giao xe cho khách xong
     }
