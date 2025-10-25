@@ -13,17 +13,13 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.HasKey(poi => poi.OrderItemId);
             builder.Property(poi => poi.OrderItemId).ValueGeneratedOnAdd();
             builder.Property(poi => poi.OrderId);
-            builder.Property(poi => poi.PartId);
+            builder.Property(poi => poi.Model).IsRequired();
             builder.Property(poi => poi.Quantity);
             builder.Property(poi => poi.Remarks);
 
             builder.HasOne(poi => poi.PartOrder)
                    .WithMany(po => po.PartOrderItems)
                    .HasForeignKey(poi => poi.OrderId);
-
-            builder.HasOne(poi => poi.Part)
-                   .WithMany(p => p.PartOrderItems)
-                   .HasForeignKey(poi => poi.PartId);
         }
     }
 }

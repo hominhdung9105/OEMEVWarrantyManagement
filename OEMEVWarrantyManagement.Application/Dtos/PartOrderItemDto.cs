@@ -10,7 +10,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
     {
         public Guid OrderItemId { get; set; }
         public Guid OrderId { get; set; }
-        public Guid PartId { get; set; }
+        public string Model { get; set; }
         public int Quantity { get; set; }
         public string Remarks { get; set; }
     }
@@ -18,7 +18,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
     public class RequsetPartOrderItemDto
     {
         public Guid OrderId { get; set; }
-        public Guid PartId { get; set; }
+        public string Model { get; set; }
         public int Quantity { get; set; }
         public string Remarks { get; set; }
     }

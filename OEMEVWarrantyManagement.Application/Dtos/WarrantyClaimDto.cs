@@ -68,7 +68,7 @@
     }
     public class RepairRequestDto
     {
-        public Guid ClaimId { get; set; }
+        public Guid? ClaimId { get; set; }
         public List<UpdateClaimPartDto> Parts { get; set; }
     }
 }

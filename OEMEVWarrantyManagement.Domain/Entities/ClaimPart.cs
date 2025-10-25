@@ -13,13 +13,10 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public string Action { get; set; } // repair | replace
         public string? Status { get; set; }
         public decimal Cost { get; set; }
-        public Guid? PartId { get; set; } // Khoá ngoại (nullable)
-        
+
 
         // Navigation Properties
         [JsonIgnore]
         public WarrantyClaim WarrantyClaim { get; set; }
-        [JsonIgnore]
-        public virtual Part Part { get; set; } // Navigation
     }
 }

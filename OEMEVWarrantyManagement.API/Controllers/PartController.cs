@@ -57,6 +57,13 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<object>.Ok(entities, "Get part categories successfully!"));
         }
 
+        [HttpGet("category-by-model")]
+        public IActionResult GetCategoryByModel([FromQuery] string model)
+        {
+            var category = _partService.GetCategoryByModel(model);
+            return Ok(ApiResponse<string>.Ok(category, "Get category by model successfully!"));
+        }
+
         //[HttpPut("{orderID}")]
         //public async Task<IActionResult>Update(string orderID)
         //{

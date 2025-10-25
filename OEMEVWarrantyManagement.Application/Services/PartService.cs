@@ -55,16 +55,22 @@ namespace OEMEVWarrantyManagement.Application.Services
 
         public async Task<IEnumerable<PartDto>> UpdateQuantityAsync(Guid orderId)
         {
-            var partOrderItem = await _orderItemRepository.GetAllByOrderIdAsync(orderId);
+            var partOrderItems = await _orderItemRepository.GetAllByOrderIdAsync(orderId);
             var orgId = await _currentUserService.GetOrgId();
             var parts = await _partRepository.GetByOrgIdAsync(orgId);
 
-            foreach (var partDto in partOrderItem)
+            // Group received quantities by model
+            var quantityByModel = partOrderItems
+                .GroupBy(i => i.Model)
+                .Select(g => new { Model = g.Key, Total = g.Sum(x => x.Quantity) })
+                .ToList();
+
+            foreach (var item in quantityByModel)
             {
-                var part = parts.FirstOrDefault(p => p.PartId == partDto.PartId);
+                var part = parts.FirstOrDefault(p => p.Model == item.Model);
                 if (part != null)
                 {
-                    part.StockQuantity += partDto.Quantity;
+                    part.StockQuantity += item.Total;
                 }
             }
 
@@ -116,17 +122,6 @@ namespace OEMEVWarrantyManagement.Application.Services
                     cp.Status = ClaimPartStatus.Enough.GetClaimPartStatus();
                 }
                 
-                //if (isEnough)
-                //{
-                //    foreach (var cp in claimParts)
-                //    {
-                //        var part = parts.FirstOrDefault(p => p.Model == cp.Model);
-
-                //        part.StockQuantity -= cp.Quantity;
-                //        cp.Status = ClaimPartStatus.Enough.GetClaimPartStatus();
-                //    }
-                //}
-
                 await _claimPartRepository.UpdateRangeAsync(notEnoughParts);
             }
 
@@ -163,55 +158,6 @@ namespace OEMEVWarrantyManagement.Application.Services
             return true;
         }
 
-
-        //public static bool CheckQuantityClaimPart(IEnumerable<Part> parts, List<(string Model, int Count)> claimParts)
-        //{
-        //    var totalByModel = claimParts
-        //        .GroupBy(p => p.Model)
-        //        .Select(g => new { Model = g.Key, Count = g.Count() })
-        //        .ToList();
-
-        //    foreach (var item in totalByModel)
-        //    {
-        //        var part = parts.FirstOrDefault(p => p.Model == item.Model);
-        //        if (part == null || part.StockQuantity < item.Count)
-        //            return false;
-        //    }
-
-        //    //foreach (var cp in claimParts)
-        //    //{
-        //    //    var part = parts.FirstOrDefault(p => p.Model == cp.Model);
-        //    //    if (part == null || part.StockQuantity < cp.Quantity)
-        //    //        return false;
-        //    //}
-
-        //    return true;
-        //}
-
-        //public static bool CheckQuantityClaimPart(IEnumerable<Part> parts, IEnumerable<ClaimPart> claimParts)
-        //{
-        //    var totalByModel = claimParts
-        //        .GroupBy(p => p.Model)
-        //        .Select(g => new { Model = g.Key, Count = g.Count() })
-        //        .ToList();
-
-        //    foreach (var item in totalByModel)
-        //    {
-        //        var part = parts.FirstOrDefault(p => p.Model == item.Model);
-        //        if (part == null || part.StockQuantity < item.Count)
-        //            return false;
-        //    }
-
-        //    //foreach (var cp in claimParts)
-        //    //{
-        //    //    var part = parts.FirstOrDefault(p => p.Model == cp.Model);
-        //    //    if (part == null || part.StockQuantity < cp.Quantity)
-        //    //        return false;
-        //    //}
-
-        //    return true;
-        //}
-
         public IEnumerable<string> GetPartCategories()
         {
             return PartCategoryExtensions.GetAllCategories();
@@ -223,6 +169,14 @@ namespace OEMEVWarrantyManagement.Application.Services
                 throw new ApiException(ResponseError.InvalidPartCategory);
 
             return PartModel.GetModels(category);
+        }
+
+        public string? GetCategoryByModel(string model)
+        {
+            if(string.IsNullOrWhiteSpace(model) || !PartModel.IsValidModel(model))
+                throw new ApiException(ResponseError.InvalidPartModel);
+
+            return PartModel.GetCategoryByModel(model);
         }
     }
 }

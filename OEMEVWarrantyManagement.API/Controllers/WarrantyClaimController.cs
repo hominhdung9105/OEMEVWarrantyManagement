@@ -195,11 +195,11 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
             request.ClaimId = id;
 
-            var result = _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.Repaired);
+            var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.Repaired);
 
             await _claimPartService.UpdateClaimPartsAsync(request);
 
-            return Ok(ApiResponse<WarrantyClaimDto>.Ok(result.Result, "Update Successfully!"));
+            return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Update Successfully!"));
         }
 
         [HttpGet("filter/{status}")]

@@ -32,7 +32,7 @@
 
     public class UpdateClaimPartDto
     {
-        public Guid ClaimPartId { get; set; }
+        public string ClaimPartId { get; set; }
         public required string SerialNumber { get; set; }
     }
 

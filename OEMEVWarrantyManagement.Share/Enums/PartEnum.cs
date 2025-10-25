@@ -261,5 +261,17 @@ namespace OEMEVWarrantyManagement.Share.Enums
                 .SelectMany(list => list)
                 .Any(m => string.Equals(m, model, StringComparison.OrdinalIgnoreCase));
         }
+
+        // Get category by model name
+        public static string? GetCategoryByModel(string model)
+        {
+            if (string.IsNullOrWhiteSpace(model)) return null;
+
+            var category = ModelsByCategory
+                .FirstOrDefault(kvp => kvp.Value.Any(m => string.Equals(m, model, StringComparison.OrdinalIgnoreCase)))
+                .Key;
+
+            return category;
+        }
     }
 }

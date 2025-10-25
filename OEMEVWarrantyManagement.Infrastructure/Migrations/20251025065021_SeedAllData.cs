@@ -272,17 +272,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     SerialNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     InstalledDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UninstalledDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PartId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_VehicleParts", x => x.VehiclePartId);
-                    table.ForeignKey(
-                        name: "FK_VehicleParts_Parts_PartId",
-                        column: x => x.PartId,
-                        principalTable: "Parts",
-                        principalColumn: "PartId");
                     table.ForeignKey(
                         name: "FK_VehicleParts_Vehicles_Vin",
                         column: x => x.Vin,
@@ -324,7 +318,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 {
                     OrderItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    PartId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Model = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     Remarks = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
@@ -336,12 +330,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         column: x => x.OrderId,
                         principalTable: "PartOrders",
                         principalColumn: "OrderId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_PartOrderItems_Parts_PartId",
-                        column: x => x.PartId,
-                        principalTable: "Parts",
-                        principalColumn: "PartId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -465,17 +453,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     SerialNumberNew = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Action = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Cost = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    PartId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    Cost = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ClaimParts", x => x.ClaimPartId);
-                    table.ForeignKey(
-                        name: "FK_ClaimParts_Parts_PartId",
-                        column: x => x.PartId,
-                        principalTable: "Parts",
-                        principalColumn: "PartId");
                     table.ForeignKey(
                         name: "FK_ClaimParts_WarrantyClaims_ClaimId",
                         column: x => x.ClaimId,
@@ -525,11 +507,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 column: "ClaimId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ClaimParts_PartId",
-                table: "ClaimParts",
-                column: "PartId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Customers_OrganizationOrgId",
                 table: "Customers",
                 column: "OrganizationOrgId");
@@ -543,11 +520,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 name: "IX_PartOrderItems_OrderId",
                 table: "PartOrderItems",
                 column: "OrderId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PartOrderItems_PartId",
-                table: "PartOrderItems",
-                column: "PartId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PartOrders_CreatedBy",
@@ -568,11 +540,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 name: "IX_Parts_OrgId",
                 table: "Parts",
                 column: "OrgId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_VehicleParts_PartId",
-                table: "VehicleParts",
-                column: "PartId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_VehicleParts_Vin",
@@ -657,6 +624,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 name: "PartOrderItems");
 
             migrationBuilder.DropTable(
+                name: "Parts");
+
+            migrationBuilder.DropTable(
                 name: "VehicleParts");
 
             migrationBuilder.DropTable(
@@ -670,9 +640,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "PartOrders");
-
-            migrationBuilder.DropTable(
-                name: "Parts");
 
             migrationBuilder.DropTable(
                 name: "VehicleWarrantyPolicies");

@@ -95,16 +95,16 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             {
                 // Tạo 2 SC_STAFF cho Service Center này
                 var scStaff = baseEmployeeFaker
-                    .RuleFor(e => e.Role, "SC_STAFF")
-                    .RuleFor(e => e.OrgId, sc.OrgId) // Gán vào SC hiện tại
-                    .Generate(2);
+                        .RuleFor(e => e.Role, "SC_STAFF")
+                        .RuleFor(e => e.OrgId, sc.OrgId) // Gán vào SC hiện tại
+                        .Generate(2);
                 employees.AddRange(scStaff);
 
                 // Tạo 5 SC_TECH cho Service Center này
                 var scTech = baseEmployeeFaker
-                    .RuleFor(e => e.Role, "SC_TECH")
-                    .RuleFor(e => e.OrgId, sc.OrgId) // Gán vào SC hiện tại
-                    .Generate(5);
+                        .RuleFor(e => e.Role, "SC_TECH")
+                        .RuleFor(e => e.OrgId, sc.OrgId) // Gán vào SC hiện tại
+                        .Generate(5);
                 employees.AddRange(scTech);
             }
 
@@ -193,7 +193,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var partOrderItemFaker = new Faker<PartOrderItem>("en")
                 .RuleFor(poi => poi.OrderItemId, f => f.Database.Random.Guid())
                 .RuleFor(poi => poi.OrderId, (f, u) => f.PickRandom(partOrders).OrderId)
-                .RuleFor(poi => poi.PartId, (f, u) => f.PickRandom(parts).PartId)
+                .RuleFor(poi => poi.Model, (f, u) => f.PickRandom(parts).Model)
                 .RuleFor(poi => poi.Quantity, f => f.Random.Int(1, 10))
                 .RuleFor(poi => poi.Remarks, f => f.Lorem.Sentence());
             var partOrderItems = partOrderItemFaker.Generate(joinRecordCount);
@@ -218,7 +218,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                  // Chọn một Part ngẫu nhiên từ danh sách đã tạo
                  .FinishWith((f, vp) => {
                      var selectedPart = f.PickRandom(parts); // Lấy một Part ngẫu nhiên
-                     vp.PartId = selectedPart.PartId;        // Gán PartId từ Part đó
                      vp.Model = selectedPart.Model;          // Gán Model từ Part đó
                  })
                  .RuleFor(vp => vp.SerialNumber, f => f.Random.AlphaNumeric(12))
@@ -263,7 +262,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 .RuleFor(w => w.WorkOrderId, f => f.Database.Random.Guid())
                 .RuleFor(w => w.AssignedTo, (f, u) => f.PickRandom(employees).UserId)
                 .RuleFor(w => w.Type, f => f.PickRandom(new[] { "Repair", "Inspection" })) // Giữ nguyên Type của bạn
-                .RuleFor(w => w.Status, f => f.PickRandom(new[] { "Pending", "InProgress", "Completed" }))
+                .RuleFor(w => w.Status, f => f.PickRandom(new[] { "in progress", "completed" }))
                 .RuleFor(w => w.StartDate, f => f.Date.Past(1))
                 .RuleFor(w => w.EndDate, (f, w) => w.Status == "Completed" ? f.Date.Recent() : (DateTime?)null)
                 .RuleFor(w => w.Notes, f => f.Lorem.Sentence())
@@ -305,13 +304,12 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var claimPartFaker = new Faker<ClaimPart>("en")
                 .RuleFor(cp => cp.ClaimPartId, f => f.Database.Random.Guid())
                 .RuleFor(cp => cp.ClaimId, (f, u) => f.PickRandom(claims).ClaimId)
-                .RuleFor(cp => cp.Model, f => f.Vehicle.Model())
+                .RuleFor(cp => cp.Model, f => f.PickRandom(parts).Model)
                 .RuleFor(cp => cp.SerialNumberOld, f => f.Random.AlphaNumeric(12))
                 .RuleFor(cp => cp.SerialNumberNew, f => f.Random.AlphaNumeric(12))
                 .RuleFor(cp => cp.Action, f => f.PickRandom(new[] { "Replace", "Repair" }))
                 .RuleFor(cp => cp.Status, f => f.PickRandom(new[] { "Pending", "Approved", "Shipped" }))
-                .RuleFor(cp => cp.Cost, f => f.Finance.Amount(50, 1000))
-                .RuleFor(cp => cp.PartId, (f, u) => f.PickRandom(parts).PartId);
+                .RuleFor(cp => cp.Cost, f => f.Finance.Amount(50, 1000));
             var claimParts = claimPartFaker.Generate(joinRecordCount);
             context.ClaimParts.AddRange(claimParts);
 

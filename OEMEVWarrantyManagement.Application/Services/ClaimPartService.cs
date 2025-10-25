@@ -52,11 +52,15 @@ namespace OEMEVWarrantyManagement.Application.Services
 
         public async Task UpdateClaimPartsAsync(RepairRequestDto dto)
         {
-            var claim = await _warrantyClaimRepository.GetWarrantyClaimByIdAsync(dto.ClaimId);
+            var claim = await _warrantyClaimRepository.GetWarrantyClaimByIdAsync((Guid) dto.ClaimId);
 
             foreach (var part in dto.Parts)
             {
-                var claimPart = await _claimPartRepository.GetByIdAsync(part.ClaimPartId);
+                if(Guid.TryParse(part.ClaimPartId, out var claimPartId) == false)
+                {
+                    throw new ApiException(ResponseError.InvalidClaimPartId);
+                }
+                var claimPart = await _claimPartRepository.GetByIdAsync(claimPartId);
 
                 if (claimPart != null && claimPart.Action == ClaimPartAction.Replace.GetClaimPartAction())
                 {
@@ -99,7 +103,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                 cp.Status = ClaimPartStatus.Done.GetClaimPartStatus();
             }
 
-            var workOrders = await _workOrderRepository.GetWorkOrders(dto.ClaimId, WorkOrderType.Repair.GetWorkOrderType(), WorkOrderTarget.Warranty.GetWorkOrderTarget());
+            var workOrders = await _workOrderRepository.GetWorkOrders((Guid)dto.ClaimId, WorkOrderType.Repair.GetWorkOrderType(), WorkOrderTarget.Warranty.GetWorkOrderTarget());
 
             if (workOrders == null || !workOrders.Any())
                 throw new ApiException(ResponseError.NotFoundWorkOrder);

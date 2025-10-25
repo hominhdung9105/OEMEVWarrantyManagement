@@ -14,5 +14,6 @@ namespace OEMEVWarrantyManagement.Application.IServices
 
         IEnumerable<string> GetPartCategories();
         IEnumerable<string> GetPartModels(string category);
+        string? GetCategoryByModel(string model);
     }
 }
