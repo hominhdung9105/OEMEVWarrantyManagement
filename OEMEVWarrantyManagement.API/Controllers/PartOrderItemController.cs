@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IServices;
@@ -17,6 +18,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(policy: "RequireScStaffOrEvmStaff")]
         public async Task<IActionResult> Create(RequsetPartOrderItemDto dto)
         {
             var entity = await _partOrderItemService.CreateAsync(dto);

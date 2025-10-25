@@ -32,11 +32,27 @@ namespace OEMEVWarrantyManagement.Application.Services
         public async Task<IEnumerable<PartDto>> GetPartByOrgIdAsync(Guid id)
         {
             var entities = await _partRepository.GetByOrgIdAsync(id);
+            var result = _mapper.Map<IEnumerable<PartDto>>(entities);
             if (!entities.Any())
             {
                 throw new ApiException(ResponseError.NotFoundPartHere);
             }
-            return _mapper.Map<IEnumerable<PartDto>>(entities);
+            foreach (var part in result)
+            {
+                if (part.StockQuantity > 0 && part.StockQuantity < 10)
+                {
+                    part.Status = PartStatus.LowStock.GetPartStatus();
+                }
+                else if (part.StockQuantity == 0)
+                {
+                    part.Status = PartStatus.OutOfStock.GetPartStatus();
+                }
+                else
+                {
+                    part.Status = PartStatus.InStock.GetPartStatus();
+                }
+            }
+            return result;
         }
 
         public async Task<IEnumerable<PartDto>> GetAllAsync()
@@ -44,7 +60,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             var entities = await _partRepository.GetAllAsync();
             return _mapper.Map<IEnumerable<PartDto>>(entities);
         }
-
+        //K dùng =  xoá
         public async Task<IEnumerable<PartDto>> GetPartsAsync(string model)
         {
             var orgId = await _currentUserService.GetOrgId();
@@ -173,7 +189,7 @@ namespace OEMEVWarrantyManagement.Application.Services
 
         public string? GetCategoryByModel(string model)
         {
-            if(string.IsNullOrWhiteSpace(model) || !PartModel.IsValidModel(model))
+            if (string.IsNullOrWhiteSpace(model) || !PartModel.IsValidModel(model))
                 throw new ApiException(ResponseError.InvalidPartModel);
 
             return PartModel.GetCategoryByModel(model);

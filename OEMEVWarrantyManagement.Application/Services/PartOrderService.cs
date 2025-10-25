@@ -12,12 +12,18 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IMapper _mapper;
         private readonly ICurrentUserService _currentUserService;
         private readonly IEmployeeRepository _employeeRepository;
-        public PartOrderService(IPartOrderRepository partOrderRepository, IMapper mapper, ICurrentUserService currentUserService, IEmployeeRepository employeeRepository)
+        private readonly IPartOrderItemRepository _partOrderItemRepository;
+        private readonly IPartRepository _partRepository;
+        private readonly IOrganizationRepository _organizationRepository;
+        public PartOrderService(IPartOrderRepository partOrderRepository, IMapper mapper, ICurrentUserService currentUserService, IEmployeeRepository employeeRepository, IPartOrderItemRepository partOrderItemRepository, IPartRepository partRepository, IOrganizationRepository organizationRepository)
         {
             _partOrderRepository = partOrderRepository;
             _mapper = mapper;
             _currentUserService = currentUserService;
             _employeeRepository = employeeRepository;
+            _partOrderItemRepository = partOrderItemRepository;
+            _partRepository = partRepository;
+            _organizationRepository = organizationRepository;
         }
         public async Task<RequestPartOrderDto> CreateAsync()
         {
@@ -46,10 +52,118 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<PartOrderDto>(entity);
         }
 
+        public async Task<IEnumerable<ResponsePartOrderDto>> GetAllPartOrderAsync()
+        {
+            var orgId = await _currentUserService.GetOrgId();
+            //var entities = await _partOrderRepository.GetAllByOrgIdAsync(orgId);
+            var entities = await _partOrderRepository.GetAll();
+            var result = _mapper.Map<IEnumerable<ResponsePartOrderDto>>(entities);
+            foreach (var entity in result)
+            {
+                var partOrderItems = await _partOrderItemRepository.GetAllByOrderIdAsync(entity.OrderId);
+                entity.PartOrderItems = _mapper.Map<List<ResponsePartOrderItemDto>>(partOrderItems);
+                entity.TotalItems = partOrderItems.Count();
+                var creator = await _employeeRepository.GetEmployeeByIdAsync(entity.CreatedBy);
+                var organization = await _organizationRepository.GetOrganizationById(entity.ServiceCenterId);
+                entity.ServiceCenterName = organization.Name;
+                entity.CreatedByName = creator.Name;
+                foreach (var item in entity.PartOrderItems)
+                {
+                    var part = await _partRepository.GetPartsAsync(item.Model, entity.ServiceCenterId);
+                    if (part != null)
+                    {
+                        item.Name = part.Name;
+                        item.Model = part.Model;
+                        item.ScStock = part.StockQuantity;
+                    }
+                    var oemPart = await _partRepository.GetPartsAsync(item.Model, orgId);
+                    if (oemPart != null)
+                    {
+                        item.OemStock = oemPart.StockQuantity;
+                    }
+                }
+            }
+            return result;
+        }
+
+        public async Task<bool> UpdateExpectedDateAsync(Guid id, UpdateExpectedDateDto dto)
+        {
+
+            var result = false;
+            var entity = await _partOrderRepository.GetPartOrderByIdAsync(id);
+            if (dto.ExpectedDate != null && (entity.Status == "Waiting" || entity.Status == "Pending"))
+            {
+                entity.ExpectedDate = dto.ExpectedDate;
+                result = true;
+            }
+            var update = await _partOrderRepository.UpdateAsync(entity);
+            return result;
+        }
+
+
         public async Task<PartOrderDto> UpdateStatusAsync(Guid id)
         {
             var entity = await _partOrderRepository.GetPartOrderByIdAsync(id);
-            entity.Status = "shipped";
+            entity.Status = "shipped";//TODO????
+            var update = await _partOrderRepository.UpdateAsync(entity);
+            return _mapper.Map<PartOrderDto>(update);
+        }
+
+        public async Task<IEnumerable<ResponsePartOrderForScStaffDto>> GetAllPartOrderForScStaffAsync()
+        {
+            var orgId = await _currentUserService.GetOrgId();
+            var entities = await _partOrderRepository.GetAllByOrgIdAsync(orgId);
+            var result = _mapper.Map<IEnumerable<ResponsePartOrderForScStaffDto>>(entities);
+            foreach (var entity in result)
+            {
+                var partOrderItems = await _partOrderItemRepository.GetAllByOrderIdAsync(entity.OrderId);
+                entity.PartOrderItems = _mapper.Map<List<ResponsePartOrderItemForScStaffDto>>(partOrderItems);
+                entity.TotalItems = partOrderItems.Count();
+                var organization = await _organizationRepository.GetOrganizationById(entity.ServiceCenterId);
+                entity.ServiceCenterName = organization.Name;
+                foreach (var item in entity.PartOrderItems)
+                {
+                    var part = await _partRepository.GetPartsAsync(item.Model, entity.ServiceCenterId);
+                    if (part != null)
+                    {
+                        item.Model = part.Model;
+                        item.ScStock = part.StockQuantity;
+                        item.RequestedQuantity = partOrderItems.FirstOrDefault(x => x.OrderItemId == item.OrderItemId)?.Quantity ?? 0;
+                    }
+                    
+                }
+            }
+            return result;
+
+        }
+        public async Task<PartOrderDto> UpdateStatusToConfirmAsync(Guid orderId)
+        {
+            var entity = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
+            if (entity.Status == "Pending" || entity.Status == "Waiting")
+            {
+                entity.Status = "Confirm";
+            }
+            var update = await _partOrderRepository.UpdateAsync(entity);
+            return _mapper.Map<PartOrderDto>(update);
+        }
+        public async Task<PartOrderDto> UpdateStatusDeliverdAsync(Guid orderId)
+        {
+            var entity = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
+            if(entity.Status == "Delivered")
+            {
+                entity.Status = "DoneDelivered";
+            }
+            var update = await _partOrderRepository.UpdateAsync(entity);
+            return _mapper.Map<PartOrderDto>(update);
+        }
+
+        public async Task<PartOrderDto> UpdateStatusDeliverdAndRepairAsync(Guid orderId)
+        {
+            var entity = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
+            if (entity.Status == "Confirm")
+            {
+                entity.Status = "Delivered";
+            }
             var update = await _partOrderRepository.UpdateAsync(entity);
             return _mapper.Map<PartOrderDto>(update);
         }

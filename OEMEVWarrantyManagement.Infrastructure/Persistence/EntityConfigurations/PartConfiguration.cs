@@ -11,7 +11,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
         {
             builder.ToTable("Parts");
             builder.HasKey(p => p.PartId);
-            builder.HasIndex(p => p.Model);
+
+            // Unique model per organization
+            builder.HasIndex(p => new { p.OrgId, p.Model }).IsUnique();
 
             builder.Property(p => p.PartId).ValueGeneratedOnAdd();
             builder.Property(p => p.Model).IsRequired();

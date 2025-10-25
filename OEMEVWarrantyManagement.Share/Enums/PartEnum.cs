@@ -273,5 +273,25 @@ namespace OEMEVWarrantyManagement.Share.Enums
 
             return category;
         }
+
+    }
+    public enum PartStatus
+    {
+        [Description("In Stock")]
+        InStock,
+        [Description("Out of Stock")]
+        OutOfStock,
+        [Description("Low Stock")]
+        LowStock
+    }
+
+    public static class PartStatusExtensions
+    {
+        public static string GetPartStatus(this PartStatus status)
+        {
+            var memberInfo = typeof(PartStatus).GetField(status.ToString());
+            var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute));
+            return attribute?.Description ?? status.ToString();
+        }
     }
 }

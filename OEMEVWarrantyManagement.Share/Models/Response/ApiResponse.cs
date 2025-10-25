@@ -111,7 +111,10 @@
         InvalidPolicy,
 
         [ResponseErrorAttr("Invalid claim part id.", 400, 37)]
-        InvalidClaimPartId
+        InvalidClaimPartId,
+
+        [ResponseErrorAttr("Invalid orderId.", 400, 38)]
+        InvalidOrderId
     }
 
     public class ApiResponse<T>

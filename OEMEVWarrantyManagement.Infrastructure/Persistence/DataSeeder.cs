@@ -121,18 +121,37 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var customers = customerFaker.Generate(primaryRecordCount);
             context.Customers.AddRange(customers);
 
-            var partFaker = new Faker<Part>("en")
-                .RuleFor(p => p.PartId, f => f.Database.Random.Guid())
-                .RuleFor(p => p.Category, f => f.PickRandom<PartCategory>().GetPartCategory())
-                .RuleFor(p => p.Model, (f, p) =>
+            // --- SỬA LOGIC TẠO PART: Mỗi Org không có 2 Model trùng nhau ---
+            var allModels = PartModel.ModelsByCategory.SelectMany(kvp => kvp.Value).Distinct().ToList();
+            var rng = new Random();
+            var parts = new List<Part>();
+
+            // Số part cho mỗi tổ chức (xáp xỉ)
+            var partsPerOrg = Math.Max(10, primaryRecordCount / Math.Max(1, organizations.Count));
+
+            foreach (var org in organizations)
+            {
+                // Chọn ngẫu nhiên các model không trùng nhau cho org này
+                var modelsForOrg = allModels
+                    .OrderBy(_ => rng.Next())
+                    .Take(Math.Min(partsPerOrg, allModels.Count))
+                    .ToList();
+
+                foreach (var model in modelsForOrg)
                 {
-                    var validModels = PartModel.ModelsByCategory.GetValueOrDefault(p.Category, new List<string> { "Generic Model" });
-                    return f.PickRandom(validModels);
-                })
-                .RuleFor(p => p.Name, (f, p) => $"{p.Category} - {p.Model}") // Tạo tên dựa trên Category và Model
-                .RuleFor(p => p.StockQuantity, f => f.Random.Number(50, 500))
-                .RuleFor(p => p.OrgId, (f, u) => f.PickRandom(organizations).OrgId);
-            var parts = partFaker.Generate(primaryRecordCount);
+                    var category = PartModel.GetCategoryByModel(model) ?? PartCategory.Other.GetPartCategory();
+                    parts.Add(new Part
+                    {
+                        PartId = Guid.NewGuid(),
+                        Model = model,
+                        Name = $"{category} - {model}",
+                        Category = category,
+                        StockQuantity = rng.Next(50, 501),
+                        OrgId = org.OrgId
+                    });
+                }
+            }
+
             context.Parts.AddRange(parts);
 
             var policyFaker = new Faker<WarrantyPolicy>("en")
@@ -164,7 +183,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 .RuleFor(p => p.RequestDate, f => f.Date.Past(1))
                 .RuleFor(p => p.ApprovedDate, (f, p) => f.Random.Bool(0.7f) ? f.Date.Recent() : (DateTime?)null)
                 .RuleFor(p => p.ShippedDate, (f, p) => p.ApprovedDate.HasValue ? f.Date.Recent() : (DateTime?)null)
-                .RuleFor(p => p.Status, f => f.PickRandom(new[] { "Pending", "Approved", "Shipped" }))
+                .RuleFor(p => p.ExpectedDate, (f, p) => p.RequestDate.AddDays(f.Random.Int(5, 15)))
+                .RuleFor(p => p.PartDelivery, (f, p) => p.ShippedDate.HasValue ? p.ExpectedDate?.AddDays(f.Random.Int(-1, 3)) : (DateTime?)null)
+                .RuleFor(p => p.Status, f => f.PickRandom(new[] { "Pending", "Waiting", "Deliverd" }))
                 .RuleFor(p => p.CreatedBy, (f, u) => f.PickRandom(employees).UserId);
             var partOrders = partOrderFaker.Generate(primaryRecordCount);
             context.PartOrders.AddRange(partOrders);

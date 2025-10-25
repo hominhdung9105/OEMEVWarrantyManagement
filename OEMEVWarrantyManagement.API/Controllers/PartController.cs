@@ -11,19 +11,22 @@ namespace OEMEVWarrantyManagement.API.Controllers
     {
         private readonly IPartService _partService;
         private readonly IEmployeeService _employeeService;
-        public PartController(IPartService partService, IEmployeeService employeeService)
+        private readonly ICurrentUserService ICurrentUserService;
+        public PartController(IPartService partService, IEmployeeService employeeService, ICurrentUserService iCurrentUserService)
         {
             _partService = partService;
             _employeeService = employeeService;
+            ICurrentUserService = iCurrentUserService;
         }
 
-        //[HttpGet] // ???
-        ////[Authorize(policy: "RequireEvmStaff")]
-        //public async Task<IActionResult> GetAllPart()
-        //{
-        //    var result = await _partService.GetAllAsync();
-        //    return Ok(ApiResponse<object>.Ok(result, "Get all part Successfully!"));
-        //}
+        [HttpGet]
+        [Authorize(policy: "RequireScStaffOrEvmStaff")]
+        public async Task<IActionResult> GetAllPart()
+        {
+            var orgId = await ICurrentUserService.GetOrgId();
+            var result = await _partService.GetPartByOrgIdAsync(orgId);
+            return Ok(ApiResponse<object>.Ok(result, "Get all part Successfully!"));
+        }
 
         //[HttpGet("{EmployeeId}")] // ???
         ////[Authorize(policy: "RequireScStaff")]

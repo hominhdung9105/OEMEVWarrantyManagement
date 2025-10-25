@@ -185,6 +185,8 @@ namespace OEMEVWarrantyManagement.API
             // Attechment
             builder.Services.AddScoped<IImageRepository, ImageRepository>();
             builder.Services.AddScoped<IImageService, ImageService>();
+            // Organization
+            builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
 
             builder.Services.AddCors(options =>
             {

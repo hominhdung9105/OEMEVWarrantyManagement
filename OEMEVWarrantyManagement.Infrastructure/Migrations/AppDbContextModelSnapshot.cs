@@ -331,9 +331,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
                     b.HasKey("PartId");
 
-                    b.HasIndex("Model");
-
-                    b.HasIndex("OrgId");
+                    b.HasIndex("OrgId", "Model")
+                        .IsUnique();
 
                     b.ToTable("Parts", (string)null);
                 });
@@ -349,6 +348,12 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ExpectedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("PartDelivery")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("RequestDate")
                         .HasColumnType("datetime2");

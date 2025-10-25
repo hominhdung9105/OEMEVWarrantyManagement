@@ -21,7 +21,14 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         public async Task<IEnumerable<PartOrder>> GetAll()
         {
-            return await _context.PartOrders.ToListAsync();
+            return await _context.PartOrders.Where(po => po.Status != "DoneDelivered").ToListAsync();
+        }
+
+        public async Task<IEnumerable<PartOrder>> GetAllByOrgIdAsync(Guid orgId)
+        {
+            return await _context.PartOrders
+                .Where(po => po.ServiceCenterId == orgId && po.Status != "DoneDelivered")
+                .ToListAsync();
         }
 
         public async Task<PartOrder> GetPartOrderByIdAsync(Guid id)
@@ -34,6 +41,19 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             var _ = _context.PartOrders.Update(Request);
             await _context.SaveChangesAsync();
             return Request;
+        }
+
+        public async Task<PartOrder> GetPendingPartOrderByOrgIdAsync(Guid orgId)
+        {
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+
+            return await _context.PartOrders
+                .FirstOrDefaultAsync(po =>
+                    po.ServiceCenterId == orgId &&
+                    po.Status == "Pending" &&
+                    po.RequestDate >= today &&
+                    po.RequestDate < tomorrow);
         }
     }
 }

@@ -23,9 +23,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return await _context.Parts.Where(p => p.OrgId == orgId).ToListAsync();
         }
 
-        public async Task<IEnumerable<Part>> GetPartsAsync(string model, Guid orgId)
+        public async Task<Part> GetPartsAsync(string model, Guid orgId)
         {
-            return await _context.Parts.Where(p => p.Model == model && p.OrgId == orgId).ToListAsync();
+            return await _context.Parts.FirstOrDefaultAsync(p => p.Model == model && p.OrgId == orgId);
         }
 
         public async Task<Part> GetPartsByIdAsync(Guid PartId)

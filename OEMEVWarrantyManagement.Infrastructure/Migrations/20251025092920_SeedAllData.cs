@@ -191,7 +191,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     ApprovedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ShippedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ExpectedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    PartDelivery = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -532,14 +534,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 column: "ServiceCenterId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Parts_Model",
+                name: "IX_Parts_OrgId_Model",
                 table: "Parts",
-                column: "Model");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Parts_OrgId",
-                table: "Parts",
-                column: "OrgId");
+                columns: new[] { "OrgId", "Model" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_VehicleParts_Vin",
