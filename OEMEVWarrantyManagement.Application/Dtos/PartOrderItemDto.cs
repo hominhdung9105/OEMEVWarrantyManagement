@@ -44,6 +44,6 @@ namespace OEMEVWarrantyManagement.Application.Dtos
     public class UpdateExpectedDateDto
     {
         public Guid? OrderId { get; set; }
-        public DateTime ExpectedDate { get; set; }
+        public DateOnly? ExpectedDate { get; set; }
     }
 }

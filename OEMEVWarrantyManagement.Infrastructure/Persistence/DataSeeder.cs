@@ -183,8 +183,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 .RuleFor(p => p.RequestDate, f => f.Date.Past(1))
                 .RuleFor(p => p.ApprovedDate, (f, p) => f.Random.Bool(0.7f) ? f.Date.Recent() : (DateTime?)null)
                 .RuleFor(p => p.ShippedDate, (f, p) => p.ApprovedDate.HasValue ? f.Date.Recent() : (DateTime?)null)
-                .RuleFor(p => p.ExpectedDate, (f, p) => p.RequestDate.AddDays(f.Random.Int(5, 15)))
-                .RuleFor(p => p.PartDelivery, (f, p) => p.ShippedDate.HasValue ? p.ExpectedDate?.AddDays(f.Random.Int(-1, 3)) : (DateTime?)null)
+                .RuleFor(p => p.ExpectedDate, (f, p) => DateOnly.FromDateTime(p.RequestDate.AddDays(f.Random.Int(5, 15))))
+                .RuleFor(p => p.PartDelivery, (f, p) => p.ShippedDate.HasValue ? p.ExpectedDate?.ToDateTime(new TimeOnly(0,0)).AddDays(f.Random.Int(-1, 3)) : (DateTime?)null)
                 .RuleFor(p => p.Status, f => f.PickRandom(new[] { "Pending", "Waiting", "Deliverd" }))
                 .RuleFor(p => p.CreatedBy, (f, u) => f.PickRandom(employees).UserId);
             var partOrders = partOrderFaker.Generate(primaryRecordCount);

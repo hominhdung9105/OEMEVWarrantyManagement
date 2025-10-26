@@ -37,7 +37,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public Guid CreatedBy { get; set; }
         public string? CreatedByName { get; set; }
         public int TotalItems { get; set; }
-        public DateTime? ExpectedDate { get; set; }
+        public DateOnly? ExpectedDate { get; set; }
         public DateTime? PartDelivery { get; set; }
         public List<ResponsePartOrderItemDto> PartOrderItems { get; set; }
     }
@@ -53,7 +53,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string Status { get; set; }
         public Guid CreatedBy { get; set; }
         public int TotalItems { get; set; }
-        public DateTime? ExpectedDate { get; set; }
+        public DateOnly? ExpectedDate { get; set; }
         public DateTime? PartDelivery { get; set; }
         public List<ResponsePartOrderItemForScStaffDto> PartOrderItems { get; set; }
     }

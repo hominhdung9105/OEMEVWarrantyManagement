@@ -95,7 +95,7 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             var result = false;
             var entity = await _partOrderRepository.GetPartOrderByIdAsync(id);
-            if (dto.ExpectedDate != null && (entity.Status == "Waiting" || entity.Status == "Pending"))
+            if (dto.ExpectedDate.HasValue && (entity.Status == "Waiting" || entity.Status == "Pending"))
             {
                 entity.ExpectedDate = dto.ExpectedDate;
                 result = true;

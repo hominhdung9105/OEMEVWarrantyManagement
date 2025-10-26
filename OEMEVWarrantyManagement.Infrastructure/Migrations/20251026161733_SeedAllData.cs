@@ -192,7 +192,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     ShippedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ExpectedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ExpectedDate = table.Column<DateOnly>(type: "date", nullable: true),
                     PartDelivery = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>

@@ -12,7 +12,7 @@ using OEMEVWarrantyManagement.Infrastructure.Persistence;
 namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251026075204_SeedAllData")]
+    [Migration("20251026161733_SeedAllData")]
     partial class SeedAllData
     {
         /// <inheritdoc />
@@ -352,8 +352,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime?>("ExpectedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateOnly?>("ExpectedDate")
+                        .HasColumnType("date");
 
                     b.Property<DateTime?>("PartDelivery")
                         .HasColumnType("datetime2");
