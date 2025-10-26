@@ -50,5 +50,15 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         {
             return await _context.Parts.FirstOrDefaultAsync(p => p.Model == model);
         }
+
+        public IQueryable<Part> Query()
+        {
+            return _context.Parts.AsNoTracking();
+        }
+
+        public IQueryable<Part> QueryByOrgId(Guid orgId)
+        {
+            return _context.Parts.AsNoTracking().Where(p => p.OrgId == orgId);
+        }
     }
 }

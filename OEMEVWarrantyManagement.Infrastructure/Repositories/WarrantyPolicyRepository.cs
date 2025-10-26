@@ -26,5 +26,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         {
             return _context.WarrantyPolicies.FirstOrDefaultAsync(wp => wp.PolicyId == policyId);
         }
+
+        public IQueryable<WarrantyPolicy> Query()
+        {
+            return _context.WarrantyPolicies.AsNoTracking();
+        }
     }
 }

@@ -3,6 +3,8 @@ using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Domain.Entities;
+using OEMEVWarrantyManagement.Share.Models.Pagination;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OEMEVWarrantyManagement.Application.Services
 {
@@ -22,13 +24,15 @@ namespace OEMEVWarrantyManagement.Application.Services
             _customerRepository = customerRepository;
         }
      
-        public async Task<IEnumerable<ResponseVehicleDto>> GetAllVehicleAsync()
+        public async Task<PagedResult<ResponseVehicleDto>> GetPagedAsync(PaginationRequest request)
         {
-            var entities = await _vehicleRepository.GetAllVehicleAsync();
-            var results = _mapper.Map<IEnumerable<ResponseVehicleDto>>(entities);//Vin model year customerid
+            var (entities, totalRecords) = await _vehicleRepository.GetPagedVehicleAsync(request.Page, request.Size);
+            var totalPages = (int)Math.Ceiling(totalRecords / (double) request.Size);
+
+            var results = _mapper.Map<IEnumerable<ResponseVehicleDto>>(entities);
             //var customer = await 
 
-            var allPolicies = await _warrantyPolicyRepository.GetAllAsync();//list policy
+            var allPolicies = await _warrantyPolicyRepository.GetAllAsync();
 
             foreach (var vehicle in results)
             {
@@ -53,7 +57,16 @@ namespace OEMEVWarrantyManagement.Application.Services
                 vehicle.CustomerId = customer.CustomerId;
             }
 
-            return results;
+            return new PagedResult<ResponseVehicleDto>
+            {
+                PageNumber = request.Page,
+                PageSize = request.Size,
+                TotalRecords = totalRecords,
+                TotalPages = totalPages,
+                Items = results
+            };
+
+            //return results;
         }
 
     }
