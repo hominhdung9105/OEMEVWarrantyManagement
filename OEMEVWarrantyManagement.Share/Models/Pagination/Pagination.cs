@@ -14,7 +14,7 @@ namespace OEMEVWarrantyManagement.Share.Models.Pagination
             set => _page = value < 0 ? 0 : value;
         }
 
-        // Page size default 20, clamp to [1, 500]
+        // Page size default 20, clamp to [1, 100]
         public int Size
         {
             get => _size;
