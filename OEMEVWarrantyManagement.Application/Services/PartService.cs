@@ -194,5 +194,31 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             return PartModel.GetCategoryByModel(model);
         }
+
+        public async Task<IEnumerable<PartDto>> UpdateEvmQuantityAsync(Guid orderId)
+        {
+            var orgId = await _currentUserService.GetOrgId();
+            var partOrderItems = await _orderItemRepository.GetAllByOrderIdAsync(orderId);
+            var quantityByModel = partOrderItems
+               .GroupBy(i => i.Model)
+               .Select(g => new { Model = g.Key, Total = g.Sum(x => x.Quantity) })
+               .ToList();
+            var parts = await _partRepository.GetByOrgIdAsync(orgId);
+            var updatedParts = new List<Part>();
+            foreach (var item in quantityByModel)
+            {
+                var part = parts.FirstOrDefault(p => p.Model == item.Model);
+                if (part == null)
+                    throw new ApiException(ResponseError.InvalidPartModel);
+
+                if (part.StockQuantity < item.Total)
+                    throw new ApiException(ResponseError.NotEnoughStock);
+
+                part.StockQuantity -= item.Total;
+                updatedParts.Add(part);
+            }
+            await _partRepository.UpdateRangeAsync(updatedParts);
+            return _mapper.Map<IEnumerable<PartDto>>(updatedParts);
+        }
     }
 }

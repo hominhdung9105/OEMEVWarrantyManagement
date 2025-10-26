@@ -15,5 +15,8 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task <PartOrder> UpdateAsync(PartOrder Request);
         Task<PartOrder> GetPendingPartOrderByOrgIdAsync(Guid orgId);
         Task<IEnumerable<PartOrder>> GetAllByOrgIdAsync(Guid orgId);
+
+        Task<(IEnumerable<PartOrder> Data, int TotalRecords)> GetPagedPartOrderByOrdIdAsync(int pageNumber, int pageSize, Guid orgId);
+        Task<(IEnumerable<PartOrder> Data, int TotalRecords)> GetAllPagedPartOrderAsync(int pageNumber, int pageSize);
     }
 }

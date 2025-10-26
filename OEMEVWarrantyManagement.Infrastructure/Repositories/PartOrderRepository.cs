@@ -2,6 +2,7 @@
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
+using System.Security.Cryptography;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 {
@@ -21,12 +22,13 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         public async Task<IEnumerable<PartOrder>> GetAll()
         {
-            return await _context.PartOrders.Where(po => po.Status != "DoneDelivered").ToListAsync();
+            return await _context.PartOrders.OrderBy(po => po.RequestDate).Where(po => po.Status != "DoneDelivered").ToListAsync();
         }
 
         public async Task<IEnumerable<PartOrder>> GetAllByOrgIdAsync(Guid orgId)
         {
             return await _context.PartOrders
+                .OrderBy(po => po.RequestDate)
                 .Where(po => po.ServiceCenterId == orgId && po.Status != "DoneDelivered")
                 .ToListAsync();
         }
@@ -54,6 +56,36 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                     po.Status == "Pending" &&
                     po.RequestDate >= today &&
                     po.RequestDate < tomorrow);
+        }
+
+        public async Task<(IEnumerable<PartOrder> Data, int TotalRecords)> GetPagedPartOrderByOrdIdAsync(int pageNumber, int pageSize, Guid orgId)
+        {
+            var query = _context.PartOrders.AsQueryable();
+            var totalRecords = await query.CountAsync();
+
+            var data = await query
+                        .Where(po => po.ServiceCenterId == orgId && po.Status != "DoneDelivery")
+                        .OrderBy(po => po.RequestDate)
+                        .Skip((pageNumber) * pageSize)
+                        .Take(pageSize)
+                        .ToListAsync();
+
+            return (data, totalRecords);
+        }
+
+        public async Task<(IEnumerable<PartOrder> Data, int TotalRecords)> GetAllPagedPartOrderAsync(int pageNumber, int pageSize)
+        {
+            var query = _context.PartOrders.AsQueryable();
+            var totalRecords = await query.CountAsync();
+
+            var data = await query
+                        .Where(po => po.Status != "DoneDelivery")
+                        .OrderBy(po => po.RequestDate)
+                        .Skip((pageNumber) * pageSize)
+                        .Take(pageSize)
+                        .ToListAsync();
+
+            return (data, totalRecords);
         }
     }
 }

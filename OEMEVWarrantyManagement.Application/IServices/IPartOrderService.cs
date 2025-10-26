@@ -1,4 +1,5 @@
 ﻿using OEMEVWarrantyManagement.Application.Dtos;
+using OEMEVWarrantyManagement.Share.Models.Pagination;
 
 namespace OEMEVWarrantyManagement.Application.IServices
 {
@@ -11,8 +12,10 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<PartOrderDto> UpdateStatusDeliverdAsync(Guid orderId);
         Task<PartOrderDto> UpdateStatusDeliverdAndRepairAsync(Guid orderId);
         Task<PartOrderDto> UpdateStatusToConfirmAsync(Guid orderId);
-        Task<IEnumerable<ResponsePartOrderDto>> GetAllPartOrderAsync();
-        Task<IEnumerable<ResponsePartOrderForScStaffDto>> GetAllPartOrderForScStaffAsync();
+        Task<PagedResult<ResponsePartOrderDto>> GetPagedPartOrderForEvmStaffAsync(PaginationRequest request);
+        //Task<IEnumerable<ResponsePartOrderDto>> GetAllPartOrderAsync();
+        Task<PagedResult<ResponsePartOrderForScStaffDto>> GetPagedPartOrderForScStaffAsync(PaginationRequest request);
+        //Task<IEnumerable<ResponsePartOrderForScStaffDto>> GetAllPartOrderForScStaffAsync();
         Task<bool> UpdateExpectedDateAsync(Guid id, UpdateExpectedDateDto dto);
     }
 }

@@ -142,7 +142,7 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
             //Warranty Claim
-            //builder.Services.AddScoped<IWarrantyClaimService, WarrantyClaimService>();
+            builder.Services.AddScoped<IWarrantyClaimService, WarrantyClaimService>();
             builder.Services.AddScoped<IWarrantyClaimRepository, WarrantyClaimRepository>();
             //Vehicle
             builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
@@ -152,10 +152,10 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddScoped<IEmployeeService, EmployeeService>();
             //WorkOrder
             builder.Services.AddScoped<IWorkOrderRepository, WorkOrderRepository>();
-            //builder.Services.AddScoped<IWorkOrderService, WorkOrderService>();
+            builder.Services.AddScoped<IWorkOrderService, WorkOrderService>();
             //Warranty Policy
             builder.Services.AddScoped<IWarrantyPolicyRepository, WarrantyPolicyRepository>();
-            //builder.Services.AddScoped<IWarrantyPolicyService, WarrantyPolicyService>();
+            builder.Services.AddScoped<IWarrantyPolicyService, WarrantyPolicyService>();
             //Part
             builder.Services.AddScoped<IPartService, PartService>();
             builder.Services.AddScoped<IPartRepository, PartRepository>();
@@ -200,32 +200,32 @@ namespace OEMEVWarrantyManagement.API
 
             var app = builder.Build();
 
-            //// =================================================================
-            //// KHỐI MÃ SEEDING: Thêm khối này vào | chạy 1 lần nếu muốn lấy data mẫu
-            //// =================================================================
-            using (var scope = app.Services.CreateScope())
-            {
-                var services = scope.ServiceProvider;
-                try
-                {
-                    var dbContext = services.GetRequiredService<AppDbContext>();
+            ////// =================================================================
+            ////// KHỐI MÃ SEEDING: Thêm khối này vào | chạy 1 lần nếu muốn lấy data mẫu
+            ////// =================================================================
+            //using (var scope = app.Services.CreateScope())
+            //{
+            //    var services = scope.ServiceProvider;
+            //    try
+            //    {
+            //        var dbContext = services.GetRequiredService<AppDbContext>();
 
-                    // 1. Tự động chạy migration để tạo bảng
-                    dbContext.Database.Migrate();
+            //        // 1. Tự động chạy migration để tạo bảng
+            //        dbContext.Database.Migrate();
 
-                    // 2. Gọi Seeder để thêm data (nó sẽ tự kiểm tra nếu DB trống)
-                    DataSeeder.SeedDatabase(dbContext);
-                }
-                catch (Exception ex)
-                {
-                    // Ghi log lỗi nếu có
-                    var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "Đã xảy ra lỗi khi seeding database.");
-                }
-            }
-            //// =================================================================
-            //// KẾT THÚC KHỐI MÃ SEEDING
-            //// =================================================================
+            //        // 2. Gọi Seeder để thêm data (nó sẽ tự kiểm tra nếu DB trống)
+            //        DataSeeder.SeedDatabase(dbContext);
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        // Ghi log lỗi nếu có
+            //        var logger = services.GetRequiredService<ILogger<Program>>();
+            //        logger.LogError(ex, "Đã xảy ra lỗi khi seeding database.");
+            //    }
+            //}
+            ////// =================================================================
+            ////// KẾT THÚC KHỐI MÃ SEEDING
+            ////// =================================================================
 
             // Dev
 

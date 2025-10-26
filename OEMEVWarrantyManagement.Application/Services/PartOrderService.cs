@@ -3,6 +3,7 @@ using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Domain.Entities;
+using OEMEVWarrantyManagement.Share.Models.Pagination;
 
 namespace OEMEVWarrantyManagement.Application.Services
 {
@@ -25,6 +26,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             _partRepository = partRepository;
             _organizationRepository = organizationRepository;
         }
+        //Không dùng
         public async Task<RequestPartOrderDto> CreateAsync()
         {
             var employee = await _employeeRepository.GetEmployeeByIdAsync(_currentUserService.GetUserId());
@@ -52,39 +54,41 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<PartOrderDto>(entity);
         }
 
-        public async Task<IEnumerable<ResponsePartOrderDto>> GetAllPartOrderAsync()
-        {
-            var orgId = await _currentUserService.GetOrgId();
-            //var entities = await _partOrderRepository.GetAllByOrgIdAsync(orgId);
-            var entities = await _partOrderRepository.GetAll();
-            var result = _mapper.Map<IEnumerable<ResponsePartOrderDto>>(entities);
-            foreach (var entity in result)
-            {
-                var partOrderItems = await _partOrderItemRepository.GetAllByOrderIdAsync(entity.OrderId);
-                entity.PartOrderItems = _mapper.Map<List<ResponsePartOrderItemDto>>(partOrderItems);
-                entity.TotalItems = partOrderItems.Count();
-                var creator = await _employeeRepository.GetEmployeeByIdAsync(entity.CreatedBy);
-                var organization = await _organizationRepository.GetOrganizationById(entity.ServiceCenterId);
-                entity.ServiceCenterName = organization.Name;
-                entity.CreatedByName = creator.Name;
-                foreach (var item in entity.PartOrderItems)
-                {
-                    var part = await _partRepository.GetPartsAsync(item.Model, entity.ServiceCenterId);
-                    if (part != null)
-                    {
-                        item.Name = part.Name;
-                        item.Model = part.Model;
-                        item.ScStock = part.StockQuantity;
-                    }
-                    var oemPart = await _partRepository.GetPartsAsync(item.Model, orgId);
-                    if (oemPart != null)
-                    {
-                        item.OemStock = oemPart.StockQuantity;
-                    }
-                }
-            }
-            return result;
-        }
+        //public async Task<IEnumerable<ResponsePartOrderDto>> GetAllPartOrderAsync()
+        //{
+        //    var orgId = await _currentUserService.GetOrgId();
+        //    var (entities, totalRecords) = await _partOrderRepository.GetPagedPartOrderByOrdIdAsync(request.Page, request.Size, orgId);
+        //    var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
+
+        //    var entities = await _partOrderRepository.GetAll();
+        //    var result = _mapper.Map<IEnumerable<ResponsePartOrderDto>>(entities);
+        //    foreach (var entity in result)
+        //    {
+        //        var partOrderItems = await _partOrderItemRepository.GetAllByOrderIdAsync(entity.OrderId);
+        //        entity.PartOrderItems = _mapper.Map<List<ResponsePartOrderItemDto>>(partOrderItems);
+        //        entity.TotalItems = partOrderItems.Count();
+        //        var creator = await _employeeRepository.GetEmployeeByIdAsync(entity.CreatedBy);
+        //        var organization = await _organizationRepository.GetOrganizationById(entity.ServiceCenterId);
+        //        entity.ServiceCenterName = organization.Name;
+        //        entity.CreatedByName = creator.Name;
+        //        foreach (var item in entity.PartOrderItems)
+        //        {
+        //            var part = await _partRepository.GetPartsAsync(item.Model, entity.ServiceCenterId);
+        //            if (part != null)
+        //            {
+        //                item.Name = part.Name;
+        //                item.Model = part.Model;
+        //                item.ScStock = part.StockQuantity;
+        //            }
+        //            var oemPart = await _partRepository.GetPartsAsync(item.Model, orgId);
+        //            if (oemPart != null)
+        //            {
+        //                item.OemStock = oemPart.StockQuantity;
+        //            }
+        //        }
+        //    }
+        //    return result;
+        //}
 
         public async Task<bool> UpdateExpectedDateAsync(Guid id, UpdateExpectedDateDto dto)
         {
@@ -109,10 +113,12 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<PartOrderDto>(update);
         }
 
-        public async Task<IEnumerable<ResponsePartOrderForScStaffDto>> GetAllPartOrderForScStaffAsync()
+        public async Task<PagedResult<ResponsePartOrderForScStaffDto>> GetPagedPartOrderForScStaffAsync(PaginationRequest request)
         {
             var orgId = await _currentUserService.GetOrgId();
-            var entities = await _partOrderRepository.GetAllByOrgIdAsync(orgId);
+            var (entities, totalRecords) = await _partOrderRepository.GetPagedPartOrderByOrdIdAsync(request.Page, request.Size, orgId);
+            var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
+
             var result = _mapper.Map<IEnumerable<ResponsePartOrderForScStaffDto>>(entities);
             foreach (var entity in result)
             {
@@ -133,7 +139,14 @@ namespace OEMEVWarrantyManagement.Application.Services
                     
                 }
             }
-            return result;
+            return new PagedResult<ResponsePartOrderForScStaffDto>
+            {
+                PageNumber = request.Page,
+                PageSize = request.Size,
+                TotalRecords = totalRecords,
+                TotalPages = totalPages,
+                Items = result
+            };
 
         }
         public async Task<PartOrderDto> UpdateStatusToConfirmAsync(Guid orderId)
@@ -166,6 +179,49 @@ namespace OEMEVWarrantyManagement.Application.Services
             }
             var update = await _partOrderRepository.UpdateAsync(entity);
             return _mapper.Map<PartOrderDto>(update);
+        }
+
+        public async Task<PagedResult<ResponsePartOrderDto>> GetPagedPartOrderForEvmStaffAsync(PaginationRequest request)
+        {
+            var orgId = await _currentUserService.GetOrgId();
+            var (entities, totalRecords) = await _partOrderRepository.GetAllPagedPartOrderAsync(request.Page, request.Size);
+            var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
+            //var entities = await _partOrderRepository.GetAll();
+
+            var result = _mapper.Map<IEnumerable<ResponsePartOrderDto>>(entities);
+            foreach (var entity in result)
+            {
+                var partOrderItems = await _partOrderItemRepository.GetAllByOrderIdAsync(entity.OrderId);
+                entity.PartOrderItems = _mapper.Map<List<ResponsePartOrderItemDto>>(partOrderItems);
+                entity.TotalItems = partOrderItems.Count();
+                var creator = await _employeeRepository.GetEmployeeByIdAsync(entity.CreatedBy);
+                var organization = await _organizationRepository.GetOrganizationById(entity.ServiceCenterId);
+                entity.ServiceCenterName = organization.Name;
+                entity.CreatedByName = creator.Name;
+                foreach (var item in entity.PartOrderItems)
+                {
+                    var part = await _partRepository.GetPartsAsync(item.Model, entity.ServiceCenterId);
+                    if (part != null)
+                    {
+                        item.Name = part.Name;
+                        item.Model = part.Model;
+                        item.ScStock = part.StockQuantity;
+                    }
+                    var oemPart = await _partRepository.GetPartsAsync(item.Model, orgId);
+                    if (oemPart != null)
+                    {
+                        item.OemStock = oemPart.StockQuantity;
+                    }
+                }
+            }
+            return new PagedResult<ResponsePartOrderDto>
+            {
+                PageNumber = request.Page,
+                PageSize = request.Size,
+                TotalRecords = totalRecords,
+                TotalPages = totalPages,
+                Items = result
+            };
         }
     }
 }

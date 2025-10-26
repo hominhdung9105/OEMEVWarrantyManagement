@@ -114,7 +114,10 @@
         InvalidClaimPartId,
 
         [ResponseErrorAttr("Invalid orderId.", 400, 38)]
-        InvalidOrderId
+        InvalidOrderId,
+
+        [ResponseErrorAttr("Not enough stock.", 400, 39)]
+        NotEnoughStock
     }
 
     public class ApiResponse<T>
