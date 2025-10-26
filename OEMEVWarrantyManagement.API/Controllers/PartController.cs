@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.IServices;
+using OEMEVWarrantyManagement.Share.Models.Pagination;
 using OEMEVWarrantyManagement.Share.Models.Response;
 
 namespace OEMEVWarrantyManagement.API.Controllers
@@ -21,10 +22,9 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpGet]
         [Authorize(policy: "RequireScStaffOrEvmStaff")]
-        public async Task<IActionResult> GetAllPart()
+        public async Task<IActionResult> GetAllPart([FromQuery] PaginationRequest request)
         {
-            var orgId = await ICurrentUserService.GetOrgId();
-            var result = await _partService.GetPartByOrgIdAsync(orgId);
+            var result = await _partService.GetPagedAsync(request);
             return Ok(ApiResponse<object>.Ok(result, "Get all part Successfully!"));
         }
 

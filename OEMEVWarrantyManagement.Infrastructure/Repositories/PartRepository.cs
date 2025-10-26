@@ -60,5 +60,22 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         {
             return _context.Parts.AsNoTracking().Where(p => p.OrgId == orgId);
         }
+
+        public async Task<(IEnumerable<Part> Data, int TotalRecords)> GetPagedPartAsync(int pageNumber, int pageSize, Guid? orgId = null)
+        {
+            var query = _context.Parts.AsQueryable();
+            if (orgId.HasValue)
+            {
+                query = query.Where(p => p.OrgId == orgId.Value);
+            }
+            var totalRecords = await query.CountAsync();
+
+            var data = await query
+                .Skip((pageNumber) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (data, totalRecords);
+        }
     }
 }

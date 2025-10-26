@@ -68,7 +68,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<object>.Ok(update, "update expected date successfully"));
         }
 
-        //xác nhận đã nhận hàng
+        //xác nhận đã nhận hàng sc
         [HttpPut("{orderID}/confirm-delivery")]
         [Authorize (policy: "RequireScStaff")]
         public async Task<IActionResult> UpdateStatusDeliverd(string orderID)
@@ -78,10 +78,20 @@ namespace OEMEVWarrantyManagement.API.Controllers
             var _ = await _partService.UpdateQuantityAsync(Guid.Parse(orderID));
             return Ok(ApiResponse<object>.Ok(update, "update status successfully"));
         }
-
+        //EVM
         [HttpPut("{orderID}/confirm")]
         [Authorize(policy: "RequireEvmStaff")]
         public async Task<IActionResult> UpdateStatusToConfirm(string orderID)
+        {
+            if (!Guid.TryParse(orderID, out var id)) throw new ApiException(ResponseError.InvalidOrderId);
+            var update = await _partOrderService.UpdateStatusToConfirmAsync(id);
+            //var _ = await _partService.UpdateEvmQuantityAsync(Guid.Parse(orderID));
+            return Ok(ApiResponse<object>.Ok(update, "update status successfully"));
+        }
+
+        [HttpPut("{orderID}/delivery")]
+        [Authorize(policy: "RequireEvmStaff")]
+        public async Task<IActionResult> UpdateStatusToDelivery(string orderID)
         {
             if (!Guid.TryParse(orderID, out var id)) throw new ApiException(ResponseError.InvalidOrderId);
             var update = await _partOrderService.UpdateStatusToConfirmAsync(id);

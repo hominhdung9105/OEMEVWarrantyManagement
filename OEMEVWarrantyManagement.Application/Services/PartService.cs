@@ -6,6 +6,7 @@ using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
+using OEMEVWarrantyManagement.Share.Models.Pagination;
 using OEMEVWarrantyManagement.Share.Models.Response;
 
 namespace OEMEVWarrantyManagement.Application.Services
@@ -67,6 +68,39 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             var parts = await _partRepository.GetPartsAsync(model, orgId);
             return _mapper.Map<IEnumerable<PartDto>>(parts);
+        }
+
+        public async Task<PagedResult<PartDto>> GetPagedAsync(PaginationRequest request)
+        {
+            var orgId = await _currentUserService.GetOrgId();
+            var (entities, totalRecords) = await _partRepository.GetPagedPartAsync(request.Page, request.Size, orgId);
+            var results = _mapper.Map<IEnumerable<PartDto>>(entities);
+
+            foreach (var part in results)
+            {
+                if (part.StockQuantity > 0 && part.StockQuantity < 10)
+                {
+                    part.Status = PartStatus.LowStock.GetPartStatus();
+                }
+                else if (part.StockQuantity == 0)
+                {
+                    part.Status = PartStatus.OutOfStock.GetPartStatus();
+                }
+                else
+                {
+                    part.Status = PartStatus.InStock.GetPartStatus();
+                }
+            }
+
+            var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
+            return new PagedResult<PartDto>
+            {
+                PageNumber = request.Page,
+                PageSize = request.Size,
+                TotalRecords = totalRecords,
+                TotalPages = totalPages,
+                Items = results
+            };
         }
 
         public async Task<IEnumerable<PartDto>> UpdateQuantityAsync(Guid orderId)

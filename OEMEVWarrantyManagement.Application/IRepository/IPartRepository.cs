@@ -14,5 +14,8 @@ namespace OEMEVWarrantyManagement.Application.IRepository
 
         IQueryable<Part> Query();
         IQueryable<Part> QueryByOrgId(Guid orgId);
+
+        // New: pagination like vehicle
+        Task<(IEnumerable<Part> Data, int TotalRecords)> GetPagedPartAsync(int pageNumber, int pageSize, Guid? orgId = null);
     }
 }

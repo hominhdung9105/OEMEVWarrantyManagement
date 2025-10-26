@@ -159,6 +159,17 @@ namespace OEMEVWarrantyManagement.Application.Services
             var update = await _partOrderRepository.UpdateAsync(entity);
             return _mapper.Map<PartOrderDto>(update);
         }
+
+        public async Task<PartOrderDto> UpdateStatusToDeliveryAsync(Guid orderId)
+        {
+            var entity = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
+            if (entity.Status == "Confirm")
+            {
+                entity.Status = "Delivery";
+            }
+            var update = await _partOrderRepository.UpdateAsync(entity);
+            return _mapper.Map<PartOrderDto>(update);
+        }
         public async Task<PartOrderDto> UpdateStatusDeliverdAsync(Guid orderId)
         {
             var entity = await _partOrderRepository.GetPartOrderByIdAsync(orderId);

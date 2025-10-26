@@ -1,5 +1,6 @@
 ﻿using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Domain.Entities;
+using OEMEVWarrantyManagement.Share.Models.Pagination;
 
 
 namespace OEMEVWarrantyManagement.Application.IServices
@@ -16,5 +17,8 @@ namespace OEMEVWarrantyManagement.Application.IServices
         IEnumerable<string> GetPartModels(string category);
         string? GetCategoryByModel(string model);
         Task<IEnumerable<PartDto>> UpdateEvmQuantityAsync(Guid orderId);
+        
+        // New: Pagination like Vehicle
+        Task<PagedResult<PartDto>> GetPagedAsync(PaginationRequest request);
     }
 }
