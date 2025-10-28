@@ -33,10 +33,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 .RuleFor(o => o.Region, f => f.Address.State())
                 .RuleFor(o => o.ContactInfo, f => f.Phone.PhoneNumber());
 
-            // 2. Tạo 2 OEM
+            // 2. Tạo 1 OEM (EVM)
             var oems = baseOrgFaker
                 .RuleFor(o => o.Type, "OEM") // Gán cứng Type là OEM
-                .Generate(2);               // Tạo 2 bản ghi
+                .Generate(1);               // Chỉ 1 OEM
 
             // 3. Tạo 3 ServiceCenter
             var serviceCenters = baseOrgFaker
@@ -51,7 +51,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             context.Organizations.AddRange(organizations);
             // ------------------------------------
 
-            context.SaveChanges(); // Lưu cả 5 organizations
+            context.SaveChanges(); // Lưu cả organizations
 
             // --- CẤP 2: PHỤ THUỘC VÀO CẤP 1 ---
 
@@ -59,6 +59,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             // 1. Lấy danh sách OEM và ServiceCenter đã tạo
             var oemOrgs = organizations.Where(o => o.Type == "OEM").ToList();
             var scOrgs = organizations.Where(o => o.Type == "ServiceCenter").ToList();
+            var singleOem = oemOrgs.First();
 
             // 2. Tạo Faker cơ bản cho Employee
             var baseEmployeeFaker = new Faker<Employee>("en")
@@ -70,40 +71,34 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             // 3. Tạo danh sách tổng hợp employee
             var employees = new List<Employee>();
 
-            // 4. Tạo 1 ADMIN (gán vào OEM đầu tiên)
-            if (oemOrgs.Any())
-            {
-                var admin = baseEmployeeFaker
-                    .RuleFor(e => e.Role, "ADMIN")
-                    .RuleFor(e => e.OrgId, oemOrgs.First().OrgId) // Gán vào OEM đầu tiên
-                    .Generate();
-                employees.Add(admin);
-            }
+            // 4. Tạo 1 ADMIN (gán vào OEM duy nhất)
+            var admin = baseEmployeeFaker
+                .RuleFor(e => e.Role, "ADMIN")
+                .RuleFor(e => e.OrgId, singleOem.OrgId) // Gán vào OEM duy nhất
+                .Generate();
+            employees.Add(admin);
 
-            // 5. Tạo 4 EVM_STAFF (2 cho mỗi OEM)
-            foreach (var oem in oemOrgs)
-            {
-                var evmStaff = baseEmployeeFaker
-                    .RuleFor(e => e.Role, "EVM_STAFF")
-                    .RuleFor(e => e.OrgId, oem.OrgId) // Gán vào OEM hiện tại
-                    .Generate(2); // Tạo 2 người
-                employees.AddRange(evmStaff);
-            }
+            // 5. Tạo đúng 1 EVM_STAFF (gán vào OEM duy nhất)
+            var evmStaff = baseEmployeeFaker
+                .RuleFor(e => e.Role, "EVM_STAFF")
+                .RuleFor(e => e.OrgId, singleOem.OrgId)
+                .Generate(1);
+            employees.AddRange(evmStaff);
 
-            // 6. Tạo 6 SC_STAFF và 15 SC_TECH (chia đều cho 3 ServiceCenter)
+            // 6. Tạo SC_STAFF và SC_TECH cho từng ServiceCenter
             foreach (var sc in scOrgs)
             {
-                // Tạo 2 SC_STAFF cho Service Center này
+                // 2 SC_STAFF
                 var scStaff = baseEmployeeFaker
                         .RuleFor(e => e.Role, "SC_STAFF")
-                        .RuleFor(e => e.OrgId, sc.OrgId) // Gán vào SC hiện tại
+                        .RuleFor(e => e.OrgId, sc.OrgId)
                         .Generate(2);
                 employees.AddRange(scStaff);
 
-                // Tạo 5 SC_TECH cho Service Center này
+                // 5 SC_TECH
                 var scTech = baseEmployeeFaker
                         .RuleFor(e => e.Role, "SC_TECH")
-                        .RuleFor(e => e.OrgId, sc.OrgId) // Gán vào SC hiện tại
+                        .RuleFor(e => e.OrgId, sc.OrgId)
                         .Generate(5);
                 employees.AddRange(scTech);
             }
@@ -121,23 +116,32 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var customers = customerFaker.Generate(primaryRecordCount);
             context.Customers.AddRange(customers);
 
-            // --- SỬA LOGIC TẠO PART: Mỗi Org không có 2 Model trùng nhau ---
+            // --- SỬA LOGIC TẠO PART ---
+            // Kho của EVM có tất cả model với số lượng lớn.
+            // TẤT CẢ Service Center CŨNG có đủ các model đó nhưng số lượng ít hoặc bằng 0.
             var allModels = PartModel.ModelsByCategory.SelectMany(kvp => kvp.Value).Distinct().ToList();
             var rng = new Random();
             var parts = new List<Part>();
 
-            // Số part cho mỗi tổ chức (xáp xỉ)
-            var partsPerOrg = Math.Max(10, primaryRecordCount / Math.Max(1, organizations.Count));
-
-            foreach (var org in organizations)
+            // 1) Seed tất cả model cho OEM với stock lớn
+            foreach (var model in allModels)
             {
-                // Chọn ngẫu nhiên các model không trùng nhau cho org này
-                var modelsForOrg = allModels
-                    .OrderBy(_ => rng.Next())
-                    .Take(Math.Min(partsPerOrg, allModels.Count))
-                    .ToList();
+                var category = PartModel.GetCategoryByModel(model) ?? PartCategory.Other.GetPartCategory();
+                parts.Add(new Part
+                {
+                    PartId = Guid.NewGuid(),
+                    Model = model,
+                    Name = $"{category} - {model}",
+                    Category = category,
+                    StockQuantity = rng.Next(800, 2001), // số lượng lớn
+                    OrgId = singleOem.OrgId
+                });
+            }
 
-                foreach (var model in modelsForOrg)
+            // 2) Mỗi Service Center có đủ các model với stock thấp hoặc 0
+            foreach (var sc in scOrgs)
+            {
+                foreach (var model in allModels)
                 {
                     var category = PartModel.GetCategoryByModel(model) ?? PartCategory.Other.GetPartCategory();
                     parts.Add(new Part
@@ -146,8 +150,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                         Model = model,
                         Name = $"{category} - {model}",
                         Category = category,
-                        StockQuantity = rng.Next(50, 501),
-                        OrgId = org.OrgId
+                        StockQuantity = rng.Next(0, 51), // số lượng ít hoặc bằng 0
+                        OrgId = sc.OrgId
                     });
                 }
             }
@@ -177,16 +181,19 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
 
             // --- WORKORDER ĐÃ BỊ XÓA KHỎI ĐÂY ---
 
+            var scEmployeeIds = employees.Where(e => e.Role == "SC_STAFF" || e.Role == "SC_TECH").Select(e => e.UserId).ToList();
             var partOrderFaker = new Faker<PartOrder>("en")
                 .RuleFor(p => p.OrderId, f => f.Database.Random.Guid())
-                .RuleFor(p => p.ServiceCenterId, (f, u) => f.PickRandom(organizations).OrgId)
+                // Chỉ chọn ServiceCenter làm ServiceCenterId
+                .RuleFor(p => p.ServiceCenterId, (f, u) => f.PickRandom(scOrgs).OrgId)
                 .RuleFor(p => p.RequestDate, f => f.Date.Past(1))
                 .RuleFor(p => p.ApprovedDate, (f, p) => f.Random.Bool(0.7f) ? f.Date.Recent() : (DateTime?)null)
                 .RuleFor(p => p.ShippedDate, (f, p) => p.ApprovedDate.HasValue ? f.Date.Recent() : (DateTime?)null)
                 .RuleFor(p => p.ExpectedDate, (f, p) => DateOnly.FromDateTime(p.RequestDate.AddDays(f.Random.Int(5, 15))))
                 .RuleFor(p => p.PartDelivery, (f, p) => p.ShippedDate.HasValue ? p.ExpectedDate?.ToDateTime(new TimeOnly(0,0)).AddDays(f.Random.Int(-1, 3)) : (DateTime?)null)
-                .RuleFor(p => p.Status, f => f.PickRandom(new[] { "Pending", "Waiting", "Deliverd" }))
-                .RuleFor(p => p.CreatedBy, (f, u) => f.PickRandom(employees).UserId);
+                .RuleFor(p => p.Status, f => f.PickRandom(new[] { "Pending", "Waiting", "Deliverd", "Done" }))
+                // Người tạo ưu tiên nhân viên SC
+                .RuleFor(p => p.CreatedBy, (f, u) => scEmployeeIds.Count > 0 ? f.PickRandom(scEmployeeIds) : f.PickRandom(employees).UserId);
             var partOrders = partOrderFaker.Generate(primaryRecordCount);
             context.PartOrders.AddRange(partOrders);
 
@@ -233,20 +240,59 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var campaignVehicles = campaignVehicleFaker.Generate(joinRecordCount);
             context.CampaignVehicles.AddRange(campaignVehicles);
 
-            var vehiclePartFaker = new Faker<VehiclePart>("en")
-                 .RuleFor(vp => vp.VehiclePartId, f => f.Database.Random.Guid())
-                 .RuleFor(vp => vp.Vin, (f, u) => f.PickRandom(vehicles).Vin)
-                 // Chọn một Part ngẫu nhiên từ danh sách đã tạo
-                 .FinishWith((f, vp) => {
-                     var selectedPart = f.PickRandom(parts); // Lấy một Part ngẫu nhiên
-                     vp.Model = selectedPart.Model;          // Gán Model từ Part đó
-                 })
-                 .RuleFor(vp => vp.SerialNumber, f => f.Random.AlphaNumeric(12))
-                 .RuleFor(vp => vp.InstalledDate, f => f.Date.Past(2))
-                 .RuleFor(vp => vp.UninstalledDate, (f, vp) => f.Date.Between(vp.InstalledDate.AddDays(1), vp.InstalledDate.AddYears(5)))
-                 .RuleFor(vp => vp.Status, (f, vp) => vp.UninstalledDate > DateTime.UtcNow ? "Active" : "Uninstalled");
+            // VehiclePart: đảm bảo một số xe có rất nhiều part
+            var vehicleParts = new List<VehiclePart>();
+            var rng2 = new Random();
+            var manyPartsVehicles = vehicles.OrderBy(_ => rng2.Next()).Take(5).ToList(); // 5 xe có nhiều part
 
-            var vehicleParts = vehiclePartFaker.Generate(joinRecordCount);
+            foreach (var v in manyPartsVehicles)
+            {
+                var count = rng2.Next(25, 41); // 25-40 part mỗi xe
+                for (int i = 0; i < count; i++)
+                {
+                    var selectedPart = parts[rng2.Next(parts.Count)];
+                    var installed = DateTime.UtcNow.AddDays(-rng2.Next(30, 800));
+                    var isUninstalled = rng2.NextDouble() < 0.5; // 50% đã tháo
+                    var uninstalled = isUninstalled ? installed.AddDays(rng2.Next(1, 5 * 365)) : DateTime.MinValue;
+
+                    vehicleParts.Add(new VehiclePart
+                    {
+                        VehiclePartId = Guid.NewGuid(),
+                        Vin = v.Vin,
+                        Model = selectedPart.Model,
+                        SerialNumber = new string(Enumerable.Range(0, 12).Select(_ => (char)rng2.Next('A', 'Z' + 1)).ToArray()),
+                        InstalledDate = installed,
+                        UninstalledDate = uninstalled,
+                        Status = isUninstalled ? VehiclePartStatus.UnInstalled.GetVehiclePartStatus() : VehiclePartStatus.Installed.GetVehiclePartStatus()
+                    });
+                }
+            }
+
+            // Các xe còn lại: 0-5 part
+            var remainingVehicles = vehicles.Except(manyPartsVehicles).ToList();
+            foreach (var v in remainingVehicles)
+            {
+                var count = rng2.Next(0, 6);
+                for (int i = 0; i < count; i++)
+                {
+                    var selectedPart = parts[rng2.Next(parts.Count)];
+                    var installed = DateTime.UtcNow.AddDays(-rng2.Next(30, 800));
+                    var isUninstalled = rng2.NextDouble() < 0.3; // 30% đã tháo
+                    var uninstalled = isUninstalled ? installed.AddDays(rng2.Next(1, 5 * 365)) : DateTime.MinValue;
+
+                    vehicleParts.Add(new VehiclePart
+                    {
+                        VehiclePartId = Guid.NewGuid(),
+                        Vin = v.Vin,
+                        Model = selectedPart.Model,
+                        SerialNumber = new string(Enumerable.Range(0, 12).Select(_ => (char)rng2.Next('A', 'Z' + 1)).ToArray()),
+                        InstalledDate = installed,
+                        UninstalledDate = uninstalled,
+                        Status = isUninstalled ? VehiclePartStatus.UnInstalled.GetVehiclePartStatus() : VehiclePartStatus.Installed.GetVehiclePartStatus()
+                    });
+                }
+            }
+
             context.VehicleParts.AddRange(vehicleParts);
 
             var vehiclePolicyFaker = new Faker<VehicleWarrantyPolicy>("en")
@@ -262,7 +308,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var claimFaker = new Faker<WarrantyClaim>("en")
                 .RuleFor(c => c.ClaimId, f => f.Database.Random.Guid())
                 .RuleFor(c => c.Vin, (f, u) => f.PickRandom(vehicles).Vin)
-                .RuleFor(c => c.ServiceCenterId, (f, u) => f.PickRandom(organizations.Where(o => o.Type == "ServiceCenter")).OrgId)
+                .RuleFor(c => c.ServiceCenterId, (f, u) => f.PickRandom(scOrgs).OrgId)
                 .RuleFor(c => c.CreatedBy, (f, u) => f.PickRandom(employees).UserId)
                 .RuleFor(c => c.CreatedDate, f => f.Date.Past(1))
                 .RuleFor(c => c.Status, f => f.PickRandom(new[] { "waiting for unassigned", "under inspection", "pending confirmation", "sent to manufacturer", "denied", "approved", "waiting for unassigned repair", "under repair", "repaired", "car back home", "hold customer car", "done warranty" }))
@@ -274,30 +320,158 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var claims = claimFaker.Generate(warrantyCLaimCount);
             context.WarrantyClaims.AddRange(claims);
 
-            context.SaveChanges(); // Lưu thay đổi CẤP 4
+            // === DEMO FLOW (Luồng 1) ===
+            // Chọn 1 Service Center, 1 SC_STAFF và 1 SC_TECH cố định
+            var demoSc = scOrgs.First();
+            var demoScStaff = employees.First(e => e.Role == "SC_STAFF" && e.OrgId == demoSc.OrgId);
+            var demoScTech = employees.First(e => e.Role == "SC_TECH" && e.OrgId == demoSc.OrgId);
+            var demoEvmStaff = employees.First(e => e.Role == "EVM_STAFF");
+
+            // Chọn 1 vehicle làm demo, đảm bảo có ít nhất 2 part đang Installed
+            var demoVehicle = vehicles.First();
+            var demoVehicleParts = vehicleParts.Where(vp => vp.Vin == demoVehicle.Vin && vp.Status == VehiclePartStatus.Installed.GetVehiclePartStatus()).ToList();
+            if (demoVehicleParts.Count < 2)
+            {
+                // Bổ sung thêm parts nếu thiếu
+                var pickModels = parts.Select(p => p.Model).Distinct().Take(2).ToList();
+                foreach (var m in pickModels)
+                {
+                    var vp = new VehiclePart
+                    {
+                        VehiclePartId = Guid.NewGuid(),
+                        Vin = demoVehicle.Vin,
+                        Model = m,
+                        SerialNumber = $"SN{Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper()}",
+                        InstalledDate = DateTime.UtcNow.AddDays(-30),
+                        UninstalledDate = DateTime.MinValue,
+                        Status = VehiclePartStatus.Installed.GetVehiclePartStatus()
+                    };
+                    vehicleParts.Add(vp);
+                    context.VehicleParts.Add(vp);
+                }
+                context.SaveChanges();
+                demoVehicleParts = vehicleParts.Where(vp => vp.Vin == demoVehicle.Vin && vp.Status == VehiclePartStatus.Installed.GetVehiclePartStatus()).Take(2).ToList();
+            }
+
+            // Tạo 1 policy đang active cho vehicle demo (nếu chưa có)
+            var demoPolicy = new VehicleWarrantyPolicy
+            {
+                VehicleWarrantyId = Guid.NewGuid(),
+                Vin = demoVehicle.Vin,
+                PolicyId = policies.First().PolicyId,
+                StartDate = DateTime.UtcNow.AddMonths(-6),
+                EndDate = DateTime.UtcNow.AddMonths(18),
+                Status = "Active"
+            };
+            context.VehicleWarrantyPolicies.Add(demoPolicy);
+
+            // Claim 1: đang under inspection + WorkOrder Inspection in progress
+            var claimInspection = new WarrantyClaim
+            {
+                ClaimId = Guid.NewGuid(),
+                Vin = demoVehicle.Vin,
+                ServiceCenterId = demoSc.OrgId,
+                CreatedBy = demoScStaff.UserId,
+                CreatedDate = DateTime.UtcNow.AddDays(-2),
+                Status = WarrantyClaimStatus.UnderInspection.GetWarrantyClaimStatus(),
+                Description = "Inspection for abnormal noise",
+                failureDesc = "Noise from motor area"
+            };
+            context.WarrantyClaims.Add(claimInspection);
+
+            // ClaimPart cho Claim 1: Replace 1 part với SerialNumberOld khớp VehiclePart
+            var demoPart1 = demoVehicleParts.First();
+            var claim1Part = new ClaimPart
+            {
+                ClaimPartId = Guid.NewGuid(),
+                ClaimId = claimInspection.ClaimId,
+                Model = demoPart1.Model,
+                SerialNumberOld = demoPart1.SerialNumber,
+                SerialNumberNew = null,
+                Action = ClaimPartAction.Replace.GetClaimPartAction(),
+                Status = ClaimPartStatus.Pending.GetClaimPartStatus(),
+                Cost = 0
+            };
+            context.ClaimParts.Add(claim1Part);
+
+            var woInspection = new WorkOrder
+            {
+                WorkOrderId = Guid.NewGuid(),
+                AssignedTo = demoScTech.UserId,
+                Type = WorkOrderType.Inspection.GetWorkOrderType(),
+                Target = WorkOrderTarget.Warranty.GetWorkOrderTarget(),
+                TargetId = claimInspection.ClaimId,
+                Status = WorkOrderStatus.InProgress.GetWorkOrderStatus(),
+                StartDate = DateTime.UtcNow.AddDays(-1),
+                Notes = "Initial inspection assigned"
+            };
+            context.WorkOrders.Add(woInspection);
+
+            // Claim 2: đã approved và đang under repair + WorkOrder Repair in progress
+            var claimRepair = new WarrantyClaim
+            {
+                ClaimId = Guid.NewGuid(),
+                Vin = demoVehicle.Vin,
+                ServiceCenterId = demoSc.OrgId,
+                CreatedBy = demoScStaff.UserId,
+                CreatedDate = DateTime.UtcNow.AddDays(-7),
+                Status = WarrantyClaimStatus.UnderRepair.GetWarrantyClaimStatus(),
+                Description = "Approved repair for BMS",
+                ConfirmBy = demoEvmStaff.UserId,
+                ConfirmDate = DateTime.UtcNow.AddDays(-6),
+                VehicleWarrantyId = demoPolicy.VehicleWarrantyId,
+                failureDesc = "BMS frequently resets"
+            };
+            context.WarrantyClaims.Add(claimRepair);
+
+            var demoPart2 = demoVehicleParts.Skip(1).First();
+            var claim2Part = new ClaimPart
+            {
+                ClaimPartId = Guid.NewGuid(),
+                ClaimId = claimRepair.ClaimId,
+                Model = demoPart2.Model,
+                SerialNumberOld = demoPart2.SerialNumber,
+                SerialNumberNew = null,
+                Action = ClaimPartAction.Replace.GetClaimPartAction(),
+                Status = ClaimPartStatus.Enough.GetClaimPartStatus(),
+                Cost = 0
+            };
+            context.ClaimParts.Add(claim2Part);
+
+            var woRepair = new WorkOrder
+            {
+                WorkOrderId = Guid.NewGuid(),
+                AssignedTo = demoScTech.UserId,
+                Type = WorkOrderType.Repair.GetWorkOrderType(),
+                Target = WorkOrderTarget.Warranty.GetWorkOrderTarget(),
+                TargetId = claimRepair.ClaimId,
+                Status = WorkOrderStatus.InProgress.GetWorkOrderStatus(),
+                StartDate = DateTime.UtcNow.AddDays(-5),
+                Notes = "Repair BMS module"
+            };
+            context.WorkOrders.Add(woRepair);
+
+            context.SaveChanges(); // Lưu thay đổi CẤP 4 + DEMO FLOW
 
             // --- CẤP 5: PHỤ THUỘC VÀO CẤP 4 ---
 
-            // --- WORKORDER ĐÃ ĐƯỢC DI CHUYỂN XUỐNG ĐÂY ---
+            // --- WORKORDER RANDOM (đúng Target/TargetId) ---
             var workOrderFaker = new Faker<WorkOrder>("en")
                 .RuleFor(w => w.WorkOrderId, f => f.Database.Random.Guid())
                 .RuleFor(w => w.AssignedTo, (f, u) => f.PickRandom(employees).UserId)
-                .RuleFor(w => w.Type, f => f.PickRandom(new[] { "Repair", "Inspection" })) // Giữ nguyên Type của bạn
-                .RuleFor(w => w.Status, f => f.PickRandom(new[] { "in progress", "completed" }))
+                .RuleFor(w => w.Type, f => f.PickRandom(new[] { WorkOrderType.Repair.GetWorkOrderType(), WorkOrderType.Inspection.GetWorkOrderType() }))
+                .RuleFor(w => w.Status, f => f.PickRandom(new[] { WorkOrderStatus.InProgress.GetWorkOrderStatus(), WorkOrderStatus.Completed.GetWorkOrderStatus() }))
                 .RuleFor(w => w.StartDate, f => f.Date.Past(1))
-                .RuleFor(w => w.EndDate, (f, w) => w.Status == "Completed" ? f.Date.Recent() : (DateTime?)null)
+                .RuleFor(w => w.EndDate, (f, w) => w.Status == WorkOrderStatus.Completed.GetWorkOrderStatus() ? f.Date.Recent() : (DateTime?)null)
                 .RuleFor(w => w.Notes, f => f.Lorem.Sentence())
-                // --- SỬA LOGIC TARGET ID ---
-                .RuleFor(w => w.Target, f => f.PickRandom(new[] { "Campaign", "Warranty" })) // Giữ nguyên Target của bạn
+                .RuleFor(w => w.Target, f => f.PickRandom(new[] { WorkOrderTarget.Campaign.GetWorkOrderTarget(), WorkOrderTarget.Warranty.GetWorkOrderTarget() }))
                 .RuleFor(w => w.TargetId, (f, w) =>
                 {
-                    // Nếu Target là "Claim", chọn 1 ClaimId ngẫu nhiên
-                    if (w.Target == "Claim")
+                    if (w.Target == WorkOrderTarget.Warranty.GetWorkOrderTarget())
                     {
-                        return f.PickRandom(claims).ClaimId; // 'claims' từ Cấp 4
+                        return f.PickRandom(claims).ClaimId; // đúng: Warranty -> ClaimId
                     }
-                    // Ngược lại, Target là "Campaign", chọn 1 CampaignId ngẫu nhiên
-                    return f.PickRandom(campaigns).CampaignId; // 'campaigns' từ Cấp 2
+                    return f.PickRandom(campaigns).CampaignId; // Campaign -> CampaignId
                 });
             var workOrders = workOrderFaker.Generate(primaryRecordCount);
             context.WorkOrders.AddRange(workOrders);
@@ -328,8 +502,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 .RuleFor(cp => cp.Model, f => f.PickRandom(parts).Model)
                 .RuleFor(cp => cp.SerialNumberOld, f => f.Random.AlphaNumeric(12))
                 .RuleFor(cp => cp.SerialNumberNew, f => f.Random.AlphaNumeric(12))
-                .RuleFor(cp => cp.Action, f => f.PickRandom(new[] { "Replace", "Repair" }))
-                .RuleFor(cp => cp.Status, f => f.PickRandom(new[] { "Pending", "Approved", "Shipped" }))
+                .RuleFor(cp => cp.Action, f => f.PickRandom(new[] { ClaimPartAction.Replace.GetClaimPartAction(), ClaimPartAction.Repair.GetClaimPartAction() }))
+                .RuleFor(cp => cp.Status, f => f.PickRandom(new[] { ClaimPartStatus.Pending.GetClaimPartStatus(), ClaimPartStatus.Enough.GetClaimPartStatus(), ClaimPartStatus.NotEnough.GetClaimPartStatus() }))
                 .RuleFor(cp => cp.Cost, f => f.Finance.Amount(50, 1000));
             var claimParts = claimPartFaker.Generate(joinRecordCount);
             context.ClaimParts.AddRange(claimParts);

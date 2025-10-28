@@ -3,6 +3,7 @@ using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Domain.Entities;
+using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
 
 namespace OEMEVWarrantyManagement.Application.Services
@@ -95,23 +96,23 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             var result = false;
             var entity = await _partOrderRepository.GetPartOrderByIdAsync(id);
-            if (dto.ExpectedDate.HasValue && (entity.Status == "Waiting" || entity.Status == "Pending"))
-            {
-                entity.ExpectedDate = dto.ExpectedDate;
-                result = true;
-            }
+
+            entity.ExpectedDate = dto.ExpectedDate;
+            entity.Status = PartOrderStatus.Waiting.GetPartOrderStatus();
+            result = true;
+            
             var update = await _partOrderRepository.UpdateAsync(entity);
             return result;
         }
 
 
-        public async Task<PartOrderDto> UpdateStatusAsync(Guid id)
-        {
-            var entity = await _partOrderRepository.GetPartOrderByIdAsync(id);
-            entity.Status = "shipped";//TODO????
-            var update = await _partOrderRepository.UpdateAsync(entity);
-            return _mapper.Map<PartOrderDto>(update);
-        }
+        //public async Task<PartOrderDto> UpdateStatusAsync(Guid id)
+        //{
+        //    var entity = await _partOrderRepository.GetPartOrderByIdAsync(id);
+        //    entity.Status = "shipped";//TODO????
+        //    var update = await _partOrderRepository.UpdateAsync(entity);
+        //    return _mapper.Map<PartOrderDto>(update);
+        //}
 
         public async Task<PagedResult<ResponsePartOrderForScStaffDto>> GetPagedPartOrderForScStaffAsync(PaginationRequest request)
         {
@@ -149,48 +150,63 @@ namespace OEMEVWarrantyManagement.Application.Services
             };
 
         }
-        public async Task<PartOrderDto> UpdateStatusToConfirmAsync(Guid orderId)
+        //public async Task<PartOrderDto> UpdateStatusToConfirmAsync(Guid orderId)
+        //{
+        //    var entity = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
+        //    if (entity.Status == "Pending" || entity.Status == "Waiting")
+        //    {
+        //        entity.Status = "Confirm";
+        //    }
+        //    var update = await _partOrderRepository.UpdateAsync(entity);
+        //    return _mapper.Map<PartOrderDto>(update);
+        //}
+
+        //public async Task<PartOrderDto> UpdateStatusToDeliveryAsync(Guid orderId)
+        //{
+        //    var entity = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
+        //    if (entity.Status == "Confirm")
+        //    {
+        //        entity.Status = "Delivery";
+        //    }
+        //    var update = await _partOrderRepository.UpdateAsync(entity);
+        //    return _mapper.Map<PartOrderDto>(update);
+        //}
+        //public async Task<PartOrderDto> UpdateStatusDeliverdAsync(Guid orderId)
+        //{
+        //    var entity = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
+        //    if(entity.Status == "Delivery")
+        //    {
+        //        entity.Status = "DoneDelivered";
+        //    }
+        //    var update = await _partOrderRepository.UpdateAsync(entity);
+        //    return _mapper.Map<PartOrderDto>(update);
+        //}
+
+        public async Task<PartOrderDto> UpdateStatusAsync(Guid orderId, PartOrderStatus status)
         {
             var entity = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
-            if (entity.Status == "Pending" || entity.Status == "Waiting")
+            if (status == PartOrderStatus.Confirm)
             {
-                entity.Status = "Confirm";
+                entity.ApprovedDate = DateTime.Now;
+            } else if (status == PartOrderStatus.Delivery)
+            {
+                entity.ShippedDate = DateTime.Now;
             }
+                entity.Status = status.GetPartOrderStatus();
             var update = await _partOrderRepository.UpdateAsync(entity);
             return _mapper.Map<PartOrderDto>(update);
         }
 
-        public async Task<PartOrderDto> UpdateStatusToDeliveryAsync(Guid orderId)
-        {
-            var entity = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
-            if (entity.Status == "Confirm")
-            {
-                entity.Status = "Delivery";
-            }
-            var update = await _partOrderRepository.UpdateAsync(entity);
-            return _mapper.Map<PartOrderDto>(update);
-        }
-        public async Task<PartOrderDto> UpdateStatusDeliverdAsync(Guid orderId)
-        {
-            var entity = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
-            if(entity.Status == "Delivered")
-            {
-                entity.Status = "DoneDelivered";
-            }
-            var update = await _partOrderRepository.UpdateAsync(entity);
-            return _mapper.Map<PartOrderDto>(update);
-        }
-
-        public async Task<PartOrderDto> UpdateStatusDeliverdAndRepairAsync(Guid orderId)
-        {
-            var entity = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
-            if (entity.Status == "Confirm")
-            {
-                entity.Status = "Delivered";
-            }
-            var update = await _partOrderRepository.UpdateAsync(entity);
-            return _mapper.Map<PartOrderDto>(update);
-        }
+        //public async Task<PartOrderDto> UpdateStatusDeliverdAndRepairAsync(Guid orderId)
+        //{
+        //    var entity = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
+        //    if (entity.Status == "Confirm")
+        //    {
+        //        entity.Status = "Delivery";
+        //    }
+        //    var update = await _partOrderRepository.UpdateAsync(entity);
+        //    return _mapper.Map<PartOrderDto>(update);
+        //}
 
         public async Task<PagedResult<ResponsePartOrderDto>> GetPagedPartOrderForEvmStaffAsync(PaginationRequest request)
         {

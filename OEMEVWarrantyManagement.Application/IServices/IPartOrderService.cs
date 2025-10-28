@@ -1,4 +1,5 @@
 ﻿using OEMEVWarrantyManagement.Application.Dtos;
+using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
 
 namespace OEMEVWarrantyManagement.Application.IServices
@@ -8,11 +9,11 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<RequestPartOrderDto> CreateAsync();
         Task<IEnumerable<PartOrderDto>> GetAllAsync();
         Task <PartOrderDto> GetByIdAsync(Guid id);
-        Task<PartOrderDto> UpdateStatusAsync(Guid id);
-        Task<PartOrderDto> UpdateStatusDeliverdAsync(Guid orderId);
-        Task<PartOrderDto> UpdateStatusDeliverdAndRepairAsync(Guid orderId);
-        Task<PartOrderDto> UpdateStatusToConfirmAsync(Guid orderId);
-        Task<PartOrderDto> UpdateStatusToDeliveryAsync(Guid orderId);
+        Task<PartOrderDto> UpdateStatusAsync(Guid id, PartOrderStatus status);
+        //Task<PartOrderDto> UpdateStatusDeliverdAsync(Guid orderId);
+        //Task<PartOrderDto> UpdateStatusDeliverdAndRepairAsync(Guid orderId);
+        //Task<PartOrderDto> UpdateStatusToConfirmAsync(Guid orderId);
+        //Task<PartOrderDto> UpdateStatusToDeliveryAsync(Guid orderId);
         Task<PagedResult<ResponsePartOrderDto>> GetPagedPartOrderForEvmStaffAsync(PaginationRequest request);
         //Task<IEnumerable<ResponsePartOrderDto>> GetAllPartOrderAsync();
         Task<PagedResult<ResponsePartOrderForScStaffDto>> GetPagedPartOrderForScStaffAsync(PaginationRequest request);

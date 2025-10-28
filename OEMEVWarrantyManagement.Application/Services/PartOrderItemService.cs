@@ -3,11 +3,7 @@ using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using OEMEVWarrantyManagement.Share.Enums;
 
 namespace OEMEVWarrantyManagement.Application.Services
 {
@@ -38,7 +34,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                     RequestDate = DateTime.Now,
                     ServiceCenterId = empoloyee.OrgId,
                     CreatedBy = empoloyee.UserId,
-                    Status = "Pending" //TODO - ENUM
+                    Status = PartOrderStatus.Pending.GetPartOrderStatus()
                 };
                 partOrder = await _partOrderRepository.CreateAsync(newPartOrder);
             }
