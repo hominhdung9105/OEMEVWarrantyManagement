@@ -8,9 +8,11 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public Guid CampaignVehicleId { get; set; }
         public Guid CampaignId { get; set; }
         public string Vin { get; set; }
-        public DateTime? NotifiedDate { get; set; }
-        public DateTime? HandledDate { get; set; }
-        public string Status { get; set; }
+        public string? NotifyToken { get; set; }
+        public DateTime? NotifiedAt { get; set; }
+        public DateTime? ConfirmedAt { get; set; }
+        public DateTime? CompletedAt { get; set; }
+        public string Status { get; set; } // PENDING, NOTIFIED, CONFIRMED, DONE, CANCELLED
 
         // Navigation Properties
         [JsonIgnore]

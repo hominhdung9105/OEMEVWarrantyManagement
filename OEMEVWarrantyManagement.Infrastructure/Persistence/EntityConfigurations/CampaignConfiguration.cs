@@ -12,7 +12,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.ToTable("Campaigns");
             builder.HasKey(c => c.CampaignId);
             builder.Property(c => c.CampaignId).ValueGeneratedOnAdd();
-            builder.Property(c => c.Name).IsRequired();
+            builder.Property(c => c.Title).IsRequired();
             builder.Property(c => c.Type);
             builder.Property(c => c.Description);
             builder.Property(c => c.StartDate);

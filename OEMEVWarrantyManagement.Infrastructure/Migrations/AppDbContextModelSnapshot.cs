@@ -22,6 +22,55 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.Appointment", b =>
+                {
+                    b.Property<Guid>("AppointmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("AppointmentDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("AppointmentType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("CampaignVehicleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ServiceCenterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Vin")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("AppointmentId");
+
+                    b.HasIndex("CampaignVehicleId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ServiceCenterId");
+
+                    b.HasIndex("Vin");
+
+                    b.ToTable("Appointments", (string)null);
+                });
+
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.BackWarrantyClaim", b =>
                 {
                     b.Property<Guid>("WarrantyClaimId")
@@ -60,10 +109,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<Guid>("OrganizationOrgId")
                         .HasColumnType("uniqueidentifier");
 
@@ -71,6 +116,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -123,11 +172,17 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<Guid>("CampaignId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime?>("HandledDate")
+                    b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("NotifiedDate")
+                    b.Property<DateTime?>("ConfirmedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("NotifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NotifyToken")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -618,6 +673,40 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.HasIndex("AssignedTo");
 
                     b.ToTable("WorkOrders", (string)null);
+                });
+
+            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.Appointment", b =>
+                {
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.CampaignVehicle", "CampaignVehicle")
+                        .WithMany()
+                        .HasForeignKey("CampaignVehicleId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Organization", "ServiceCenter")
+                        .WithMany()
+                        .HasForeignKey("ServiceCenterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Vehicle", "Vehicle")
+                        .WithMany()
+                        .HasForeignKey("Vin")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CampaignVehicle");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("ServiceCenter");
+
+                    b.Navigation("Vehicle");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.BackWarrantyClaim", b =>

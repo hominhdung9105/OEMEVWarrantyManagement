@@ -169,12 +169,12 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
 
             var campaignFaker = new Faker<Campaign>("en")
                 .RuleFor(c => c.CampaignId, f => f.Database.Random.Guid())
-                .RuleFor(c => c.Name, f => f.Company.Bs() + " Campaign")
-                .RuleFor(c => c.Type, f => f.PickRandom(new[] { "Recall", "Service", "Update" }))
+                .RuleFor(c => c.Title, f => f.Company.Bs() + " Campaign")
+                .RuleFor(c => c.Type, f => f.PickRandom(new[] { "RECALL", "SERVICE" }))
                 .RuleFor(c => c.Description, f => f.Lorem.Sentence())
                 .RuleFor(c => c.StartDate, f => f.Date.Past(1))
                 .RuleFor(c => c.EndDate, f => f.Date.Future(1))
-                .RuleFor(c => c.Status, f => "Active")
+                .RuleFor(c => c.Status, f => f.PickRandom(new[] { "DRAFT", "ACTIVE", "CLOSED" }))
                 .RuleFor(c => c.OrganizationOrgId, (f, u) => f.PickRandom(organizations).OrgId);
             var campaigns = campaignFaker.Generate(primaryRecordCount);
             context.Campaigns.AddRange(campaigns);
@@ -234,9 +234,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 .RuleFor(cv => cv.CampaignVehicleId, f => f.Database.Random.Guid())
                 .RuleFor(cv => cv.CampaignId, (f, u) => f.PickRandom(campaigns).CampaignId)
                 .RuleFor(cv => cv.Vin, (f, u) => f.PickRandom(vehicles).Vin)
-                .RuleFor(cv => cv.NotifiedDate, f => f.Date.Past(1))
-                .RuleFor(cv => cv.HandledDate, (f, cv) => f.Random.Bool(0.5f) ? f.Date.Recent() : (DateTime?)null)
-                .RuleFor(cv => cv.Status, (f, cv) => cv.HandledDate.HasValue ? "Completed" : "Notified");
+                .RuleFor(cv => cv.NotifyToken, f => f.Random.AlphaNumeric(20))
+                .RuleFor(cv => cv.Status, f => f.PickRandom(new[] { "PENDING", "NOTIFIED", "CONFIRMED", "DONE", "CANCELLED" }))
+                .RuleFor(cv => cv.NotifiedAt, (f, cv) => cv.Status is "NOTIFIED" or "CONFIRMED" or "DONE" ? f.Date.Past(1) : (DateTime?)null)
+                .RuleFor(cv => cv.ConfirmedAt, (f, cv) => cv.Status is "CONFIRMED" or "DONE" ? f.Date.Recent() : (DateTime?)null)
+                .RuleFor(cv => cv.CompletedAt, (f, cv) => cv.Status == "DONE" ? f.Date.Recent() : (DateTime?)null);
             var campaignVehicles = campaignVehicleFaker.Generate(joinRecordCount);
             context.CampaignVehicles.AddRange(campaignVehicles);
 
@@ -451,7 +453,37 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             };
             context.WorkOrders.Add(woRepair);
 
-            context.SaveChanges(); // Lưu thay đổi CẤP 4 + DEMO FLOW
+            // === Appointments ===
+            var vinToCustomer = vehicles.ToDictionary(v => v.Vin, v => v.CustomerId);
+            var campaignVehiclesByVin = campaignVehicles.GroupBy(cv => cv.Vin).ToDictionary(g => g.Key, g => g.ToList());
+
+            var appointmentFaker = new Faker<Appointment>("en")
+                .RuleFor(a => a.AppointmentId, f => f.Database.Random.Guid())
+                .RuleFor(a => a.AppointmentType, f => f.PickRandom(new[] { "WARRANTY", "CAMPAIGN" }))
+                .RuleFor(a => a.Vin, f => f.PickRandom(vehicles).Vin)
+                .RuleFor(a => a.CustomerId, (f, a) => vinToCustomer[a.Vin])
+                .RuleFor(a => a.CampaignVehicleId, (f, a) =>
+                {
+                    if (a.AppointmentType == "CAMPAIGN")
+                    {
+                        if (campaignVehiclesByVin.TryGetValue(a.Vin, out var list) && list.Count > 0)
+                        {
+                            return f.PickRandom(list).CampaignVehicleId;
+                        }
+                        return f.PickRandom(campaignVehicles).CampaignVehicleId;
+                    }
+                    return (Guid?)null;
+                })
+                .RuleFor(a => a.ServiceCenterId, f => f.PickRandom(scOrgs).OrgId)
+                .RuleFor(a => a.AppointmentDate, f => DateOnly.FromDateTime(f.Date.Soon(30)))
+                .RuleFor(a => a.Status, f => f.PickRandom(new[] { "SCHEDULED", "CHECKED_IN", "CANCELLED", "DONE", "NO_SHOW" }))
+                .RuleFor(a => a.CreatedAt, f => f.Date.Recent(60))
+                .RuleFor(a => a.Note, f => f.Random.Bool(0.4f) ? f.Lorem.Sentence() : null);
+
+            var appointments = appointmentFaker.Generate(primaryRecordCount);
+            context.Appointments.AddRange(appointments);
+
+            context.SaveChanges(); // Lưu thay đổi CẤP 4 + DEMO FLOW + Appointments
 
             // --- CẤP 5: PHỤ THUỘC VÀO CẤP 4 ---
 
