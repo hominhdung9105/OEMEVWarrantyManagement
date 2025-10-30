@@ -19,6 +19,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             var query = _context.CampaignVehicles.AsNoTracking()
                 .Include(cv => cv.Vehicle)
                     .ThenInclude(v => v.Customer)
+                .Include(cv => cv.Campaign)
                 .Where(cv => cv.CampaignId == campaignId)
                 .OrderByDescending(cv => cv.CreatedAt);
             var total = await query.CountAsync();
@@ -31,6 +32,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return await _context.CampaignVehicles
                 .Include(cv => cv.Vehicle)
                     .ThenInclude(v => v.Customer)
+                .Include(cv => cv.Campaign)
                 .FirstOrDefaultAsync(x => x.CampaignVehicleId == id);
         }
 
@@ -60,6 +62,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             var query = _context.CampaignVehicles.AsNoTracking()
                 .Include(cv => cv.Vehicle)
                     .ThenInclude(v => v.Customer)
+                .Include(cv => cv.Campaign)
                 .OrderByDescending(cv => cv.CreatedAt);
             var total = await query.CountAsync();
             var items = await query.Skip(request.Page * request.Size).Take(request.Size).ToListAsync();

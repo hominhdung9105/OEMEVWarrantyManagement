@@ -15,6 +15,13 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         // Include related data
         public VehicleDto? Vehicle { get; set; }
         public CustomerDto? Customer { get; set; }
+
+        // Campaign info
+        public string? Title { get; set; }
+        public string? Description { get; set; }
+        public string? Type { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
     }
 
     public class RequestAddCampaignVehicleDto
