@@ -60,9 +60,9 @@ namespace OEMEVWarrantyManagement.Share.Enums
             return Enum.GetValues<TimeSlotEnum>()
            .Select(slot => new
            {
- slot = slot.ToString(),
-  time = slot.GetTime()
-      });
-     }
+                slot = slot.ToString(),
+                time = slot.GetTime()
+            });
+        }
     }
 }
