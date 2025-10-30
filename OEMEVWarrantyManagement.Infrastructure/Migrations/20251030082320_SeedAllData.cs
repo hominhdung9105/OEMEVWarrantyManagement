@@ -27,30 +27,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Campaigns",
-                columns: table => new
-                {
-                    CampaignId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Type = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    OrganizationOrgId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Campaigns", x => x.CampaignId);
-                    table.ForeignKey(
-                        name: "FK_Campaigns_Organizations_OrganizationOrgId",
-                        column: x => x.OrganizationOrgId,
-                        principalTable: "Organizations",
-                        principalColumn: "OrgId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Customers",
                 columns: table => new
                 {
@@ -140,28 +116,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CampaignTargets",
-                columns: table => new
-                {
-                    CampaignTargetId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CampaignId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TargetType = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    TargetRefId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    YearFrom = table.Column<int>(type: "int", nullable: true),
-                    YearTo = table.Column<int>(type: "int", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CampaignTargets", x => x.CampaignTargetId);
-                    table.ForeignKey(
-                        name: "FK_CampaignTargets_Campaigns_CampaignId",
-                        column: x => x.CampaignId,
-                        principalTable: "Campaigns",
-                        principalColumn: "CampaignId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Vehicles",
                 columns: table => new
                 {
@@ -179,6 +133,36 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         principalTable: "Customers",
                         principalColumn: "CustomerId",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Campaigns",
+                columns: table => new
+                {
+                    CampaignId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PartModel = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    TotalAffectedVehicles = table.Column<int>(type: "int", nullable: false),
+                    PendingVehicles = table.Column<int>(type: "int", nullable: false),
+                    InProgressVehicles = table.Column<int>(type: "int", nullable: false),
+                    CompletedVehicles = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Campaigns", x => x.CampaignId);
+                    table.ForeignKey(
+                        name: "FK_Campaigns_Employee_CreatedBy",
+                        column: x => x.CreatedBy,
+                        principalTable: "Employee",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -238,35 +222,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CampaignVehicles",
-                columns: table => new
-                {
-                    CampaignVehicleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CampaignId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Vin = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    NotifyToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    NotifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    ConfirmedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CampaignVehicles", x => x.CampaignVehicleId);
-                    table.ForeignKey(
-                        name: "FK_CampaignVehicles_Campaigns_CampaignId",
-                        column: x => x.CampaignId,
-                        principalTable: "Campaigns",
-                        principalColumn: "CampaignId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_CampaignVehicles_Vehicles_Vin",
-                        column: x => x.Vin,
-                        principalTable: "Vehicles",
-                        principalColumn: "Vin");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "VehicleParts",
                 columns: table => new
                 {
@@ -317,6 +272,34 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CampaignVehicles",
+                columns: table => new
+                {
+                    CampaignVehicleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CampaignId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Vin = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    NewSerial = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CampaignVehicles", x => x.CampaignVehicleId);
+                    table.ForeignKey(
+                        name: "FK_CampaignVehicles_Campaigns_CampaignId",
+                        column: x => x.CampaignId,
+                        principalTable: "Campaigns",
+                        principalColumn: "CampaignId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CampaignVehicles_Vehicles_Vin",
+                        column: x => x.Vin,
+                        principalTable: "Vehicles",
+                        principalColumn: "Vin");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "PartOrderItems",
                 columns: table => new
                 {
@@ -335,50 +318,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         principalTable: "PartOrders",
                         principalColumn: "OrderId",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Appointments",
-                columns: table => new
-                {
-                    AppointmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    AppointmentType = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Vin = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CampaignVehicleId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    ServiceCenterId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    AppointmentDate = table.Column<DateOnly>(type: "date", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Note = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Appointments", x => x.AppointmentId);
-                    table.ForeignKey(
-                        name: "FK_Appointments_CampaignVehicles_CampaignVehicleId",
-                        column: x => x.CampaignVehicleId,
-                        principalTable: "CampaignVehicles",
-                        principalColumn: "CampaignVehicleId",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_Appointments_Customers_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "Customers",
-                        principalColumn: "CustomerId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Appointments_Organizations_ServiceCenterId",
-                        column: x => x.ServiceCenterId,
-                        principalTable: "Organizations",
-                        principalColumn: "OrgId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Appointments_Vehicles_Vin",
-                        column: x => x.Vin,
-                        principalTable: "Vehicles",
-                        principalColumn: "Vin",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -436,6 +375,50 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         column: x => x.WarrantyPolicyPolicyId,
                         principalTable: "WarrantyPolicies",
                         principalColumn: "PolicyId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Appointments",
+                columns: table => new
+                {
+                    AppointmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AppointmentType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Vin = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CampaignVehicleId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    ServiceCenterId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AppointmentDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Note = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Appointments", x => x.AppointmentId);
+                    table.ForeignKey(
+                        name: "FK_Appointments_CampaignVehicles_CampaignVehicleId",
+                        column: x => x.CampaignVehicleId,
+                        principalTable: "CampaignVehicles",
+                        principalColumn: "CampaignVehicleId",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_Appointments_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "CustomerId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Appointments_Organizations_ServiceCenterId",
+                        column: x => x.ServiceCenterId,
+                        principalTable: "Organizations",
+                        principalColumn: "OrgId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Appointments_Vehicles_Vin",
+                        column: x => x.Vin,
+                        principalTable: "Vehicles",
+                        principalColumn: "Vin",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -540,14 +523,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 column: "CreatedByEmployeeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Campaigns_OrganizationOrgId",
+                name: "IX_Campaigns_CreatedBy",
                 table: "Campaigns",
-                column: "OrganizationOrgId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CampaignTargets_CampaignId",
-                table: "CampaignTargets",
-                column: "CampaignId");
+                column: "CreatedBy");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CampaignVehicles_CampaignId",
@@ -674,9 +652,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "BackWarrantyClaim");
-
-            migrationBuilder.DropTable(
-                name: "CampaignTargets");
 
             migrationBuilder.DropTable(
                 name: "ClaimAttachments");

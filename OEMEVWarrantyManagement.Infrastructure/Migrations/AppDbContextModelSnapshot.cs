@@ -102,6 +102,15 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("CompletedVehicles")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -109,8 +118,14 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("OrganizationOrgId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("InProgressVehicles")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PartModel")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PendingVehicles")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
@@ -123,44 +138,18 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("TotalAffectedVehicles")
+                        .HasColumnType("int");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("CampaignId");
 
-                    b.HasIndex("OrganizationOrgId");
+                    b.HasIndex("CreatedBy");
 
                     b.ToTable("Campaigns", (string)null);
-                });
-
-            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.CampaignTarget", b =>
-                {
-                    b.Property<Guid>("CampaignTargetId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CampaignId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("TargetRefId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("TargetType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("YearFrom")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("YearTo")
-                        .HasColumnType("int");
-
-                    b.HasKey("CampaignTargetId");
-
-                    b.HasIndex("CampaignId");
-
-                    b.ToTable("CampaignTargets", (string)null);
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.CampaignVehicle", b =>
@@ -175,13 +164,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("ConfirmedAt")
+                    b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("NotifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("NotifyToken")
+                    b.Property<string>("NewSerial")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
@@ -730,24 +716,13 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.Campaign", b =>
                 {
-                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Organization", "Organization")
-                        .WithMany("Campaigns")
-                        .HasForeignKey("OrganizationOrgId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Employee", "CreatedByEmployee")
+                        .WithMany("CreatedCampaigns")
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Organization");
-                });
-
-            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.CampaignTarget", b =>
-                {
-                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Campaign", "Campaign")
-                        .WithMany("CampaignTargets")
-                        .HasForeignKey("CampaignId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Campaign");
+                    b.Navigation("CreatedByEmployee");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.CampaignVehicle", b =>
@@ -970,8 +945,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.Campaign", b =>
                 {
-                    b.Navigation("CampaignTargets");
-
                     b.Navigation("CampaignVehicles");
                 });
 
@@ -986,6 +959,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
                     b.Navigation("AssignedWorkOrders");
 
+                    b.Navigation("CreatedCampaigns");
+
                     b.Navigation("CreatedClaims");
 
                     b.Navigation("CreatedFeedbacks");
@@ -997,8 +972,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.Organization", b =>
                 {
-                    b.Navigation("Campaigns");
-
                     b.Navigation("Customers");
 
                     b.Navigation("Employees");
