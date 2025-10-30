@@ -26,29 +26,12 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return (items, total);
         }
 
-        public async Task<IEnumerable<CampaignVehicle>> GetByCampaignIdAsync(Guid campaignId)
-        {
-            return await _context.CampaignVehicles.AsNoTracking()
-                .Include(cv => cv.Vehicle)
-                    .ThenInclude(v => v.Customer)
-                .Where(cv => cv.CampaignId == campaignId)
-                .ToListAsync();
-        }
-
         public async Task<CampaignVehicle?> GetByIdAsync(Guid id)
         {
             return await _context.CampaignVehicles
                 .Include(cv => cv.Vehicle)
                     .ThenInclude(v => v.Customer)
                 .FirstOrDefaultAsync(x => x.CampaignVehicleId == id);
-        }
-
-        public async Task<List<CampaignVehicle>> GetByIdsAsync(IEnumerable<Guid> ids)
-        {
-            return await _context.CampaignVehicles
-                .Include(cv => cv.Vehicle)
-                    .ThenInclude(v => v.Customer)
-                .Where(cv => ids.Contains(cv.CampaignVehicleId)).ToListAsync();
         }
 
         public async Task<List<CampaignVehicle>> GetByCampaignAndVinsAsync(Guid campaignId, IEnumerable<string> vins)
@@ -70,6 +53,17 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             _context.CampaignVehicles.Update(entity);
             await _context.SaveChangesAsync();
             return entity;
+        }
+
+        public async Task<(IEnumerable<CampaignVehicle> Data, int TotalRecords)> GetAllAsync(PaginationRequest request)
+        {
+            var query = _context.CampaignVehicles.AsNoTracking()
+                .Include(cv => cv.Vehicle)
+                    .ThenInclude(v => v.Customer)
+                .OrderByDescending(cv => cv.CreatedAt);
+            var total = await query.CountAsync();
+            var items = await query.Skip(request.Page * request.Size).Take(request.Size).ToListAsync();
+            return (items, total);
         }
     }
 }

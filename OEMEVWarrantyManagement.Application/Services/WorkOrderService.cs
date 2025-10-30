@@ -22,8 +22,24 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IVehicleRepository _vehicleRepository;
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IBackWarrantyClaimRepository _backWarrantyClaimRepository;
+        private readonly ICampaignVehicleRepository _campaignVehicleRepository;
+        private readonly ICampaignRepository _campaignRepository;
+        private readonly IVehiclePartRepository _vehiclePartRepository;
 
-        public WorkOrderService(IWorkOrderRepository workOrderRepository, IMapper mapper, IWarrantyClaimService warrantyClaimService, IWarrantyClaimRepository claimRepository, ICurrentUserService currentUserService, IClaimPartRepository claimPartRepository, IImageRepository imageRepository, IVehicleRepository vehicleRepository, IEmployeeRepository employeeRepository, IBackWarrantyClaimRepository backWarrantyClaimRepository)
+        public WorkOrderService(
+            IWorkOrderRepository workOrderRepository,
+            IMapper mapper,
+            IWarrantyClaimService warrantyClaimService,
+            IWarrantyClaimRepository claimRepository,
+            ICurrentUserService currentUserService,
+            IClaimPartRepository claimPartRepository,
+            IImageRepository imageRepository,
+            IVehicleRepository vehicleRepository,
+            IEmployeeRepository employeeRepository,
+            IBackWarrantyClaimRepository backWarrantyClaimRepository,
+            ICampaignVehicleRepository campaignVehicleRepository,
+            ICampaignRepository campaignRepository,
+            IVehiclePartRepository vehiclePartRepository)
         {
             _workOrderRepository = workOrderRepository;
             _mapper = mapper;
@@ -35,12 +51,15 @@ namespace OEMEVWarrantyManagement.Application.Services
             _vehicleRepository = vehicleRepository;
             _employeeRepository = employeeRepository;
             _backWarrantyClaimRepository = backWarrantyClaimRepository;
+            _campaignVehicleRepository = campaignVehicleRepository;
+            _campaignRepository = campaignRepository;
+            _vehiclePartRepository = vehiclePartRepository;
         }
 
         //public async Task<RequestCreateWorkOrderDto> CreateWorkOrderAsync(RequestCreateWorkOrderDto request)
         //{
         //    var entity = _mapper.Map<WorkOrder>(request);
-
+        //
         //    var warrantyClaim = await _claimRepository.GetWarrantyClaimByIdAsync((Guid)request.TargetId);
         //    if (warrantyClaim.Status == WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyClaimStatus())
         //    {
@@ -203,7 +222,6 @@ namespace OEMEVWarrantyManagement.Application.Services
                     var claimDto = new WarrantyClaimInfoDto
                     {
                         ClaimId = claim.ClaimId,
-                        Vin = claim.Vin,
                         FailureDesc = claim.failureDesc,
                         Description = claim.Description,
                         Status = claim.Status
@@ -213,8 +231,9 @@ namespace OEMEVWarrantyManagement.Application.Services
                     var vehicle = await _vehicleRepository.GetVehicleByVinAsync(claim.Vin);
                     if (vehicle != null)
                     {
-                        claimDto.Model = vehicle.Model;
-                        claimDto.Year = vehicle.Year;
+                        dto.Vin = vehicle.Vin;
+                        dto.Model = vehicle.Model;
+                        dto.Year = vehicle.Year;
                     }
 
                     // latest back-claim note
@@ -233,6 +252,50 @@ namespace OEMEVWarrantyManagement.Application.Services
                     claimDto.Attachments = attachments.Select(a => _mapper.Map<ImageDto>(a));
 
                     dto.WarrantyClaim = claimDto;
+                }
+            }
+            else if (workOrder.Target == WorkOrderTarget.Campaign.GetWorkOrderTarget())
+            {
+                var cv = await _campaignVehicleRepository.GetByIdAsync(workOrder.TargetId);
+                if (cv != null)
+                {
+                    var campaign = await _campaignRepository.GetByIdAsync(cv.CampaignId);
+
+                    // vehicle
+                    var vehicle = await _vehicleRepository.GetVehicleByVinAsync(cv.Vin);
+                    if (vehicle != null)
+                    {
+                        dto.Vin = vehicle.Vin;
+                        dto.Model = vehicle.Model;
+                        dto.Year = vehicle.Year;
+                    }
+
+                    var campDto = new CampaignInfoDto
+                    {
+                        CampaignVehicleId = cv.CampaignVehicleId,
+                        CampaignId = cv.CampaignId,
+                        Title = campaign?.Title,
+                        Description = campaign?.Description,
+                        Status = cv.Status,
+                        CreatedAt = cv.CreatedAt,
+                        CompletedAt = cv.CompletedAt,
+                        PartModel = campaign?.PartModel
+                    };
+
+                    // Only provide old serials for the campaign part model so tech can replace later
+                    if (!string.IsNullOrWhiteSpace(campDto.PartModel) && !string.IsNullOrWhiteSpace(cv.Vin))
+                    {
+                        var vehicleParts = await _vehiclePartRepository.GetVehiclePartByVinAndModelAsync(cv.Vin, campDto.PartModel);
+                        var oldSerials = vehicleParts
+                            .Where(vp => string.Equals(vp.Status, VehiclePartStatus.UnInstalled.GetVehiclePartStatus(), StringComparison.OrdinalIgnoreCase))
+                            .Select(vp => vp.SerialNumber)
+                            .Distinct()
+                            .ToList();
+
+                        campDto.OldSerials = oldSerials;
+                    }
+
+                    dto.Campaign = campDto;
                 }
             }
 
@@ -284,7 +347,6 @@ namespace OEMEVWarrantyManagement.Application.Services
                         var claimDto = new WarrantyClaimInfoDto
                         {
                             ClaimId = claim.ClaimId,
-                            Vin = claim.Vin,
                             FailureDesc = claim.failureDesc,
                             Description = claim.Description,
                             Status = claim.Status
@@ -293,8 +355,9 @@ namespace OEMEVWarrantyManagement.Application.Services
                         var vehicle = await _vehicleRepository.GetVehicleByVinAsync(claim.Vin);
                         if (vehicle != null)
                         {
-                            claimDto.Model = vehicle.Model;
-                            claimDto.Year = vehicle.Year;
+                            dto.Vin = vehicle.Vin;
+                            dto.Model = vehicle.Model;
+                            dto.Year = vehicle.Year;
                         }
 
                         // latest back-claim note
@@ -308,11 +371,52 @@ namespace OEMEVWarrantyManagement.Application.Services
                         var parts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
                         claimDto.ClaimParts = parts.Select(p => _mapper.Map<ShowClaimPartDto>(p));
 
-
                         var attachments = await _imageRepository.GetImagesByWarrantyClaimIdAsync(claim.ClaimId);
                         claimDto.Attachments = attachments.Select(a => _mapper.Map<ImageDto>(a));
 
                         dto.WarrantyClaim = claimDto;
+                    }
+                }
+                else if (wo.Target == WorkOrderTarget.Campaign.GetWorkOrderTarget())
+                {
+                    var cv = await _campaignVehicleRepository.GetByIdAsync(wo.TargetId);
+                    if (cv != null)
+                    {
+                        var campaign = await _campaignRepository.GetByIdAsync(cv.CampaignId);
+                        var vehicle = await _vehicleRepository.GetVehicleByVinAsync(cv.Vin);
+                        if (vehicle != null)
+                        {
+                            dto.Vin = vehicle.Vin;
+                            dto.Model = vehicle.Model;
+                            dto.Year = vehicle.Year;
+                        }
+
+                        var campDto = new CampaignInfoDto
+                        {
+                            CampaignVehicleId = cv.CampaignVehicleId,
+                            CampaignId = cv.CampaignId,
+                            Title = campaign?.Title,
+                            Description = campaign?.Description,
+                            Status = cv.Status,
+                            CreatedAt = cv.CreatedAt,
+                            CompletedAt = cv.CompletedAt,
+                            PartModel = campaign?.PartModel
+                        };
+
+                        if (!string.IsNullOrWhiteSpace(campDto.PartModel) && !string.IsNullOrWhiteSpace(cv.Vin))
+                        {
+                            var vehicleParts = await _vehiclePartRepository.GetVehiclePartByVinAndModelAsync(cv.Vin, campDto.PartModel);
+
+                            var oldSerials = vehicleParts
+                                .Where(vp => string.Equals(vp.Status, VehiclePartStatus.UnInstalled.GetVehiclePartStatus(), StringComparison.OrdinalIgnoreCase))
+                                .Select(vp => vp.SerialNumber)
+                                .Distinct()
+                                .ToList();
+
+                            campDto.OldSerials = oldSerials;
+                        }
+
+                        dto.Campaign = campDto;
                     }
                 }
 

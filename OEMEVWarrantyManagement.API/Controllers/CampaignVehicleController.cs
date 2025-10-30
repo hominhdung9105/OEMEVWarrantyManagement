@@ -33,17 +33,15 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<PagedResult<CampaignVehicleDto>>.Ok(result, "Get campaign vehicles successfully!"));
         }
 
-        [HttpGet("campaign/{campaignId}/all")]
+        // New: get all campaign vehicles (across campaigns) with pagination
+        [HttpGet]
         [Authorize]
-        public async Task<IActionResult> GetAllByCampaign(string campaignId)
+        public async Task<IActionResult> GetAll([FromQuery] PaginationRequest request)
         {
             if (_currentUserService.GetRole() == RoleIdEnum.Technician.GetRoleId()) throw new UnauthorizedAccessException();
 
-            if (!Guid.TryParse(campaignId, out var id))
-                return BadRequest(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
-
-            var result = await _service.GetAllByCampaignIdAsync(id);
-            return Ok(ApiResponse<IEnumerable<CampaignVehicleDto>>.Ok(result, "Get all campaign vehicles successfully!"));
+            var result = await _service.GetAllAsync(request);
+            return Ok(ApiResponse<PagedResult<CampaignVehicleDto>>.Ok(result, "Get all campaign vehicles successfully!"));
         }
 
         [HttpPost]
@@ -55,17 +53,20 @@ namespace OEMEVWarrantyManagement.API.Controllers
         }
 
         [HttpPut("{id}/repaired")]
-        [Authorize(policy: "RequireScTechOrScStaff")]
+        [Authorize(policy: "RequireScTech")]
         public async Task<IActionResult> MarkRepaired(string id, [FromBody] MarkRepairedRequest request)
         {
             if (!Guid.TryParse(id, out var guid))
+                return BadRequest(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
+
+            if (request?.Replacements == null || request.Replacements.Count == 0)
                 return BadRequest(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
 
             var result = await _service.UpdateStatusAsync(new UpdateCampaignVehicleStatusDto
             {
                 CampaignVehicleId = guid,
                 Status = CampaignVehicleStatus.Repaired,
-                NewSerial = request.NewSerial
+                Replacements = request.Replacements
             });
             return Ok(ApiResponse<CampaignVehicleDto>.Ok(result, "Marked vehicle repaired successfully!"));
         }

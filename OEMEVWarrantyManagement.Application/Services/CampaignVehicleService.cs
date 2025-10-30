@@ -7,6 +7,7 @@ using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
 using OEMEVWarrantyManagement.Share.Models.Response;
+using System.Text.Json;
 
 namespace OEMEVWarrantyManagement.Application.Services
 {
@@ -110,26 +111,85 @@ namespace OEMEVWarrantyManagement.Application.Services
             };
         }
 
-        public async Task<IEnumerable<CampaignVehicleDto>> GetAllByCampaignIdAsync(Guid campaignId)
+        public async Task<PagedResult<CampaignVehicleDto>> GetAllAsync(PaginationRequest request)
         {
-            var data = await _campaignVehicleRepository.GetByCampaignIdAsync(campaignId);
-            return _mapper.Map<IEnumerable<CampaignVehicleDto>>(data);
+            var (data, total) = await _campaignVehicleRepository.GetAllAsync(request);
+            var items = _mapper.Map<IEnumerable<CampaignVehicleDto>>(data);
+            return new PagedResult<CampaignVehicleDto>
+            {
+                PageNumber = request.Page,
+                PageSize = request.Size,
+                TotalRecords = total,
+                TotalPages = (int)Math.Ceiling(total / (double)request.Size),
+                Items = items
+            };
         }
 
         public async Task<CampaignVehicleDto> UpdateStatusAsync(UpdateCampaignVehicleStatusDto request)
         {
             var entity = await _campaignVehicleRepository.GetByIdAsync(request.CampaignVehicleId) ?? throw new ApiException(ResponseError.InternalServerError);
+            var campaign = await _campaignRepository.GetByIdAsync(entity.CampaignId) ?? throw new ApiException(ResponseError.InternalServerError);
 
             switch (request.Status)
             {
                 case CampaignVehicleStatus.Repaired:
                     if (entity.Status != CampaignVehicleStatus.UnderRepair.GetCampaignVehicleStatus())
                         throw new ApiException(ResponseError.InvalidJsonFormat);
-                    if (string.IsNullOrWhiteSpace(request.NewSerial))
+
+                    // Validate replacements payload
+                    if (request.Replacements == null || request.Replacements.Count == 0)
                         throw new ApiException(ResponseError.InvalidJsonFormat);
 
-                    entity.NewSerial = request.NewSerial;
-                    entity.CompletedAt = DateTime.UtcNow;
+                    if (string.IsNullOrWhiteSpace(campaign.PartModel))
+                        throw new ApiException(ResponseError.InvalidPartModel);
+
+                    // Get all vehicle parts by VIN and campaign model
+                    var parts = await _vehiclePartRepository.GetVehiclePartByVinAndModelAsync(entity.Vin, campaign.PartModel);
+                    var installedParts = parts.Where(p => p.Status == VehiclePartStatus.Installed.GetVehiclePartStatus()).ToList();
+
+                    // Must replace all installed parts of this model
+                    if (installedParts.Count != request.Replacements.Count)
+                        throw new ApiException(ResponseError.InvalidJsonFormat);
+
+                    var now = DateTime.UtcNow;
+                    var matchedOlds = new HashSet<string>(installedParts.Select(p => p.SerialNumber));
+
+                    // Process each replacement
+                    var newSerials = new List<string>();
+                    foreach (var rep in request.Replacements)
+                    {
+                        if (string.IsNullOrWhiteSpace(rep.OldSerial) || string.IsNullOrWhiteSpace(rep.NewSerial))
+                            throw new ApiException(ResponseError.InvalidJsonFormat);
+
+                        // Validate old serial exists in installed list
+                        var vp = installedParts.FirstOrDefault(p => p.SerialNumber == rep.OldSerial);
+                        if (vp == null)
+                            throw new ApiException(ResponseError.NotFoundVehiclePart);
+
+                        // Mark old as uninstalled
+                        vp.Status = VehiclePartStatus.UnInstalled.GetVehiclePartStatus();
+                        vp.UninstalledDate = now;
+                        await _vehiclePartRepository.UpdateVehiclePartAsync(vp);
+
+                        // Add new installed part entry
+                        var newVp = new VehiclePart
+                        {
+                            VehiclePartId = Guid.NewGuid(),
+                            Vin = entity.Vin,
+                            Model = campaign.PartModel!,
+                            SerialNumber = rep.NewSerial,
+                            InstalledDate = now,
+                            UninstalledDate = DateTime.MinValue,
+                            Status = VehiclePartStatus.Installed.GetVehiclePartStatus()
+                        };
+                        await _vehiclePartRepository.AddVehiclePartAsync(newVp);
+
+                        newSerials.Add(rep.NewSerial);
+                    }
+
+                    // Persist campaign vehicle new serial list as JSON
+                    entity.NewSerial = JsonSerializer.Serialize(newSerials);
+                    entity.CompletedAt = now;
                     entity.Status = CampaignVehicleStatus.Repaired.GetCampaignVehicleStatus();
 
                     // complete all related campaign work orders for this target
@@ -145,8 +205,6 @@ namespace OEMEVWarrantyManagement.Application.Services
                     if (entity.Status != CampaignVehicleStatus.Repaired.GetCampaignVehicleStatus())
                         throw new ApiException(ResponseError.InvalidJsonFormat);
                     entity.Status = CampaignVehicleStatus.Done.GetCampaignVehicleStatus();
-
-                    var campaign = await _campaignRepository.GetByIdAsync(entity.CampaignId) ?? throw new ApiException(ResponseError.InternalServerError);
 
                     campaign.InProgressVehicles -= 1;
                     campaign.CompletedVehicles += 1;

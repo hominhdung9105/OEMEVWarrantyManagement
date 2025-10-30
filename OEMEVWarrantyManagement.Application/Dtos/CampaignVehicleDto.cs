@@ -10,7 +10,8 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string Status { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
-        public string? NewSerial { get; set; }
+        // Changed: store list of new serials for replaced parts (API surface)
+        public List<string>? NewSerials { get; set; }
         // Include related data
         public VehicleDto? Vehicle { get; set; }
         public CustomerDto? Customer { get; set; }
@@ -27,12 +28,19 @@ namespace OEMEVWarrantyManagement.Application.Dtos
     {
         public Guid CampaignVehicleId { get; set; }
         public CampaignVehicleStatus Status { get; set; }
-        public string? NewSerial { get; set; }
+        // For Repaired status: list of replacements (old -> new)
+        public List<SerialReplacementDto>? Replacements { get; set; }
+    }
+
+    public class SerialReplacementDto
+    {
+        public required string OldSerial { get; set; }
+        public required string NewSerial { get; set; }
     }
 
     public class MarkRepairedRequest
     {
-        public string NewSerial { get; set; }
+        public List<SerialReplacementDto> Replacements { get; set; }
     }
 
     public class MarkDoneRequest { }

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Domain.Entities;
+using System.Text.Json;
 
 namespace OEMEVWarrantyManagement.Application.Mapping
 {
@@ -59,7 +60,36 @@ namespace OEMEVWarrantyManagement.Application.Mapping
             CreateMap<CampaignVehicle, CampaignVehicleDto>()
                 .ForMember(d => d.Vehicle, opt => opt.MapFrom(src => src.Vehicle))
                 .ForMember(d => d.Customer, opt => opt.MapFrom(src => src.Vehicle != null ? src.Vehicle.Customer : null))
-                .ReverseMap();
+                .ForMember(d => d.NewSerials, opt => opt.MapFrom(src => ParseNewSerials(src.NewSerial)))
+                .ReverseMap()
+                .ForMember(s => s.NewSerial, opt => opt.MapFrom(d => SerializeNewSerials(d.NewSerials)));
+        }
+
+        private static List<string>? ParseNewSerials(string? newSerialField)
+        {
+            if (string.IsNullOrWhiteSpace(newSerialField)) return null;
+
+            var trimmed = newSerialField.TrimStart();
+            if (trimmed.StartsWith("["))
+            {
+                try
+                {
+                    // Use explicit overload to avoid optional args in expression trees
+                    return JsonSerializer.Deserialize<List<string>>(trimmed, (JsonSerializerOptions?)null) ?? new List<string>();
+                }
+                catch
+                {
+                    return new List<string>();
+                }
+            }
+
+            return new List<string> { newSerialField };
+        }
+
+        private static string? SerializeNewSerials(List<string>? list)
+        {
+            if (list == null) return null;
+            return JsonSerializer.Serialize(list, (JsonSerializerOptions?)null);
         }
     }
 }

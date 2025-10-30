@@ -38,7 +38,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<object>.Ok(result, "Create Warranty Claim Successfully!"));
         }
 
-        //Get All by Admin/Staff; Tech see claim are WaitingForUnassigned
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> GetAllWarrantyClaim([FromQuery] PaginationRequest request)
@@ -55,11 +54,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
                 var result = await _warrantyClaimService.GetWarrantyClaimHavePolicyAndPartsAndOrg(request);
                 return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
             }
-            else if (role == RoleIdEnum.Technician.GetRoleId())
-            {
-                var result = await _workOrderService.GetWorkOrdersDetailByTechAsync(request);
-                return Ok(ApiResponse<object>.Ok(result, "Get All Warranty Claim Successfully!"));
-            }
+
             else return Unauthorized(ApiResponse<object>.Fail(ResponseError.Forbidden));
         }
 

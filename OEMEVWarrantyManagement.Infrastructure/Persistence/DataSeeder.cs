@@ -404,7 +404,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 TargetId = claimInspection.ClaimId,
                 Status = WorkOrderStatus.InProgress.GetWorkOrderStatus(),
                 StartDate = DateTime.UtcNow.AddDays(-1),
-                Notes = "Initial inspection assigned"
             };
             context.WorkOrders.Add(woInspection);
 
@@ -448,7 +447,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 TargetId = claimRepair.ClaimId,
                 Status = WorkOrderStatus.InProgress.GetWorkOrderStatus(),
                 StartDate = DateTime.UtcNow.AddDays(-5),
-                Notes = "Repair BMS module"
             };
             context.WorkOrders.Add(woRepair);
 
@@ -494,7 +492,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 .RuleFor(w => w.Status, f => f.PickRandom(new[] { WorkOrderStatus.InProgress.GetWorkOrderStatus(), WorkOrderStatus.Completed.GetWorkOrderStatus() }))
                 .RuleFor(w => w.StartDate, f => f.Date.Past(1))
                 .RuleFor(w => w.EndDate, (f, w) => w.Status == WorkOrderStatus.Completed.GetWorkOrderStatus() ? f.Date.Recent() : (DateTime?)null)
-                .RuleFor(w => w.Notes, f => f.Lorem.Sentence())
                 .RuleFor(w => w.Target, f => f.PickRandom(new[] { WorkOrderTarget.Campaign.GetWorkOrderTarget(), WorkOrderTarget.Warranty.GetWorkOrderTarget() }))
                 .RuleFor(w => w.TargetId, (f, w) =>
                 {

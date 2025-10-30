@@ -30,12 +30,12 @@ namespace OEMEVWarrantyManagement.Application.Services
         public async Task<CampaignDto> CreateAsync(RequestCampaignDto request)
         {
             // Validate part model exists in master parts
-            if (!string.IsNullOrWhiteSpace(request.PartModel) || PartModel.IsValidModel(request.PartModel))
+            if (string.IsNullOrWhiteSpace(request.PartModel) || !PartModel.IsValidModel(request.PartModel))
             {
                 throw new ApiException(ResponseError.InvalidPartModel);
             }
 
-            if (!string.IsNullOrWhiteSpace(request.Type) ||  CampaignTypeExtensions.IsValidType(request.Type))
+            if (string.IsNullOrWhiteSpace(request.Type) || ! CampaignTypeExtensions.IsValidType(request.Type))
             {
                 throw new ApiException(ResponseError.InternalServerError);
             }
