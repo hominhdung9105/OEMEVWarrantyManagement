@@ -454,28 +454,13 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             context.WorkOrders.Add(woRepair);
 
             // === Appointments ===
-            var vinToCustomer = vehicles.ToDictionary(v => v.Vin, v => v.CustomerId);
-            var campaignVehiclesByVin = campaignVehicles.GroupBy(cv => cv.Vin).ToDictionary(g => g.Key, g => g.ToList());
-
             var appointmentFaker = new Faker<Appointment>("en")
                 .RuleFor(a => a.AppointmentId, f => f.Database.Random.Guid())
                 .RuleFor(a => a.AppointmentType, f => f.PickRandom(new[] { "WARRANTY", "CAMPAIGN" }))
-                .RuleFor(a => a.Vin, f => f.PickRandom(vehicles).Vin)
-                .RuleFor(a => a.CustomerId, (f, a) => vinToCustomer[a.Vin])
-                .RuleFor(a => a.CampaignVehicleId, (f, a) =>
-                {
-                    if (a.AppointmentType == "CAMPAIGN")
-                    {
-                        if (campaignVehiclesByVin.TryGetValue(a.Vin, out var list) && list.Count > 0)
-                        {
-                            return f.PickRandom(list).CampaignVehicleId;
-                        }
-                        return f.PickRandom(campaignVehicles).CampaignVehicleId;
-                    }
-                    return (Guid?)null;
-                })
+                .RuleFor(a => a.CustomerId, f => f.PickRandom(customers).CustomerId)
                 .RuleFor(a => a.ServiceCenterId, f => f.PickRandom(scOrgs).OrgId)
                 .RuleFor(a => a.AppointmentDate, f => DateOnly.FromDateTime(f.Date.Soon(30)))
+                .RuleFor(a => a.Slot, f => f.PickRandom(new[] { "Slot1", "Slot2", "Slot3", "Slot4", "Slot5", "Slot6", "Slot7", "Slot8" }))
                 .RuleFor(a => a.Status, f => f.PickRandom(new[] { "SCHEDULED", "CHECKED_IN", "CANCELLED", "DONE", "NO_SHOW" }))
                 .RuleFor(a => a.CreatedAt, f => f.Date.Recent(60))
                 .RuleFor(a => a.Note, f => f.Random.Bool(0.4f) ? f.Lorem.Sentence() : null);

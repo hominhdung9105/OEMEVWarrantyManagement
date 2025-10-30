@@ -10,5 +10,6 @@ namespace OEMEVWarrantyManagement.Application.IRepository
     public interface IOrganizationRepository
     {
         Task<Organization> GetOrganizationById(Guid orgId);
+        Task<IEnumerable<Organization>> GetAllOrganizationsAsync();
     }
 }

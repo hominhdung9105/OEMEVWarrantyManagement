@@ -34,21 +34,21 @@ namespace OEMEVWarrantyManagement.API
             // Add Controllers - ignore null value in response
 
             builder.Services.AddControllers()
-                .ConfigureApiBehaviorOptions(options =>
-                {
-                    options.InvalidModelStateResponseFactory = context =>
-                    {
-                        var errors = context.ModelState
-                            .Where(x => x.Value?.Errors.Count > 0)
-                            .Select(x => new
-                            {
-                                field = x.Key,
-                                messages = x.Value!.Errors.Select(e => e.ErrorMessage)
-                            });
+                //.ConfigureApiBehaviorOptions(options =>
+                //{
+                //    options.InvalidModelStateResponseFactory = context =>
+                //    {
+                //        var errors = context.ModelState
+                //            .Where(x => x.Value?.Errors.Count > 0)
+                //            .Select(x => new
+                //            {
+                //                field = x.Key,
+                //                messages = x.Value!.Errors.Select(e => e.ErrorMessage)
+                //            });
 
-                        return new BadRequestObjectResult(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
-                    };
-                })
+                //        return new BadRequestObjectResult(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
+                //    };
+                //})
                 .AddJsonOptions(options =>
                 {
                     options.AllowInputFormatterExceptionMessages = true;
@@ -187,6 +187,10 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddScoped<IImageService, ImageService>();
             // Organization
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+            builder.Services.AddScoped<IOrganizationService, OrganizationService>();
+            // Appointment
+            builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+            builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 
             builder.Services.AddCors(options =>
             {
