@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OEMEVWarrantyManagement.Domain.Entities;
 
-
 namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfigurations
 {
     public class WarrantyClaimConfiguration : IEntityTypeConfiguration<WarrantyClaim>

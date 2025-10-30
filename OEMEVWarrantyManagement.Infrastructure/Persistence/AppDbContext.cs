@@ -22,7 +22,6 @@ public class AppDbContext : DbContext
     public DbSet<ClaimPart> ClaimParts { get; set; }
     public DbSet<WorkOrder> WorkOrders { get; set; }
     public DbSet<Campaign> Campaigns { get; set; }
-    public DbSet<CampaignTarget> CampaignTargets { get; set; }
     public DbSet<CampaignVehicle> CampaignVehicles { get; set; }
     public DbSet<PartOrder> PartOrders { get; set; }
     public DbSet<PartOrderItem> PartOrderItems { get; set; }

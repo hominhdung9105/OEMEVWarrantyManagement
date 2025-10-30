@@ -29,5 +29,7 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public ICollection<PartOrder> CreatedPartOrders { get; set; } = new List<PartOrder>();
         [JsonIgnore]
         public ICollection<BackWarrantyClaim> CreatedFeedbacks { get; set; } = new List<BackWarrantyClaim>();
+        [JsonIgnore]
+        public ICollection<Campaign> CreatedCampaigns { get; set; } = new List<Campaign>();
     }
 }

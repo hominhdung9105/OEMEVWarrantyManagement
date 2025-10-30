@@ -18,11 +18,13 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.Property(c => c.StartDate);
             builder.Property(c => c.EndDate);
             builder.Property(c => c.Status);
+            builder.Property(c => c.CreatedAt);
 
-            //builder.HasOne(c => c.Organization)
-            //       .WithMany(o => o.Campaigns)
-            //       .HasForeignKey(c => c.OrgId)
-            //       .OnDelete(DeleteBehavior.Restrict);
+            // CreatedBy FK -> Employee
+            builder.HasOne(c => c.CreatedByEmployee)
+                   .WithMany(e => e.CreatedCampaigns)
+                   .HasForeignKey(c => c.CreatedBy)
+                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

@@ -17,5 +17,7 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<PagedResult<WorkOrderDetailDto>> GetWorkOrdersDetailByTechAsync(PaginationRequest request, string? type = null, string? status = null, DateTime? from = null, DateTime? to = null);
         Task<IEnumerable<WorkOrderDto>> GetWorkOrdersByClaimIdAsync(Guid claimId);
         Task<IEnumerable<AssignedTechDto>> GetAssignedTechsByClaimIdAsync(Guid claimId);
+        // New: unified method to get assigned technicians for any target (Warranty or Campaign)
+        Task<IEnumerable<AssignedTechDto>> GetAssignedTechsByTargetAsync(Guid targetId, WorkOrderTarget target);
     }
 }

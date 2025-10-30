@@ -365,5 +365,46 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             return result;
         }
+
+        // New: unified getter for assigned technicians by target
+        public async Task<IEnumerable<AssignedTechDto>> GetAssignedTechsByTargetAsync(Guid targetId, WorkOrderTarget target)
+        {
+            IEnumerable<WorkOrder> workOrders;
+
+            if (target == WorkOrderTarget.Warranty)
+            {
+                // Get both inspection and repair for warranty claims
+                var inspection = await _workOrderRepository.GetWorkOrders(targetId, WorkOrderType.Inspection.GetWorkOrderType(), WorkOrderTarget.Warranty.GetWorkOrderTarget());
+                var repair = await _workOrderRepository.GetWorkOrders(targetId, WorkOrderType.Repair.GetWorkOrderType(), WorkOrderTarget.Warranty.GetWorkOrderTarget());
+                workOrders = inspection.Concat(repair);
+            }
+            else if (target == WorkOrderTarget.Campaign)
+            {
+                // Only repair type for campaign vehicles
+                workOrders = await _workOrderRepository.GetWorkOrders(targetId, WorkOrderType.Repair.GetWorkOrderType(), WorkOrderTarget.Campaign.GetWorkOrderTarget());
+            }
+            else
+            {
+                throw new ApiException(ResponseError.InternalServerError);
+            }
+
+            var techIds = workOrders
+                .Where(wo => wo.AssignedTo != null && wo.Status == WorkOrderStatus.InProgress.GetWorkOrderStatus())
+                .Select(wo => wo.AssignedTo.Value)
+                .Distinct()
+                .ToList();
+
+            var result = new List<AssignedTechDto>();
+            foreach (var techId in techIds)
+            {
+                var emp = await _employeeRepository.GetEmployeeByIdAsync(techId);
+                if (emp != null)
+                {
+                    result.Add(new AssignedTechDto { UserId = emp.UserId, Name = emp.Name, Email = emp.Email });
+                }
+            }
+
+            return result;
+        }
     }
 }

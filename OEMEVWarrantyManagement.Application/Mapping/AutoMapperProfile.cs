@@ -8,7 +8,6 @@ namespace OEMEVWarrantyManagement.Application.Mapping
     {
         public AutoMapperProfile()
         {
-            //Warranty Request
             CreateMap<WarrantyClaim, WarrantyClaimDto>().ReverseMap();
             CreateMap<WarrantyClaim, RequestWarrantyClaim>().ReverseMap();
             CreateMap<WarrantyClaim, ResponseWarrantyClaim>().ReverseMap();
@@ -52,8 +51,15 @@ namespace OEMEVWarrantyManagement.Application.Mapping
             CreateMap<BackWarrantyClaim, BackWarrantyClaimDto>().ReverseMap();
             CreateMap<BackWarrantyClaim, CreateBackWarrantyClaimRequestDto>().ReverseMap();
 
+            CreateMap<Campaign, CampaignDto>().ReverseMap();
+            CreateMap<Campaign, RequestCampaignDto>().ReverseMap();
 
+            CreateMap<Customer, CustomerDto>().ReverseMap();
 
+            CreateMap<CampaignVehicle, CampaignVehicleDto>()
+                .ForMember(d => d.Vehicle, opt => opt.MapFrom(src => src.Vehicle))
+                .ForMember(d => d.Customer, opt => opt.MapFrom(src => src.Vehicle != null ? src.Vehicle.Customer : null))
+                .ReverseMap();
         }
     }
 }

@@ -23,8 +23,6 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         [JsonIgnore]
         public ICollection<WarrantyClaim> ServicedWarrantyClaims { get; set; } = new List<WarrantyClaim>();
         [JsonIgnore]
-        public ICollection<Campaign> Campaigns { get; set; } = new List<Campaign>();
-        [JsonIgnore]
         public ICollection<PartOrder> PartOrders { get; set; } = new List<PartOrder>();
     }
 }

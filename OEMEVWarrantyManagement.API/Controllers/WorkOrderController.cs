@@ -78,9 +78,32 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<IEnumerable<WorkOrderDto>>.Ok(result, "Create Work Orders successfully!!"));
         }
 
-        // New endpoint: get assigned technicians for a given warranty claim
+        // New endpoint: get assigned technicians for a given target (warranty claim or campaign vehicle)
+        [HttpGet("assigned-techs")]
+        [Authorize]
+        public async Task<IActionResult> GetAssignedTechnicians([FromQuery] string target, [FromQuery] string targetId)
+        {
+            if (string.IsNullOrWhiteSpace(target) || string.IsNullOrWhiteSpace(targetId))
+                throw new ApiException(ResponseError.InvalidJsonFormat);
+
+            if (!Guid.TryParse(targetId, out var id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
+
+            // Normalize target string to enum
+            WorkOrderTarget parsedTarget;
+            if (target.Equals(WorkOrderTarget.Warranty.GetWorkOrderTarget(), StringComparison.OrdinalIgnoreCase))
+                parsedTarget = WorkOrderTarget.Warranty;
+            else if (target.Equals(WorkOrderTarget.Campaign.GetWorkOrderTarget(), StringComparison.OrdinalIgnoreCase))
+                parsedTarget = WorkOrderTarget.Campaign;
+            else
+                throw new ApiException(ResponseError.InvalidJsonFormat);
+
+            var assignedTechs = await _workOrderService.GetAssignedTechsByTargetAsync(id, parsedTarget);
+            return Ok(ApiResponse<IEnumerable<AssignedTechDto>>.Ok(assignedTechs, "Get assigned technicians successfully"));
+        }
+
+        // Legacy endpoint: get assigned technicians for a given warranty claim
         [HttpGet("assigned-techs/{claimId}")]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> GetAssignedTechniciansByClaim(string claimId)
         {
             if (!Guid.TryParse(claimId, out var id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);

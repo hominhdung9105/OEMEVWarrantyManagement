@@ -38,5 +38,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Vehicle>> GetAllAsync()
+        {
+            return await _context.Vehicles.AsNoTracking().ToListAsync();
+        }
+
     }
 }

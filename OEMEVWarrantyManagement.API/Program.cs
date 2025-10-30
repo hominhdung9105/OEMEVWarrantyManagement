@@ -187,6 +187,12 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddScoped<IImageService, ImageService>();
             // Organization
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+            // Campaign
+            builder.Services.AddScoped<ICampaignRepository, CampaignRepository>();
+            builder.Services.AddScoped<ICampaignService, CampaignService>();
+            // Campaign Vehicle
+            builder.Services.AddScoped<ICampaignVehicleRepository, CampaignVehicleRepository>();
+            builder.Services.AddScoped<ICampaignVehicleService, CampaignVehicleService>();
 
             builder.Services.AddCors(options =>
             {

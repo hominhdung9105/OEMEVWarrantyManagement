@@ -175,7 +175,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 .RuleFor(c => c.StartDate, f => f.Date.Past(1))
                 .RuleFor(c => c.EndDate, f => f.Date.Future(1))
                 .RuleFor(c => c.Status, f => f.PickRandom(new[] { "DRAFT", "ACTIVE", "CLOSED" }))
-                .RuleFor(c => c.OrganizationOrgId, (f, u) => f.PickRandom(organizations).OrgId);
+                .RuleFor(c => c.CreatedBy, (f, u) => f.PickRandom(employees).UserId)
+                .RuleFor(c => c.CreatedAt, f => f.Date.Recent(120));
             var campaigns = campaignFaker.Generate(primaryRecordCount);
             context.Campaigns.AddRange(campaigns);
 
@@ -208,16 +209,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var vehicles = vehicleFaker.Generate(primaryRecordCount);
             context.Vehicles.AddRange(vehicles);
 
-            var campaignTargetFaker = new Faker<CampaignTarget>("en")
-                .RuleFor(ct => ct.CampaignTargetId, f => f.Database.Random.Guid())
-                .RuleFor(ct => ct.CampaignId, (f, u) => f.PickRandom(campaigns).CampaignId)
-                .RuleFor(ct => ct.TargetType, f => f.PickRandom(new[] { "Model", "YearRange", "VIN" }))
-                .RuleFor(ct => ct.TargetRefId, f => f.Database.Random.Guid())
-                .RuleFor(ct => ct.YearFrom, (f, ct) => ct.TargetType == "YearRange" ? f.Random.Int(2018, 2020) : (int?)null)
-                .RuleFor(ct => ct.YearTo, (f, ct) => ct.TargetType == "YearRange" ? f.Random.Int(2021, 2023) : (int?)null);
-            var campaignTargets = campaignTargetFaker.Generate(joinRecordCount);
-            context.CampaignTargets.AddRange(campaignTargets);
-
             var partOrderItemFaker = new Faker<PartOrderItem>("en")
                 .RuleFor(poi => poi.OrderItemId, f => f.Database.Random.Guid())
                 .RuleFor(poi => poi.OrderId, (f, u) => f.PickRandom(partOrders).OrderId)
@@ -234,11 +225,19 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 .RuleFor(cv => cv.CampaignVehicleId, f => f.Database.Random.Guid())
                 .RuleFor(cv => cv.CampaignId, (f, u) => f.PickRandom(campaigns).CampaignId)
                 .RuleFor(cv => cv.Vin, (f, u) => f.PickRandom(vehicles).Vin)
-                .RuleFor(cv => cv.NotifyToken, f => f.Random.AlphaNumeric(20))
-                .RuleFor(cv => cv.Status, f => f.PickRandom(new[] { "PENDING", "NOTIFIED", "CONFIRMED", "DONE", "CANCELLED" }))
-                .RuleFor(cv => cv.NotifiedAt, (f, cv) => cv.Status is "NOTIFIED" or "CONFIRMED" or "DONE" ? f.Date.Past(1) : (DateTime?)null)
-                .RuleFor(cv => cv.ConfirmedAt, (f, cv) => cv.Status is "CONFIRMED" or "DONE" ? f.Date.Recent() : (DateTime?)null)
-                .RuleFor(cv => cv.CompletedAt, (f, cv) => cv.Status == "DONE" ? f.Date.Recent() : (DateTime?)null);
+                .RuleFor(cv => cv.Status, f => f.PickRandom(new[] {
+                    CampaignVehicleStatus.WaitingForUnassignedRepair.GetCampaignVehicleStatus(),
+                    CampaignVehicleStatus.UnderRepair.GetCampaignVehicleStatus(),
+                    CampaignVehicleStatus.Repaired.GetCampaignVehicleStatus(),
+                    CampaignVehicleStatus.Done.GetCampaignVehicleStatus()
+                }))
+                .RuleFor(cv => cv.CreatedAt, f => f.Date.Recent(120))
+                .RuleFor(cv => cv.NewSerial, (f, cv) =>
+                    cv.Status == CampaignVehicleStatus.Repaired.GetCampaignVehicleStatus() ||
+                    cv.Status == CampaignVehicleStatus.Done.GetCampaignVehicleStatus() ? f.Random.AlphaNumeric(12) : null)
+                .RuleFor(cv => cv.CompletedAt, (f, cv) =>
+                    cv.Status == CampaignVehicleStatus.Repaired.GetCampaignVehicleStatus() ||
+                    cv.Status == CampaignVehicleStatus.Done.GetCampaignVehicleStatus() ? f.Date.Recent() : (DateTime?)null);
             var campaignVehicles = campaignVehicleFaker.Generate(joinRecordCount);
             context.CampaignVehicles.AddRange(campaignVehicles);
 
@@ -468,9 +467,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                     {
                         if (campaignVehiclesByVin.TryGetValue(a.Vin, out var list) && list.Count > 0)
                         {
-                            return f.PickRandom(list).CampaignVehicleId;
+                            return (Guid?)f.PickRandom(list).CampaignVehicleId;
                         }
-                        return f.PickRandom(campaignVehicles).CampaignVehicleId;
+                        return (Guid?)f.PickRandom(campaignVehicles).CampaignVehicleId;
                     }
                     return (Guid?)null;
                 })
@@ -503,7 +502,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                     {
                         return f.PickRandom(claims).ClaimId; // đúng: Warranty -> ClaimId
                     }
-                    return f.PickRandom(campaigns).CampaignId; // Campaign -> CampaignId
+                    return f.PickRandom(campaignVehicles).CampaignVehicleId; // Campaign -> CampaignVehicleId
                 });
             var workOrders = workOrderFaker.Generate(primaryRecordCount);
             context.WorkOrders.AddRange(workOrders);
