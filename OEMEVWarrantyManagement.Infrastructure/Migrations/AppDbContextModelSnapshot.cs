@@ -187,6 +187,33 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.ToTable("CampaignVehicles", (string)null);
                 });
 
+            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.CampaignVehicleReplacement", b =>
+                {
+                    b.Property<Guid>("CampaignVehicleReplacementId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CampaignVehicleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("NewSerial")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OldSerial")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ReplacedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("CampaignVehicleReplacementId");
+
+                    b.HasIndex("CampaignVehicleId");
+
+                    b.ToTable("CampaignVehicleReplacements", (string)null);
+                });
+
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.ClaimAttachment", b =>
                 {
                     b.Property<string>("AttachmentId")
@@ -741,6 +768,17 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Navigation("Vehicle");
                 });
 
+            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.CampaignVehicleReplacement", b =>
+                {
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.CampaignVehicle", "CampaignVehicle")
+                        .WithMany("Replacements")
+                        .HasForeignKey("CampaignVehicleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CampaignVehicle");
+                });
+
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.ClaimAttachment", b =>
                 {
                     b.HasOne("OEMEVWarrantyManagement.Domain.Entities.WarrantyClaim", "WarrantyClaim")
@@ -943,6 +981,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.Campaign", b =>
                 {
                     b.Navigation("CampaignVehicles");
+                });
+
+            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.CampaignVehicle", b =>
+                {
+                    b.Navigation("Replacements");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.Customer", b =>

@@ -11,5 +11,6 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<CampaignVehicle> AddRangeAsync(CampaignVehicle entity);
         Task<CampaignVehicle> UpdateAsync(CampaignVehicle entity);
         Task<(IEnumerable<CampaignVehicle> Data, int TotalRecords)> GetAllAsync(PaginationRequest request);
+        Task AddReplacementsAsync(IEnumerable<CampaignVehicleReplacement> replacements);
     }
 }

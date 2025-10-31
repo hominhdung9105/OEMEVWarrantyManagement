@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
@@ -39,8 +39,8 @@ namespace OEMEVWarrantyManagement.Application.Services
             // Validate VIN
             var vehicle = await _vehicleRepository.GetVehicleByVinAsync(request.Vin) ?? throw new ApiException(ResponseError.NotfoundVin);
 
-            // Check if vehicle model matches campaign part model
-            if (! await _vehiclePartRepository.ExistsByVinAndModelAsync(request.Vin, campaign.PartModel)) throw new ApiException(ResponseError.InternalServerError);
+            // Check if vehicle model matches campaign part model |TODO: để làm gì k biết
+            //if (! await _vehiclePartRepository.ExistsByVinAndModelAsync(request.Vin, campaign.PartModel)) throw new ApiException(ResponseError.InternalServerError);
 
             // Check duplicate
             var existing = await _campaignVehicleRepository.GetByCampaignAndVinsAsync(request.CampaignId, new[] { request.Vin });
@@ -152,10 +152,10 @@ namespace OEMEVWarrantyManagement.Application.Services
                         throw new ApiException(ResponseError.InvalidJsonFormat);
 
                     var now = DateTime.UtcNow;
-                    var matchedOlds = new HashSet<string>(installedParts.Select(p => p.SerialNumber));
 
                     // Process each replacement
                     var newSerials = new List<string>();
+                    var replacementEntities = new List<CampaignVehicleReplacement>();
                     foreach (var rep in request.Replacements)
                     {
                         if (string.IsNullOrWhiteSpace(rep.OldSerial) || string.IsNullOrWhiteSpace(rep.NewSerial))
@@ -184,11 +184,31 @@ namespace OEMEVWarrantyManagement.Application.Services
                         };
                         await _vehiclePartRepository.AddVehiclePartAsync(newVp);
 
+                        // add weak entity record
+                        replacementEntities.Add(new CampaignVehicleReplacement
+                        {
+                            CampaignVehicleReplacementId = Guid.NewGuid(),
+                            CampaignVehicleId = entity.CampaignVehicleId,
+                            OldSerial = rep.OldSerial,
+                            NewSerial = rep.NewSerial,
+                            ReplacedAt = now
+                        });
+
                         newSerials.Add(rep.NewSerial);
                     }
 
-                    // Persist campaign vehicle new serial list as JSON
-                    entity.NewSerial = JsonSerializer.Serialize(newSerials);
+                    if (replacementEntities.Count > 0)
+                    {
+                        await _campaignVehicleRepository.AddReplacementsAsync(replacementEntities);
+                        // update in-memory navigation for immediate response
+                        foreach (var r in replacementEntities)
+                        {
+                            entity.Replacements.Add(r);
+                        }
+                    }
+
+                    // Keep legacy NewSerial field updated for backward compatibility (stores JSON array)
+                    entity.NewSerial = JsonSerializer.Serialize(newSerials, (JsonSerializerOptions?)null);
                     entity.CompletedAt = now;
                     entity.Status = CampaignVehicleStatus.Repaired.GetCampaignVehicleStatus();
 
@@ -215,8 +235,10 @@ namespace OEMEVWarrantyManagement.Application.Services
                     throw new ApiException(ResponseError.InternalServerError);
             }
 
-            var updated = await _campaignVehicleRepository.UpdateAsync(entity);
-            return _mapper.Map<CampaignVehicleDto>(updated);
+            await _campaignVehicleRepository.UpdateAsync(entity);
+            // Return a fresh entity including navigations to ensure Replacements is populated
+            var refreshed = await _campaignVehicleRepository.GetByIdAsync(entity.CampaignVehicleId) ?? entity;
+            return _mapper.Map<CampaignVehicleDto>(refreshed);
         }
 
         // Assign technicians after creation when currently unassigned -> move to UnderRepair

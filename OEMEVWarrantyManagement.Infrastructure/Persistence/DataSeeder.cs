@@ -1,6 +1,7 @@
 ﻿using Bogus;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Share.Enums;
+using System.Text.Json;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Persistence
 {
@@ -295,6 +296,65 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             }
 
             context.VehicleParts.AddRange(vehicleParts);
+
+            // Seed replacements for campaign vehicles already in Repaired/Done status
+            var replacements = new List<CampaignVehicleReplacement>();
+            foreach (var cv in campaignVehicles.Where(cv => cv.Status == CampaignVehicleStatus.Repaired.GetCampaignVehicleStatus() || cv.Status == CampaignVehicleStatus.Done.GetCampaignVehicleStatus()))
+            {
+                var vinPartsInstalled = vehicleParts.Where(vp => vp.Vin == cv.Vin && vp.Status == VehiclePartStatus.Installed.GetVehiclePartStatus()).ToList();
+                if (vinPartsInstalled.Count == 0) continue;
+
+                var countToReplace = Math.Min(vinPartsInstalled.Count, rng2.Next(1, Math.Min(4, vinPartsInstalled.Count) + 1));
+                var picked = vinPartsInstalled.OrderBy(_ => rng2.Next()).Take(countToReplace).ToList();
+                var newSerials = new List<string>();
+                var replacedAt = cv.CompletedAt ?? DateTime.UtcNow.AddDays(-rng2.Next(1, 30));
+
+                foreach (var oldPart in picked)
+                {
+                    // mark old uninstalled
+                    if (oldPart.Status != VehiclePartStatus.UnInstalled.GetVehiclePartStatus())
+                    {
+                        oldPart.Status = VehiclePartStatus.UnInstalled.GetVehiclePartStatus();
+                        oldPart.UninstalledDate = replacedAt;
+                    }
+
+                    // create new installed part with same model
+                    var newSerial = $"SN{Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper()}";
+                    var newPart = new VehiclePart
+                    {
+                        VehiclePartId = Guid.NewGuid(),
+                        Vin = cv.Vin,
+                        Model = oldPart.Model,
+                        SerialNumber = newSerial,
+                        InstalledDate = replacedAt,
+                        UninstalledDate = DateTime.MinValue,
+                        Status = VehiclePartStatus.Installed.GetVehiclePartStatus()
+                    };
+                    vehicleParts.Add(newPart);
+                    context.VehicleParts.Add(newPart);
+
+                    // add replacement record
+                    replacements.Add(new CampaignVehicleReplacement
+                    {
+                        CampaignVehicleReplacementId = Guid.NewGuid(),
+                        CampaignVehicleId = cv.CampaignVehicleId,
+                        OldSerial = oldPart.SerialNumber,
+                        NewSerial = newSerial,
+                        ReplacedAt = replacedAt
+                    });
+
+                    newSerials.Add(newSerial);
+                }
+
+                // set legacy NewSerial as JSON list for compatibility
+                cv.NewSerial = JsonSerializer.Serialize(newSerials, (JsonSerializerOptions?)null);
+                cv.CompletedAt = cv.CompletedAt ?? replacedAt;
+            }
+
+            if (replacements.Count > 0)
+            {
+                context.CampaignVehicleReplacements.AddRange(replacements);
+            }
 
             var vehiclePolicyFaker = new Faker<VehicleWarrantyPolicy>("en")
                 .RuleFor(vp => vp.VehicleWarrantyId, f => f.Database.Random.Guid())

@@ -27,6 +27,7 @@ public class AppDbContext : DbContext
     public DbSet<PartOrderItem> PartOrderItems { get; set; }
     public DbSet<BackWarrantyClaim> BackWarrantyClaims { get; set; }
     public DbSet<Appointment> Appointments { get; set; }
+    public DbSet<CampaignVehicleReplacement> CampaignVehicleReplacements { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // apply tất cả configurations trong assembly

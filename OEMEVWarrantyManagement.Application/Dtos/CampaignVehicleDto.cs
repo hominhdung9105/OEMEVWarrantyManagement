@@ -22,6 +22,8 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string? Type { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        // New: expose detailed replacements (old/new)
+        public List<SerialReplacementDto>? Replacements { get; set; }
     }
 
     public class RequestAddCampaignVehicleDto

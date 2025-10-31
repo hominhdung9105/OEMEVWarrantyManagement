@@ -421,6 +421,27 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CampaignVehicleReplacements",
+                columns: table => new
+                {
+                    CampaignVehicleReplacementId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CampaignVehicleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    OldSerial = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    NewSerial = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ReplacedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CampaignVehicleReplacements", x => x.CampaignVehicleReplacementId);
+                    table.ForeignKey(
+                        name: "FK_CampaignVehicleReplacements_CampaignVehicles_CampaignVehicleId",
+                        column: x => x.CampaignVehicleId,
+                        principalTable: "CampaignVehicles",
+                        principalColumn: "CampaignVehicleId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "BackWarrantyClaim",
                 columns: table => new
                 {
@@ -525,6 +546,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 name: "IX_Campaigns_CreatedBy",
                 table: "Campaigns",
                 column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CampaignVehicleReplacements_CampaignVehicleId",
+                table: "CampaignVehicleReplacements",
+                column: "CampaignVehicleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CampaignVehicles_CampaignId",
@@ -651,6 +677,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "BackWarrantyClaim");
+
+            migrationBuilder.DropTable(
+                name: "CampaignVehicleReplacements");
 
             migrationBuilder.DropTable(
                 name: "ClaimAttachments");

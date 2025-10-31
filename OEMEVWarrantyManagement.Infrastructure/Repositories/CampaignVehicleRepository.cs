@@ -20,6 +20,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                 .Include(cv => cv.Vehicle)
                     .ThenInclude(v => v.Customer)
                 .Include(cv => cv.Campaign)
+                .Include(cv => cv.Replacements)
                 .Where(cv => cv.CampaignId == campaignId)
                 .OrderByDescending(cv => cv.CreatedAt);
             var total = await query.CountAsync();
@@ -33,6 +34,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                 .Include(cv => cv.Vehicle)
                     .ThenInclude(v => v.Customer)
                 .Include(cv => cv.Campaign)
+                .Include(cv => cv.Replacements)
                 .FirstOrDefaultAsync(x => x.CampaignVehicleId == id);
         }
 
@@ -63,10 +65,17 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                 .Include(cv => cv.Vehicle)
                     .ThenInclude(v => v.Customer)
                 .Include(cv => cv.Campaign)
+                .Include(cv => cv.Replacements)
                 .OrderByDescending(cv => cv.CreatedAt);
             var total = await query.CountAsync();
             var items = await query.Skip(request.Page * request.Size).Take(request.Size).ToListAsync();
             return (items, total);
+        }
+
+        public async Task AddReplacementsAsync(IEnumerable<CampaignVehicleReplacement> replacements)
+        {
+            await _context.CampaignVehicleReplacements.AddRangeAsync(replacements);
+            await _context.SaveChangesAsync();
         }
     }
 }

@@ -18,5 +18,8 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public Campaign Campaign { get; set; }
         [JsonIgnore]
         public Vehicle Vehicle { get; set; }
+        // Weak entity collection to store old/new serial pairs after repair
+        [JsonIgnore]
+        public ICollection<CampaignVehicleReplacement> Replacements { get; set; } = new List<CampaignVehicleReplacement>();
     }
 }

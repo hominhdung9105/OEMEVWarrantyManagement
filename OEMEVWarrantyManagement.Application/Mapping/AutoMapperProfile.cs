@@ -61,6 +61,7 @@ namespace OEMEVWarrantyManagement.Application.Mapping
                 .ForMember(d => d.Vehicle, opt => opt.MapFrom(src => src.Vehicle))
                 .ForMember(d => d.Customer, opt => opt.MapFrom(src => src.Vehicle != null ? src.Vehicle.Customer : null))
                 .ForMember(d => d.NewSerials, opt => opt.MapFrom(src => ParseNewSerials(src.NewSerial)))
+                .ForMember(d => d.Replacements, opt => opt.MapFrom(src => src.Replacements.Select(r => new SerialReplacementDto { OldSerial = r.OldSerial, NewSerial = r.NewSerial }).ToList()))
                 // map campaign fields
                 .ForMember(d => d.Title, opt => opt.MapFrom(src => src.Campaign != null ? src.Campaign.Title : null))
                 .ForMember(d => d.Description, opt => opt.MapFrom(src => src.Campaign != null ? src.Campaign.Description : null))
@@ -76,7 +77,7 @@ namespace OEMEVWarrantyManagement.Application.Mapping
             if (string.IsNullOrWhiteSpace(newSerialField)) return null;
 
             var trimmed = newSerialField.TrimStart();
-            if (trimmed.StartsWith("["))
+            if (trimmed.StartsWith("[") )
             {
                 try
                 {
