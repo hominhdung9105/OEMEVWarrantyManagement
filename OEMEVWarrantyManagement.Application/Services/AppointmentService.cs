@@ -20,28 +20,34 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IVehicleRepository _vehicleRepository;
         private readonly IMapper _mapper;
+        private readonly ICurrentUserService _currentUserService;
 
-        public AppointmentService(IAppointmentRepository appointmentRepository, IVehicleRepository vehicleRepository, IMapper mapper)
+
+        public AppointmentService(IAppointmentRepository appointmentRepository, IVehicleRepository vehicleRepository, IMapper mapper, ICurrentUserService currentUserService)
         {
             _appointmentRepository = appointmentRepository;
             _vehicleRepository = vehicleRepository;
             _mapper = mapper;
+            _currentUserService = currentUserService;
         }
 
         public async Task<IEnumerable<AvailableTimeslotDto>> GetAvailableTimeslotAsync(Guid orgId, DateOnly desiredDate)
         {
+            const int SlotCapacity = 2;
             var appointments = await _appointmentRepository.GetAppoinmentByOrgIdAndDateAsync(orgId, desiredDate);
 
-            var bookedSlots = appointments
-                .Select(a => a.Slot)
-                .ToList();
+            // Count existing bookings per slot
+            var bookedCounts = appointments
+                .GroupBy(a => a.Slot)
+                .ToDictionary(g => g.Key, g => g.Count());
 
             var allSlots = TimeSlotExtensions.GetAllSlots()
                 .Select(s => new { slot = (string)s.slot, time = (string)s.time })
                 .ToList();
 
+            // A slot is available if current bookings < SlotCapacity
             var available = allSlots
-                .Where(s => !bookedSlots.Contains(s.slot))
+                .Where(s => !bookedCounts.TryGetValue(s.slot, out var count) || count < SlotCapacity)
                 .Select(s => new AvailableTimeslotDto
                 {
                     Slot = s.slot,
@@ -53,18 +59,75 @@ namespace OEMEVWarrantyManagement.Application.Services
 
         public async Task<ResponseAppointmentDto> CreateAppointmentAsync(CreateAppointmentDto request)
         {
+            // Validate: chỉ cho đặt sau 3 ngày kể từ hôm nay (UTC)
+            var today = DateOnly.FromDateTime(DateTime.UtcNow.Date);
+            var minDate = today.AddDays(3);
+            if (request.AppointmentDate < minDate)
+            {
+                throw new ApiException(ResponseError.InvalidJsonFormat);
+            }
+
+            // Validate: Slot hợp lệ theo TimeSlotEnum
+            if (TimeSlotExtensions.FromString(request.Slot) is null)
+            {
+                throw new ApiException(ResponseError.InvalidJsonFormat);
+            }
+
             var vehicle = await _vehicleRepository.GetVehicleByVinAsync(request.Vin);
             if (vehicle == null)
             {
                 throw new ApiException(ResponseError.NotfoundVin);
             }
             request.CustomerId = vehicle.CustomerId;
-            request.Status = "Pending";
-            request.CreatedAt = DateTime.Now;
+            request.CreatedAt = DateTime.UtcNow;
+
+            // Re-check availability with capacity considered
+            var available = await GetAvailableTimeslotAsync(request.ServiceCenterId, request.AppointmentDate);
+            var isAvailable = available.Any(s => string.Equals(s.Slot, request.Slot, StringComparison.OrdinalIgnoreCase));
+            if (!isAvailable)
+            {
+                throw new ApiException(ResponseError.InvalidJsonFormat);
+            }
+
             var create = _mapper.Map<Appointment>(request);
             var createdAppointment = await _appointmentRepository.CreateAsync(create);
             var response = _mapper.Map<ResponseAppointmentDto>(createdAppointment);
             return response;
+        }
+
+        public async Task<ResponseAppointmentDto> CreateAppointmentByEvmAsync(CreateAppointmentDto request)
+        {
+            // Validate: chỉ cho đặt sau 3 ngày kể từ hôm nay (UTC)
+            var today = DateOnly.FromDateTime(DateTime.UtcNow.Date);
+            var minDate = today.AddDays(3);
+            if (request.AppointmentDate < minDate)
+            {
+                throw new ApiException(ResponseError.InvalidJsonFormat);
+            }
+
+            if (TimeSlotExtensions.FromString(request.Slot) is null)
+            {
+                throw new ApiException(ResponseError.InvalidJsonFormat);
+            }
+
+            var vehicle = await _vehicleRepository.GetVehicleByVinAsync(request.Vin) ?? throw new ApiException(ResponseError.NotfoundVin);
+            var creatorOrgId = await _currentUserService.GetOrgId();
+
+            // Re-check availability with capacity considered
+            var available = await GetAvailableTimeslotAsync(request.ServiceCenterId, request.AppointmentDate);
+            var isAvailable = available.Any(s => string.Equals(s.Slot, request.Slot, StringComparison.OrdinalIgnoreCase));
+            if (!isAvailable)
+            {
+                throw new ApiException(ResponseError.InvalidJsonFormat);
+            }
+
+            request.CustomerId = vehicle.CustomerId;
+            request.Status = request.ServiceCenterId == creatorOrgId ? "Scheduled" : "Pending";
+            request.CreatedAt = DateTime.UtcNow;
+
+            var entity = _mapper.Map<Appointment>(request);
+            var created = await _appointmentRepository.CreateAsync(entity);
+            return _mapper.Map<ResponseAppointmentDto>(created);
         }
 
         public async Task<AppointmentDto> SubmitAppointmentAsync(Guid appointmentId)

@@ -44,6 +44,15 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<ResponseAppointmentDto>.Ok(result, "Create Appointment Successfully!"));
         }
 
+        // Endpoint dành cho EVM Staff tạo appointment (gọi service riêng)
+        [HttpPost("evm")]
+        [Authorize(policy: "RequireEvmStaff")]
+        public async Task<IActionResult> CreateAppointmentByEvm(CreateAppointmentDto request)
+        {
+            var result = await _appointmentService.CreateAppointmentByEvmAsync(request);
+            return Ok(ApiResponse<ResponseAppointmentDto>.Ok(result, "Create Appointment (EVM) Successfully!"));
+        }
+
         [HttpPut("{appointmentId}")]
         [Authorize(policy: "RequireEvmStaff")]
         public async Task<IActionResult> SubmitAppointment(string appointmentId)

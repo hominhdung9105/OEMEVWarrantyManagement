@@ -13,6 +13,7 @@ namespace OEMEVWarrantyManagement.Application.IServices
     {
         Task<IEnumerable<AvailableTimeslotDto>> GetAvailableTimeslotAsync(Guid orgId, DateOnly desiredDate);
         Task<ResponseAppointmentDto> CreateAppointmentAsync(CreateAppointmentDto request);
+        Task<ResponseAppointmentDto> CreateAppointmentByEvmAsync(CreateAppointmentDto request);
         Task<AppointmentDto> SubmitAppointmentAsync(Guid appointmentId);
         Task<PagedResult<AppointmentDto>> GetPagedAsync(PaginationRequest request);
     }

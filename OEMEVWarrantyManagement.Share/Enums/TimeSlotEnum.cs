@@ -11,7 +11,7 @@ namespace OEMEVWarrantyManagement.Share.Enums
         Slot2,
         [Description("10:00")]
         Slot3,
-        [Description("13:00")]
+        [Description("11:00")]
         Slot4,
         [Description("14:00")]
         Slot5,
