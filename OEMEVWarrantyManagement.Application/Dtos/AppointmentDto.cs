@@ -11,7 +11,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public Guid AppointmentId { get; set; }
         public string AppointmentType { get; set; } // WARRANTY | CAMPAIGN
 
-        public Guid CustomerId { get; set; }
+        public string Vin { get; set; }
         public Guid ServiceCenterId { get; set; }
 
         public DateOnly AppointmentDate { get; set; }
@@ -19,6 +19,9 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public string? Note { get; set; }
+        public string? CustomerName { get; set; }
+        public string? CustomerPhoneNumber { get; set; }
+        public string? CustomerEmail { get; set; }
     }
 
     public class AvailableTimeslotDto
@@ -31,7 +34,6 @@ namespace OEMEVWarrantyManagement.Application.Dtos
     {
         public string AppointmentType { get; set; } // WARRANTY | CAMPAIGN
         public Guid ServiceCenterId { get; set; }
-        public Guid? CustomerId { get; set; }
         public DateOnly AppointmentDate { get; set; }
         public string? Status { get; set; }
         public string Slot { get; set; }
@@ -45,7 +47,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
     {
         public Guid AppointmentId { get; set; }
         public string AppointmentType { get; set; }
-        public Guid CustomerId { get; set; }
+        public string Vin { get; set; }
         public Guid ServiceCenterId { get; set; }
         public DateOnly AppointmentDate { get; set; }
         public string Slot { get; set; }
@@ -53,7 +55,6 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public DateTime CreatedAt { get; set; }
         public string? Note { get; set; }
 
-        public string Vin { get; set; }
         public string Model { get; set; }
         public int Year { get; set; }
     }

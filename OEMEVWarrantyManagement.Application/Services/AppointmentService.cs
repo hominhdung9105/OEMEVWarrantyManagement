@@ -21,14 +21,16 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IVehicleRepository _vehicleRepository;
         private readonly IMapper _mapper;
         private readonly ICurrentUserService _currentUserService;
+        private readonly ICustomerRepository _customerRepository;
 
 
-        public AppointmentService(IAppointmentRepository appointmentRepository, IVehicleRepository vehicleRepository, IMapper mapper, ICurrentUserService currentUserService)
+        public AppointmentService(IAppointmentRepository appointmentRepository, IVehicleRepository vehicleRepository, IMapper mapper, ICurrentUserService currentUserService, ICustomerRepository customerRepository)
         {
             _appointmentRepository = appointmentRepository;
             _vehicleRepository = vehicleRepository;
             _mapper = mapper;
             _currentUserService = currentUserService;
+            _customerRepository = customerRepository;
         }
 
         public async Task<IEnumerable<AvailableTimeslotDto>> GetAvailableTimeslotAsync(Guid orgId, DateOnly desiredDate)
@@ -73,12 +75,13 @@ namespace OEMEVWarrantyManagement.Application.Services
                 throw new ApiException(ResponseError.InvalidJsonFormat);
             }
 
+            // Validate vehicle exists by VIN
             var vehicle = await _vehicleRepository.GetVehicleByVinAsync(request.Vin);
             if (vehicle == null)
             {
                 throw new ApiException(ResponseError.NotfoundVin);
             }
-            request.CustomerId = vehicle.CustomerId;
+
             request.CreatedAt = DateTime.UtcNow;
 
             // Re-check availability with capacity considered
@@ -121,7 +124,6 @@ namespace OEMEVWarrantyManagement.Application.Services
                 throw new ApiException(ResponseError.InvalidJsonFormat);
             }
 
-            request.CustomerId = vehicle.CustomerId;
             request.Status = request.ServiceCenterId == creatorOrgId ? "Scheduled" : "Pending";
             request.CreatedAt = DateTime.UtcNow;
 
@@ -147,6 +149,19 @@ namespace OEMEVWarrantyManagement.Application.Services
             var (entities, totalRecords) = await _appointmentRepository.GetPagedAsync(request.Page, request.Size);
             var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
             var results = _mapper.Map<IEnumerable<AppointmentDto>>(entities);
+            
+            // Populate customer information from Vehicle
+            foreach (var appointment in results)
+            {
+                var entity = entities.FirstOrDefault(e => e.AppointmentId == appointment.AppointmentId);
+                if (entity?.Vehicle?.Customer != null)
+                {
+                    var customer = entity.Vehicle.Customer;
+                    appointment.CustomerName = customer.Name;
+                    appointment.CustomerPhoneNumber = customer.Phone;
+                    appointment.CustomerEmail = customer.Email;
+                }
+            }
 
             return new PagedResult<AppointmentDto>
             {

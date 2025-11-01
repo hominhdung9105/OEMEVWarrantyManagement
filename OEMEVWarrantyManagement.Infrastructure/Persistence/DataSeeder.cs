@@ -457,7 +457,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var appointmentFaker = new Faker<Appointment>("en")
                 .RuleFor(a => a.AppointmentId, f => f.Database.Random.Guid())
                 .RuleFor(a => a.AppointmentType, f => f.PickRandom(new[] { "WARRANTY", "CAMPAIGN" }))
-                .RuleFor(a => a.CustomerId, f => f.PickRandom(customers).CustomerId)
+                .RuleFor(a => a.Vin, f => f.PickRandom(vehicles).Vin)
                 .RuleFor(a => a.ServiceCenterId, f => f.PickRandom(scOrgs).OrgId)
                 .RuleFor(a => a.AppointmentDate, f => DateOnly.FromDateTime(f.Date.Soon(30)))
                 .RuleFor(a => a.Slot, f => f.PickRandom(new[] { "Slot1", "Slot2", "Slot3", "Slot4", "Slot5", "Slot6", "Slot7", "Slot8" }))

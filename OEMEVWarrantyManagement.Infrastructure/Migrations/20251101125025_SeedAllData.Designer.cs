@@ -12,7 +12,7 @@ using OEMEVWarrantyManagement.Infrastructure.Persistence;
 namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251029220600_SeedAllData")]
+    [Migration("20251101125025_SeedAllData")]
     partial class SeedAllData
     {
         /// <inheritdoc />
@@ -41,9 +41,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("CustomerId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
 
@@ -58,11 +55,15 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Vin")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("AppointmentId");
 
-                    b.HasIndex("CustomerId");
-
                     b.HasIndex("ServiceCenterId");
+
+                    b.HasIndex("Vin");
 
                     b.ToTable("Appointments", (string)null);
                 });
@@ -673,21 +674,21 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.Appointment", b =>
                 {
-                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Organization", "ServiceCenter")
                         .WithMany()
                         .HasForeignKey("ServiceCenterId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Customer");
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Vehicle", "Vehicle")
+                        .WithMany()
+                        .HasForeignKey("Vin")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("ServiceCenter");
+
+                    b.Navigation("Vehicle");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.BackWarrantyClaim", b =>

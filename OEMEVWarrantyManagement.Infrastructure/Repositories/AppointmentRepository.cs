@@ -45,7 +45,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         public async Task<(IEnumerable<Appointment> Data, int TotalRecords)> GetPagedAsync(int pageNumber, int pageSize)
         {
-            var query = _context.Appointments.AsQueryable();
+            var query = _context.Appointments
+                .Include(a => a.Vehicle)
+                    .ThenInclude(v => v.Customer)
+                .AsQueryable();
+            
             var totalRecords = await query.CountAsync();
 
             var data = await query

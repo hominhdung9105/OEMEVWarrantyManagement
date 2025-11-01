@@ -8,7 +8,8 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public Guid AppointmentId { get; set; }
         public string AppointmentType { get; set; } // WARRANTY | CAMPAIGN
 
-        public Guid CustomerId { get; set; }
+        // Replace CustomerId by Vin to link directly to Vehicle
+        public string Vin { get; set; }
         public Guid ServiceCenterId { get; set; }
 
         public DateOnly AppointmentDate { get; set; }
@@ -19,7 +20,7 @@ namespace OEMEVWarrantyManagement.Domain.Entities
 
         // Navigation properties
         [JsonIgnore]
-        public Customer Customer { get; set; }
+        public Vehicle Vehicle { get; set; }
         [JsonIgnore]
         public Organization ServiceCenter { get; set; }
     }

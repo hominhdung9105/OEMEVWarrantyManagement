@@ -162,37 +162,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Appointments",
-                columns: table => new
-                {
-                    AppointmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    AppointmentType = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ServiceCenterId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    AppointmentDate = table.Column<DateOnly>(type: "date", nullable: false),
-                    Slot = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Note = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Appointments", x => x.AppointmentId);
-                    table.ForeignKey(
-                        name: "FK_Appointments_Customers_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "Customers",
-                        principalColumn: "CustomerId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Appointments_Organizations_ServiceCenterId",
-                        column: x => x.ServiceCenterId,
-                        principalTable: "Organizations",
-                        principalColumn: "OrgId",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Vehicles",
                 columns: table => new
                 {
@@ -265,6 +234,37 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         column: x => x.AssignedTo,
                         principalTable: "Employee",
                         principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Appointments",
+                columns: table => new
+                {
+                    AppointmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AppointmentType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Vin = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ServiceCenterId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AppointmentDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    Slot = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Note = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Appointments", x => x.AppointmentId);
+                    table.ForeignKey(
+                        name: "FK_Appointments_Organizations_ServiceCenterId",
+                        column: x => x.ServiceCenterId,
+                        principalTable: "Organizations",
+                        principalColumn: "OrgId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Appointments_Vehicles_Vin",
+                        column: x => x.Vin,
+                        principalTable: "Vehicles",
+                        principalColumn: "Vin",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -502,14 +502,14 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Appointments_CustomerId",
-                table: "Appointments",
-                column: "CustomerId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Appointments_ServiceCenterId",
                 table: "Appointments",
                 column: "ServiceCenterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Appointments_Vin",
+                table: "Appointments",
+                column: "Vin");
 
             migrationBuilder.CreateIndex(
                 name: "IX_BackWarrantyClaim_CreatedByEmployeeId",
