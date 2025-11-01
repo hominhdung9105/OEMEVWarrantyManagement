@@ -18,7 +18,7 @@ namespace OEMEVWarrantyManagement.Application.IServices
         string? GetCategoryByModel(string model);
         Task<IEnumerable<PartDto>> UpdateEvmQuantityAsync(Guid orderId);
         
-        // New: Pagination like Vehicle
-        Task<PagedResult<PartDto>> GetPagedAsync(PaginationRequest request);
+        // Pagination + filters
+        Task<PagedResult<PartDto>> GetPagedAsync(PaginationRequest request, string? search = null, string? status = null);
     }
 }

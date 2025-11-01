@@ -22,11 +22,11 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> GetPaged([FromQuery] PaginationRequest request)
+        public async Task<IActionResult> GetPaged([FromQuery] PaginationRequest request, [FromQuery] string? search, [FromQuery] string? type, [FromQuery] string? status)
         {
             if (_currentUserService.GetRole() == RoleIdEnum.Technician.GetRoleId()) throw new UnauthorizedAccessException();
 
-            var result = await _campaignService.GetPagedAsync(request);
+            var result = await _campaignService.GetPagedAsync(request, search, type, status);
             if (_currentUserService.GetRole() == RoleIdEnum.ScStaff.GetRoleId())
             {
                 foreach (var campaign in result.Items)

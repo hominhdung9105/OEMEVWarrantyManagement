@@ -35,6 +35,22 @@ namespace OEMEVWarrantyManagement.Application.Services
                 throw new ApiException(ResponseError.InvalidPartModel);
             }
 
+            // Validate replacement model if provided and ensure same category
+            if (!string.IsNullOrWhiteSpace(request.ReplacementPartModel))
+            {
+                if (!PartModel.IsValidModel(request.ReplacementPartModel))
+                    throw new ApiException(ResponseError.InvalidPartModel);
+
+                var faultyCategory = PartModel.GetCategoryByModel(request.PartModel!);
+                var replacementCategory = PartModel.GetCategoryByModel(request.ReplacementPartModel!);
+
+                if (string.IsNullOrWhiteSpace(faultyCategory) || string.IsNullOrWhiteSpace(replacementCategory) || !string.Equals(faultyCategory, replacementCategory, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Use InvalidPartModel to avoid adding new enum for now
+                    throw new ApiException(ResponseError.InvalidPartModel);
+                }
+            }
+
             if (string.IsNullOrWhiteSpace(request.Type) || ! CampaignTypeExtensions.IsValidType(request.Type))
             {
                 throw new ApiException(ResponseError.InternalServerError);
@@ -45,6 +61,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             entity.CreatedBy = _currentUserService.GetUserId();
             entity.CreatedAt = DateTime.UtcNow;
             entity.Status = CampaignStatus.Active.GetCampaignStatus();
+            entity.ReplacementPartModel = request.ReplacementPartModel;
             
             entity.PendingVehicles = 0;
             entity.InProgressVehicles = 0;
@@ -82,17 +99,58 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<CampaignDto?>(entity);
         }
 
-        public async Task<PagedResult<CampaignDto>> GetPagedAsync(PaginationRequest request)
+        public async Task<PagedResult<CampaignDto>> GetPagedAsync(PaginationRequest request, string? search = null, string? type = null, string? status = null)
         {
-            var (data, totalRecords) = await _campaignRepository.GetPagedAsync(request);
-            var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
-            var items = _mapper.Map<IEnumerable<CampaignDto>>(data);
+            // If no filters, keep repository paging to avoid double pagination
+            if (string.IsNullOrWhiteSpace(search) && string.IsNullOrWhiteSpace(type) && string.IsNullOrWhiteSpace(status))
+            {
+                var (data, totalRecords) = await _campaignRepository.GetPagedAsync(request);
+                var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
+                var itemsNoFilter = _mapper.Map<IEnumerable<CampaignDto>>(data);
+                return new PagedResult<CampaignDto>
+                {
+                    PageNumber = request.Page,
+                    PageSize = request.Size,
+                    TotalRecords = totalRecords,
+                    TotalPages = totalPages,
+                    Items = itemsNoFilter
+                };
+            }
+
+            // Build DB-side query when filters are present
+            var query = _campaignRepository.Query();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.Trim();
+                query = query.Where(c => c.Title != null && c.Title.Contains(s));
+            }
+
+            if (!string.IsNullOrWhiteSpace(type))
+            {
+                query = query.Where(c => !string.IsNullOrWhiteSpace(c.Type) && c.Type == type);
+            }
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                query = query.Where(c => !string.IsNullOrWhiteSpace(c.Status) && c.Status == status);
+            }
+
+            var filteredTotal = query.Count();
+            var pageData = query
+                .OrderByDescending(c => c.CreatedAt)
+                .Skip(request.Page * request.Size)
+                .Take(request.Size)
+                .ToList();
+
+            var items = _mapper.Map<IEnumerable<CampaignDto>>(pageData);
+
             return new PagedResult<CampaignDto>
             {
                 PageNumber = request.Page,
                 PageSize = request.Size,
-                TotalRecords = totalRecords,
-                TotalPages = totalPages,
+                TotalRecords = filteredTotal,
+                TotalPages = (int)Math.Ceiling(filteredTotal / (double)request.Size),
                 Items = items
             };
         }

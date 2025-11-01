@@ -55,42 +55,6 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<PartOrderDto>(entity);
         }
 
-        //public async Task<IEnumerable<ResponsePartOrderDto>> GetAllPartOrderAsync()
-        //{
-        //    var orgId = await _currentUserService.GetOrgId();
-        //    var (entities, totalRecords) = await _partOrderRepository.GetPagedPartOrderByOrdIdAsync(request.Page, request.Size, orgId);
-        //    var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
-
-        //    var entities = await _partOrderRepository.GetAll();
-        //    var result = _mapper.Map<IEnumerable<ResponsePartOrderDto>>(entities);
-        //    foreach (var entity in result)
-        //    {
-        //        var partOrderItems = await _partOrderItemRepository.GetAllByOrderIdAsync(entity.OrderId);
-        //        entity.PartOrderItems = _mapper.Map<List<ResponsePartOrderItemDto>>(partOrderItems);
-        //        entity.TotalItems = partOrderItems.Count();
-        //        var creator = await _employeeRepository.GetEmployeeByIdAsync(entity.CreatedBy);
-        //        var organization = await _organizationRepository.GetOrganizationById(entity.ServiceCenterId);
-        //        entity.ServiceCenterName = organization.Name;
-        //        entity.CreatedByName = creator.Name;
-        //        foreach (var item in entity.PartOrderItems)
-        //        {
-        //            var part = await _partRepository.GetPartsAsync(item.Model, entity.ServiceCenterId);
-        //            if (part != null)
-        //            {
-        //                item.Name = part.Name;
-        //                item.Model = part.Model;
-        //                item.ScStock = part.StockQuantity;
-        //            }
-        //            var oemPart = await _partRepository.GetPartsAsync(item.Model, orgId);
-        //            if (oemPart != null)
-        //            {
-        //                item.OemStock = oemPart.StockQuantity;
-        //            }
-        //        }
-        //    }
-        //    return result;
-        //}
-
         public async Task<bool> UpdateExpectedDateAsync(Guid id, UpdateExpectedDateDto dto)
         {
 
@@ -106,18 +70,11 @@ namespace OEMEVWarrantyManagement.Application.Services
         }
 
 
-        //public async Task<PartOrderDto> UpdateStatusAsync(Guid id)
-        //{
-        //    var entity = await _partOrderRepository.GetPartOrderByIdAsync(id);
-        //    entity.Status = "shipped";//TODO????
-        //    var update = await _partOrderRepository.UpdateAsync(entity);
-        //    return _mapper.Map<PartOrderDto>(update);
-        //}
-
         public async Task<PagedResult<ResponsePartOrderForScStaffDto>> GetPagedPartOrderForScStaffAsync(PaginationRequest request)
         {
             var orgId = await _currentUserService.GetOrgId();
             var (entities, totalRecords) = await _partOrderRepository.GetPagedPartOrderByOrdIdAsync(request.Page, request.Size, orgId);
+            
             var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
 
             var result = _mapper.Map<IEnumerable<ResponsePartOrderForScStaffDto>>(entities);
@@ -150,34 +107,10 @@ namespace OEMEVWarrantyManagement.Application.Services
             };
 
         }
-        //public async Task<PartOrderDto> UpdateStatusToConfirmAsync(Guid orderId)
+        //public async Task<PartOrderDto> UpdateStatusAsync(Guid id)
         //{
-        //    var entity = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
-        //    if (entity.Status == "Pending" || entity.Status == "Waiting")
-        //    {
-        //        entity.Status = "Confirm";
-        //    }
-        //    var update = await _partOrderRepository.UpdateAsync(entity);
-        //    return _mapper.Map<PartOrderDto>(update);
-        //}
-
-        //public async Task<PartOrderDto> UpdateStatusToDeliveryAsync(Guid orderId)
-        //{
-        //    var entity = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
-        //    if (entity.Status == "Confirm")
-        //    {
-        //        entity.Status = "Delivery";
-        //    }
-        //    var update = await _partOrderRepository.UpdateAsync(entity);
-        //    return _mapper.Map<PartOrderDto>(update);
-        //}
-        //public async Task<PartOrderDto> UpdateStatusDeliverdAsync(Guid orderId)
-        //{
-        //    var entity = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
-        //    if(entity.Status == "Delivery")
-        //    {
-        //        entity.Status = "DoneDelivered";
-        //    }
+        //    var entity = await _partOrderRepository.GetPartOrderByIdAsync(id);
+        //    entity.Status = "shipped";//TODO????
         //    var update = await _partOrderRepository.UpdateAsync(entity);
         //    return _mapper.Map<PartOrderDto>(update);
         //}
@@ -197,25 +130,37 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<PartOrderDto>(update);
         }
 
-        //public async Task<PartOrderDto> UpdateStatusDeliverdAndRepairAsync(Guid orderId)
-        //{
-        //    var entity = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
-        //    if (entity.Status == "Confirm")
-        //    {
-        //        entity.Status = "Delivery";
-        //    }
-        //    var update = await _partOrderRepository.UpdateAsync(entity);
-        //    return _mapper.Map<PartOrderDto>(update);
-        //}
-
-        public async Task<PagedResult<ResponsePartOrderDto>> GetPagedPartOrderForEvmStaffAsync(PaginationRequest request)
+        public async Task<PagedResult<ResponsePartOrderDto>> GetPagedPartOrderForEvmStaffAsync(PaginationRequest request, string? search = null)
         {
             var orgId = await _currentUserService.GetOrgId();
-            var (entities, totalRecords) = await _partOrderRepository.GetAllPagedPartOrderAsync(request.Page, request.Size);
-            var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
-            //var entities = await _partOrderRepository.GetAll();
 
-            var result = _mapper.Map<IEnumerable<ResponsePartOrderDto>>(entities);
+            // Load all non-done part orders, then filter and paginate once to avoid double filtering
+            var allEntities = (await _partOrderRepository.GetAll()).OrderBy(po => po.RequestDate).ToList();
+
+            // Build org name cache for search
+            var orgNameById = new Dictionary<Guid, string>();
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var distinctOrgIds = allEntities.Select(e => e.ServiceCenterId).Distinct().ToList();
+                foreach (var oid in distinctOrgIds)
+                {
+                    var org = await _organizationRepository.GetOrganizationById(oid);
+                    orgNameById[oid] = org?.Name ?? string.Empty;
+                }
+
+                var s = search.Trim();
+                allEntities = allEntities
+                    .Where(e => orgNameById.TryGetValue(e.ServiceCenterId, out var name) && !string.IsNullOrWhiteSpace(name) && name.Contains(s, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            var filteredTotal = allEntities.Count;
+            var pageEntities = allEntities
+                .Skip(request.Page * request.Size)
+                .Take(request.Size)
+                .ToList();
+
+            var result = _mapper.Map<IEnumerable<ResponsePartOrderDto>>(pageEntities);
             foreach (var entity in result)
             {
                 var partOrderItems = await _partOrderItemRepository.GetAllByOrderIdAsync(entity.OrderId);
@@ -241,12 +186,13 @@ namespace OEMEVWarrantyManagement.Application.Services
                     }
                 }
             }
+
             return new PagedResult<ResponsePartOrderDto>
             {
                 PageNumber = request.Page,
                 PageSize = request.Size,
-                TotalRecords = totalRecords,
-                TotalPages = totalPages,
+                TotalRecords = filteredTotal,
+                TotalPages = (int)Math.Ceiling(filteredTotal / (double)request.Size),
                 Items = result
             };
         }

@@ -33,14 +33,14 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<PagedResult<CampaignVehicleDto>>.Ok(result, "Get campaign vehicles successfully!"));
         }
 
-        // New: get all campaign vehicles (across campaigns) with pagination
+        // Unified GET with optional filters via query string: search (vin/title/customer), type, status
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> GetAll([FromQuery] PaginationRequest request)
+        public async Task<IActionResult> GetAll([FromQuery] PaginationRequest request, [FromQuery] string? search, [FromQuery] string? type, [FromQuery] string? status)
         {
             if (_currentUserService.GetRole() == RoleIdEnum.Technician.GetRoleId()) throw new UnauthorizedAccessException();
 
-            var result = await _service.GetAllAsync(request);
+            var result = await _service.GetAllAsync(request, search, type, status);
             return Ok(ApiResponse<PagedResult<CampaignVehicleDto>>.Ok(result, "Get all campaign vehicles successfully!"));
         }
 

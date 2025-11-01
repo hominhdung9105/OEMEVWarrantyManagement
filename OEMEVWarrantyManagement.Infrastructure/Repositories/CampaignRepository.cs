@@ -50,5 +50,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             await _context.SaveChangesAsync();
             return campaign;
         }
+
+        public IQueryable<Campaign> Query()
+        {
+            return _context.Campaigns.AsNoTracking();
+        }
     }
 }

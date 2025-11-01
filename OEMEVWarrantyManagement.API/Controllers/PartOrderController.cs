@@ -6,6 +6,7 @@ using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
 using OEMEVWarrantyManagement.Share.Models.Response;
+using System.Security.Claims;
 
 namespace OEMEVWarrantyManagement.API.Controllers
 {
@@ -15,48 +16,33 @@ namespace OEMEVWarrantyManagement.API.Controllers
     {
         private readonly IPartOrderService _partOrderService;
         private readonly IPartService _partService;
-        public PartOrderController(IPartOrderService partOrderService, IPartService partService)
+        private readonly ICurrentUserService _currentUserService;
+        public PartOrderController(IPartOrderService partOrderService, IPartService partService, ICurrentUserService currentUserService)
         {
             _partOrderService = partOrderService;
             _partService = partService;
+            _currentUserService = currentUserService;
         }
 
-
-        //Không dùng
-        //[HttpPost]
-        //[Authorize(policy: "RequireScStaff")]
-        //public async Task<IActionResult> Create()
-        //{
-        //    var result = await _partOrderService.CreateAsync();
-        //    return Ok(ApiResponse<RequestPartOrderDto>.Ok(result, "Create Part order Successfully!"));
-        //}
-
-        [HttpGet("scstaff")]
-        [Authorize(policy: "RequireScStaff")]
-        public async Task<IActionResult> GetByScStaff([FromQuery] PaginationRequest request)
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> Get([FromQuery] PaginationRequest request, [FromQuery] string? search)
         {
-            var resultForScStaff = await _partOrderService.GetPagedPartOrderForScStaffAsync(request);
-            return Ok(ApiResponse<object>.Ok(resultForScStaff, "Get all By Staff Successfully"));
+            var role = _currentUserService.GetRole();
+
+            if (role == RoleIdEnum.ScStaff.GetRoleId())
+            {
+                var result = await _partOrderService.GetPagedPartOrderForScStaffAsync(request);
+                return Ok(ApiResponse<object>.Ok(result, "Get all By Staff Successfully"));
+            }
+            else if (role == RoleIdEnum.EvmStaff.GetRoleId() || role == RoleIdEnum.Admin.GetRoleId())
+            {
+                var result = await _partOrderService.GetPagedPartOrderForEvmStaffAsync(request, search);
+                return Ok(ApiResponse<object>.Ok(result, "Get all Successfully"));
+            }
+
+            return Unauthorized(ApiResponse<object>.Fail(ResponseError.Forbidden));
         }
-
-        [HttpGet("evmstaff")]
-        [Authorize(policy: "RequireEvmStaff")]
-        public async Task<IActionResult> GetByEvmStaff([FromQuery] PaginationRequest request)
-        {
-            var result = await _partOrderService.GetPagedPartOrderForEvmStaffAsync(request);
-            return Ok(ApiResponse<object>.Ok(result, "Get all Successfully"));
-        }
-
-        //KHONG DÙNG
-        //[HttpPut("{orderID}/received")]
-        //[Authorize(policy: "RequireScStaff")]
-        //public async Task<IActionResult> ReceivedPart(string orderID)
-        //{
-        //    var update = await _partOrderService.UpdateStatusAsync(Guid.Parse(orderID));
-        //    var _ = await _partService.UpdateQuantityAsync(Guid.Parse(orderID));
-        //    return Ok(ApiResponse<object>.Ok(update, "update status successfully"));
-        //}
-
 
         [HttpPut("{orderID}/expected-date")]
         [Authorize(policy: "RequireEvmStaff")]

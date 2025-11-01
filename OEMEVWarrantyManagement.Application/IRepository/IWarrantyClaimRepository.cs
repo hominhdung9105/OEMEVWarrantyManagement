@@ -6,7 +6,6 @@ namespace OEMEVWarrantyManagement.Application.IRepository
 {
     public interface IWarrantyClaimRepository
     {
-        Task<IEnumerable<WarrantyClaim>> GetAllWarrantyClaimAsync();
         Task<(IEnumerable<WarrantyClaim> Data, int TotalRecords)> GetAllWarrantyClaimAsync(PaginationRequest request);
         Task<IEnumerable<WarrantyClaim>> GetAllWarrantyClaimByOrgIdAsync(Guid orgId);
         Task<(IEnumerable<WarrantyClaim> Data, int TotalRecords)> GetWarrantyClaimsByVinAsync(string vin, PaginationRequest request);

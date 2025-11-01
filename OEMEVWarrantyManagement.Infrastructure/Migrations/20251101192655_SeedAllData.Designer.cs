@@ -12,7 +12,7 @@ using OEMEVWarrantyManagement.Infrastructure.Persistence;
 namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251030172504_SeedAllData")]
+    [Migration("20251101192655_SeedAllData")]
     partial class SeedAllData
     {
         /// <inheritdoc />
@@ -129,6 +129,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
                     b.Property<int>("PendingVehicles")
                         .HasColumnType("int");
+
+                    b.Property<string>("ReplacementPartModel")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");

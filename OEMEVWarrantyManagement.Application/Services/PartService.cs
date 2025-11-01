@@ -70,36 +70,89 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<IEnumerable<PartDto>>(parts);
         }
 
-        public async Task<PagedResult<PartDto>> GetPagedAsync(PaginationRequest request)
+        public async Task<PagedResult<PartDto>> GetPagedAsync(PaginationRequest request, string? search = null, string? status = null)
         {
             var orgId = await _currentUserService.GetOrgId();
-            var (entities, totalRecords) = await _partRepository.GetPagedPartAsync(request.Page, request.Size, orgId);
-            var results = _mapper.Map<IEnumerable<PartDto>>(entities);
 
-            foreach (var part in results)
+            // If no filters, use repository-level paging as-is
+            if (string.IsNullOrWhiteSpace(search) && string.IsNullOrWhiteSpace(status))
             {
-                if (part.StockQuantity > 0 && part.StockQuantity < 10)
+                var (entities, totalRecords) = await _partRepository.GetPagedPartAsync(request.Page, request.Size, orgId);
+                var pageItems = _mapper.Map<IEnumerable<PartDto>>(entities).ToList();
+
+                // compute status for paged items
+                foreach (var part in pageItems)
                 {
-                    part.Status = PartStatus.LowStock.GetPartStatus();
+                    if (part.StockQuantity > 0 && part.StockQuantity < 10)
+                        part.Status = PartStatus.LowStock.GetPartStatus();
+                    else if (part.StockQuantity == 0)
+                        part.Status = PartStatus.OutOfStock.GetPartStatus();
+                    else
+                        part.Status = PartStatus.InStock.GetPartStatus();
                 }
-                else if (part.StockQuantity == 0)
+
+                var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
+                return new PagedResult<PartDto>
                 {
-                    part.Status = PartStatus.OutOfStock.GetPartStatus();
+                    PageNumber = request.Page,
+                    PageSize = request.Size,
+                    TotalRecords = totalRecords,
+                    TotalPages = totalPages,
+                    Items = pageItems
+                };
+            }
+
+            // With filters: build query first, then apply pagination once
+            var query = _partRepository.QueryByOrgId(orgId);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.Trim();
+                query = query.Where(p => p.Model.Contains(s) || p.Category.Contains(s));
+            }
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                var st = status.Trim();
+                if (string.Equals(st, PartStatus.OutOfStock.GetPartStatus(), StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(p => p.StockQuantity == 0);
                 }
-                else
+                else if (string.Equals(st, PartStatus.LowStock.GetPartStatus(), StringComparison.OrdinalIgnoreCase))
                 {
-                    part.Status = PartStatus.InStock.GetPartStatus();
+                    query = query.Where(p => p.StockQuantity > 0 && p.StockQuantity < 10);
+                }
+                else if (string.Equals(st, PartStatus.InStock.GetPartStatus(), StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(p => p.StockQuantity >= 10);
                 }
             }
 
-            var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
+            var filteredTotal = query.Count();
+            var entitiesFiltered = query
+                .OrderBy(p => p.Model)
+                .Skip(request.Page * request.Size)
+                .Take(request.Size)
+                .ToList();
+
+            var items = _mapper.Map<IEnumerable<PartDto>>(entitiesFiltered).ToList();
+            foreach (var part in items)
+            {
+                if (part.StockQuantity > 0 && part.StockQuantity < 10)
+                    part.Status = PartStatus.LowStock.GetPartStatus();
+                else if (part.StockQuantity == 0)
+                    part.Status = PartStatus.OutOfStock.GetPartStatus();
+                else
+                    part.Status = PartStatus.InStock.GetPartStatus();
+            }
+
             return new PagedResult<PartDto>
             {
                 PageNumber = request.Page,
                 PageSize = request.Size,
-                TotalRecords = totalRecords,
-                TotalPages = totalPages,
-                Items = results
+                TotalRecords = filteredTotal,
+                TotalPages = (int)Math.Ceiling(filteredTotal / (double)request.Size),
+                Items = items
             };
         }
 

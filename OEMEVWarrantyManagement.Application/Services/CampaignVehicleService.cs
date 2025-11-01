@@ -125,6 +125,56 @@ namespace OEMEVWarrantyManagement.Application.Services
             };
         }
 
+        public async Task<PagedResult<CampaignVehicleDto>> GetAllAsync(PaginationRequest request, string? search = null, string? type = null, string? status = null)
+        {
+            // If no filters, keep repository paging
+            if (string.IsNullOrWhiteSpace(search) && string.IsNullOrWhiteSpace(type) && string.IsNullOrWhiteSpace(status))
+            {
+                return await GetAllAsync(request);
+            }
+
+            // Build DB-side query, apply filters, then paginate once
+            var query = _campaignVehicleRepository.Query();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.Trim();
+                query = query.Where(cv =>
+                    (cv.Campaign != null && cv.Campaign.Title != null && cv.Campaign.Title.Contains(s)) ||
+                    (cv.Vin != null && cv.Vin.Contains(s)) ||
+                    (cv.Vehicle != null && cv.Vehicle.Customer != null && cv.Vehicle.Customer.Name != null && cv.Vehicle.Customer.Name.Contains(s))
+                );
+            }
+
+            if (!string.IsNullOrWhiteSpace(type))
+            {
+                query = query.Where(cv => cv.Campaign != null && cv.Campaign.Type == type);
+            }
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                query = query.Where(cv => cv.Status == status);
+            }
+
+            var totalRecords = query.Count();
+            var data = query
+                .OrderByDescending(cv => cv.CreatedAt)
+                .Skip(request.Page * request.Size)
+                .Take(request.Size)
+                .ToList();
+
+            var items = _mapper.Map<IEnumerable<CampaignVehicleDto>>(data);
+
+            return new PagedResult<CampaignVehicleDto>
+            {
+                PageNumber = request.Page,
+                PageSize = request.Size,
+                TotalRecords = totalRecords,
+                TotalPages = (int)Math.Ceiling(totalRecords / (double)request.Size),
+                Items = items
+            };
+        }
+
         public async Task<CampaignVehicleDto> UpdateStatusAsync(UpdateCampaignVehicleStatusDto request)
         {
             var entity = await _campaignVehicleRepository.GetByIdAsync(request.CampaignVehicleId) ?? throw new ApiException(ResponseError.InternalServerError);

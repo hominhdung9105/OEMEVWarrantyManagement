@@ -127,6 +127,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<int>("PendingVehicles")
                         .HasColumnType("int");
 
+                    b.Property<string>("ReplacementPartModel")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 

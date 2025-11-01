@@ -22,9 +22,9 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpGet]
         [Authorize(policy: "RequireScStaffOrEvmStaff")]
-        public async Task<IActionResult> GetAllPart([FromQuery] PaginationRequest request)
+        public async Task<IActionResult> GetAllPart([FromQuery] PaginationRequest request, [FromQuery] string? search, [FromQuery] string? status)
         {
-            var result = await _partService.GetPagedAsync(request);
+            var result = await _partService.GetPagedAsync(request, search, status);
             return Ok(ApiResponse<object>.Ok(result, "Get all part Successfully!"));
         }
 
@@ -47,14 +47,14 @@ namespace OEMEVWarrantyManagement.API.Controllers
         //}
 
         [HttpGet("category")]
-        public IActionResult GetPartCategory() // TODO - chua test
+        public IActionResult GetCategory()
         {
             var entities = _partService.GetPartCategories();
             return Ok(ApiResponse<object>.Ok(entities, "Get part categories successfully!"));
         }
 
-        [HttpGet("model")]
-        public IActionResult GetPartCategory([FromQuery] string category) // TODO - chua test
+        [HttpGet("model")] // TODO - thêm s
+        public IActionResult GetModelsByCategory([FromQuery] string category)
         {
             var entities = _partService.GetPartModels(category);
             return Ok(ApiResponse<object>.Ok(entities, "Get part categories successfully!"));

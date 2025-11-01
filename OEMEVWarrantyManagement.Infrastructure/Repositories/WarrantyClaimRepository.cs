@@ -29,17 +29,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return true;
         }
 
-        public async Task<IEnumerable<WarrantyClaim>> GetAllWarrantyClaimAsync()
-        {
-            return await _context.WarrantyClaims
-                .Where(wc => wc.Status != WarrantyClaimStatus.DoneWarranty.ToString())//TODO: Chưa sửa thành GetWarrantyClaimStatus()
-                .OrderBy(wc => wc.CreatedDate)
-                .ToListAsync();
-        }
-
         public async Task<(IEnumerable<WarrantyClaim> Data, int TotalRecords)> GetAllWarrantyClaimAsync(PaginationRequest request)
         {
-            var query = _context.WarrantyClaims.Where(wc => wc.Status != WarrantyClaimStatus.DoneWarranty.ToString());
+            var query = _context.WarrantyClaims.Where(wc => wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus());
             var totalRecords = await query.CountAsync();
 
             var data = await query
@@ -54,7 +46,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         public async Task<IEnumerable<WarrantyClaim>> GetAllWarrantyClaimByOrgIdAsync(Guid orgId)
         {
             return await _context.WarrantyClaims
-                .Where(wc => wc.ServiceCenterId == orgId && wc.Status != WarrantyClaimStatus.DoneWarranty.ToString())
+                .Where(wc => wc.ServiceCenterId == orgId && wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus())
                 .OrderBy(wc => wc.CreatedDate)
                 .ToListAsync();
         }
@@ -67,7 +59,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         public async Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimsByVinAsync(string vin, string staffId)
         {
             return await _context.WarrantyClaims
-                .Where(wc => wc.Vin == vin && wc.CreatedBy == Guid.Parse(staffId) && wc.Status != WarrantyClaimStatus.DoneWarranty.ToString())
+                .Where(wc => wc.Vin == vin && wc.CreatedBy == Guid.Parse(staffId) && wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus())
                 .OrderBy(wc => wc.CreatedDate)
                 .ToListAsync();
         }
@@ -75,7 +67,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         public async Task<(IEnumerable<WarrantyClaim> Data, int TotalRecords)> GetWarrantyClaimsByVinAsync(string vin, string staffId, PaginationRequest request)
         {
             var query = _context.WarrantyClaims
-                .Where(wc => wc.Vin == vin && wc.CreatedBy == Guid.Parse(staffId) && wc.Status != WarrantyClaimStatus.DoneWarranty.ToString());
+                .Where(wc => wc.Vin == vin && wc.CreatedBy == Guid.Parse(staffId) && wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus());
 
             var totalRecords = await query.CountAsync();
 
@@ -91,14 +83,14 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         public async Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimsByVinAsync(string vin)
         {
             return await _context.WarrantyClaims
-                .Where(wc => wc.Vin == vin && wc.Status != WarrantyClaimStatus.DoneWarranty.ToString())
+                .Where(wc => wc.Vin == vin && wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus())
                 .OrderBy(wc => wc.CreatedDate)
                 .ToListAsync();
         }
 
         public async Task<(IEnumerable<WarrantyClaim> Data, int TotalRecords)> GetWarrantyClaimsByVinAsync(string vin, PaginationRequest request)
         {
-            var query = _context.WarrantyClaims.Where(wc => wc.Vin == vin && wc.Status != WarrantyClaimStatus.DoneWarranty.ToString());
+            var query = _context.WarrantyClaims.Where(wc => wc.Vin == vin && wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus());
             var totalRecords = await query.CountAsync();
 
             var data = await query
@@ -120,7 +112,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         public async Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimsByStatusAndOrgIdAsync(string status, Guid orgId)
         {
             return await _context.WarrantyClaims
-                .Where(wc => wc.Status == status && wc.ServiceCenterId == orgId && wc.Status != WarrantyClaimStatus.DoneWarranty.ToString())
+                .Where(wc => wc.Status == status && wc.ServiceCenterId == orgId && wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus())
                 .OrderBy(wc => wc.CreatedDate)
                 .ToListAsync();
         }
@@ -128,7 +120,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         public async Task<(IEnumerable<WarrantyClaim> Data, int TotalRecords)> GetWarrantyClaimsByStatusAndOrgIdAsync(string status, Guid orgId, PaginationRequest request)
         {
             var query = _context.WarrantyClaims
-                .Where(wc => wc.Status == status && wc.ServiceCenterId == orgId && wc.Status != WarrantyClaimStatus.DoneWarranty.ToString());
+                .Where(wc => wc.Status == status && wc.ServiceCenterId == orgId && wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus());
 
             var totalRecords = await query.CountAsync();
 
@@ -144,14 +136,14 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         public async Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimByStatusAsync(string status)
         {
             return await _context.WarrantyClaims
-                .Where(wc => wc.Status == status && wc.Status != WarrantyClaimStatus.DoneWarranty.ToString())
+                .Where(wc => wc.Status == status && wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus())
                 .OrderBy(wc => wc.CreatedDate)
                 .ToListAsync();
         }
 
         public async Task<(IEnumerable<WarrantyClaim> Data, int TotalRecords)> GetWarrantyClaimByStatusAsync(string status, PaginationRequest request)
         {
-            var query = _context.WarrantyClaims.Where(wc => wc.Status == status && wc.Status != WarrantyClaimStatus.DoneWarranty.ToString());
+            var query = _context.WarrantyClaims.Where(wc => wc.Status == status && wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus());
             var totalRecords = await query.CountAsync();
 
             var data = await query

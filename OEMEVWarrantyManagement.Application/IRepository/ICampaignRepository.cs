@@ -10,5 +10,7 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<Campaign?> GetByIdAsync(Guid id);
         Task<Campaign> CreateAsync(Campaign campaign);
         Task<Campaign> UpdateAsync(Campaign campaign);
+        // New: Query builder for filtering
+        IQueryable<Campaign> Query();
     }
 }

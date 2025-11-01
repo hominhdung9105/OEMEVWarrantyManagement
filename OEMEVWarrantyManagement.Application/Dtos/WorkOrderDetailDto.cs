@@ -48,6 +48,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public DateTime? CreatedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
         public string? PartModel { get; set; }
+        public string? ReplacementPartModel { get; set; }
 
         // Only show current/old serials for the campaign part model so tech can replace later
         public IEnumerable<string>? OldSerials { get; set; }

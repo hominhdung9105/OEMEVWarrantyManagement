@@ -279,7 +279,8 @@ namespace OEMEVWarrantyManagement.Application.Services
                         Status = cv.Status,
                         CreatedAt = cv.CreatedAt,
                         CompletedAt = cv.CompletedAt,
-                        PartModel = campaign?.PartModel
+                        PartModel = campaign?.PartModel,
+                        ReplacementPartModel = campaign?.ReplacementPartModel
                     };
 
                     // Only provide old serials for the campaign part model so tech can replace later
@@ -400,7 +401,8 @@ namespace OEMEVWarrantyManagement.Application.Services
                             Status = cv.Status,
                             CreatedAt = cv.CreatedAt,
                             CompletedAt = cv.CompletedAt,
-                            PartModel = campaign?.PartModel
+                            PartModel = campaign?.PartModel,
+                            ReplacementPartModel = campaign?.ReplacementPartModel
                         };
 
                         if (!string.IsNullOrWhiteSpace(campDto.PartModel) && !string.IsNullOrWhiteSpace(cv.Vin))

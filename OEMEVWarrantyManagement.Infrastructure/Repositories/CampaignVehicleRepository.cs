@@ -77,5 +77,15 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             await _context.CampaignVehicleReplacements.AddRangeAsync(replacements);
             await _context.SaveChangesAsync();
         }
+
+        public IQueryable<CampaignVehicle> Query()
+        {
+            return _context.CampaignVehicles
+                .Include(cv => cv.Vehicle)
+                    .ThenInclude(v => v.Customer)
+                .Include(cv => cv.Campaign)
+                .Include(cv => cv.Replacements)
+                .AsNoTracking();
+        }
     }
 }

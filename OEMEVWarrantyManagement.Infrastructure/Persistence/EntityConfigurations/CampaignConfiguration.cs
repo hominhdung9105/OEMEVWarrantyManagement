@@ -19,6 +19,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.Property(c => c.EndDate);
             builder.Property(c => c.Status);
             builder.Property(c => c.CreatedAt);
+            builder.Property(c => c.PartModel);
+            builder.Property(c => c.ReplacementPartModel);
 
             // CreatedBy FK -> Employee
             builder.HasOne(c => c.CreatedByEmployee)
