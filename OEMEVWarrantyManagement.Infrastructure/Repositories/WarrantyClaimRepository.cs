@@ -29,20 +29,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return true;
         }
 
-        public async Task<(IEnumerable<WarrantyClaim> Data, int TotalRecords)> GetAllWarrantyClaimAsync(PaginationRequest request)
-        {
-            var query = _context.WarrantyClaims.Where(wc => wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus());
-            var totalRecords = await query.CountAsync();
-
-            var data = await query
-                        .OrderBy(wc => wc.CreatedDate)
-                        .Skip(request.Page * request.Size)
-                        .Take(request.Size)
-                        .ToListAsync();
-
-            return (data, totalRecords);
-        }
-
         public async Task<IEnumerable<WarrantyClaim>> GetAllWarrantyClaimByOrgIdAsync(Guid orgId)
         {
             return await _context.WarrantyClaims
@@ -56,52 +42,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return await _context.WarrantyClaims.FindAsync(id);
         }
 
-        public async Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimsByVinAsync(string vin, string staffId)
-        {
-            return await _context.WarrantyClaims
-                .Where(wc => wc.Vin == vin && wc.CreatedBy == Guid.Parse(staffId) && wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus())
-                .OrderBy(wc => wc.CreatedDate)
-                .ToListAsync();
-        }
-
-        public async Task<(IEnumerable<WarrantyClaim> Data, int TotalRecords)> GetWarrantyClaimsByVinAsync(string vin, string staffId, PaginationRequest request)
-        {
-            var query = _context.WarrantyClaims
-                .Where(wc => wc.Vin == vin && wc.CreatedBy == Guid.Parse(staffId) && wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus());
-
-            var totalRecords = await query.CountAsync();
-
-            var data = await query
-                        .OrderBy(wc => wc.CreatedDate)
-                        .Skip(request.Page * request.Size)
-                        .Take(request.Size)
-                        .ToListAsync();
-
-            return (data, totalRecords);
-        }
-
-        public async Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimsByVinAsync(string vin)
-        {
-            return await _context.WarrantyClaims
-                .Where(wc => wc.Vin == vin && wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus())
-                .OrderBy(wc => wc.CreatedDate)
-                .ToListAsync();
-        }
-
-        public async Task<(IEnumerable<WarrantyClaim> Data, int TotalRecords)> GetWarrantyClaimsByVinAsync(string vin, PaginationRequest request)
-        {
-            var query = _context.WarrantyClaims.Where(wc => wc.Vin == vin && wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus());
-            var totalRecords = await query.CountAsync();
-
-            var data = await query
-                        .OrderBy(wc => wc.CreatedDate)
-                        .Skip(request.Page * request.Size)
-                        .Take(request.Size)
-                        .ToListAsync();
-
-            return (data, totalRecords);
-        }
-
         public async Task<WarrantyClaim> UpdateAsync(WarrantyClaim request)
         {
             _context.WarrantyClaims.Update(request);
@@ -109,48 +49,45 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return request;
         }
 
-        public async Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimsByStatusAndOrgIdAsync(string status, Guid orgId)
+        public async Task<(IEnumerable<WarrantyClaim> Data, int TotalRecords)> GetPagedUnifiedAsync(PaginationRequest request, Guid? orgId, string? search, string? status)
         {
-            return await _context.WarrantyClaims
-                .Where(wc => wc.Status == status && wc.ServiceCenterId == orgId && wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus())
-                .OrderBy(wc => wc.CreatedDate)
-                .ToListAsync();
-        }
-
-        public async Task<(IEnumerable<WarrantyClaim> Data, int TotalRecords)> GetWarrantyClaimsByStatusAndOrgIdAsync(string status, Guid orgId, PaginationRequest request)
-        {
+            // Base query excludes DoneWarranty
             var query = _context.WarrantyClaims
-                .Where(wc => wc.Status == status && wc.ServiceCenterId == orgId && wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus());
+                .Where(wc => wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus())
+                .AsQueryable();
+
+            if (orgId.HasValue)
+            {
+                query = query.Where(wc => wc.ServiceCenterId == orgId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                query = query.Where(wc => wc.Status == status);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.Trim().ToLower();
+
+                // join vehicles and customers for search
+                query = from wc in query
+                        join v in _context.Vehicles on wc.Vin equals v.Vin
+                        join c in _context.Customers on v.CustomerId equals c.CustomerId
+                        where wc.Vin.ToLower().Contains(s)
+                              || v.Vin.ToLower().Contains(s)
+                              || (c.Name != null && c.Name.ToLower().Contains(s))
+                              || (c.Phone != null && c.Phone.ToLower().Contains(s))
+                        select wc;
+            }
 
             var totalRecords = await query.CountAsync();
 
             var data = await query
-                        .OrderBy(wc => wc.CreatedDate)
-                        .Skip(request.Page * request.Size)
-                        .Take(request.Size)
-                        .ToListAsync();
-
-            return (data, totalRecords);
-        }
-
-        public async Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimByStatusAsync(string status)
-        {
-            return await _context.WarrantyClaims
-                .Where(wc => wc.Status == status && wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus())
-                .OrderBy(wc => wc.CreatedDate)
+                .OrderByDescending(wc => wc.CreatedDate)
+                .Skip(request.Page * request.Size)
+                .Take(request.Size)
                 .ToListAsync();
-        }
-
-        public async Task<(IEnumerable<WarrantyClaim> Data, int TotalRecords)> GetWarrantyClaimByStatusAsync(string status, PaginationRequest request)
-        {
-            var query = _context.WarrantyClaims.Where(wc => wc.Status == status && wc.Status != WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus());
-            var totalRecords = await query.CountAsync();
-
-            var data = await query
-                        .OrderBy(wc => wc.CreatedDate)
-                        .Skip(request.Page * request.Size)
-                        .Take(request.Size)
-                        .ToListAsync();
 
             return (data, totalRecords);
         }

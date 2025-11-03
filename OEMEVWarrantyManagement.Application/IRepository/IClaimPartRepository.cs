@@ -9,7 +9,6 @@ namespace OEMEVWarrantyManagement.Application.IRepository
 {
     public interface IClaimPartRepository
     {
-        Task<ClaimPart> CreateClaimPartAsync(ClaimPart request);
         Task<IEnumerable<ClaimPart>> GetClaimPartByClaimIdAsync(Guid claimId);
         Task UpdateRangeAsync(IEnumerable<ClaimPart> entities);
         Task<ClaimPart> GetByIdAsync(Guid id);

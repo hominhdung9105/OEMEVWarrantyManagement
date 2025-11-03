@@ -38,12 +38,5 @@ namespace OEMEVWarrantyManagement.API.Controllers
             var result = await _backWarrantyClaimService.CreateBackWarrantyClaimAsync(dto);
             return Ok(ApiResponse<BackWarrantyClaimDto>.Ok(result, "Create Back Warranty Claim Successfully!"));
         }
-
-        //[HttpGet]
-        //public async Task<IActionResult> GetAllBackWarrantyClaims()
-        //{
-        //    var result = await _backWarrantyClaimService.GetAllBackWarrantyClaimsAsync();
-        //    return Ok(ApiResponse<IEnumerable<object>>.Ok(result, "Get All Back Warranty Claims Successfully!"));
-        //}
     }
 }

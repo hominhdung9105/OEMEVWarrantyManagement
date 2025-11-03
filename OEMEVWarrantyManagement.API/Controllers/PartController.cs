@@ -28,32 +28,14 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<object>.Ok(result, "Get all part Successfully!"));
         }
 
-        //[HttpGet("{EmployeeId}")] // ???
-        ////[Authorize(policy: "RequireScStaff")]
-        //[Authorize]
-        //public async Task<IActionResult> GetPartByOrgId(string EmployeeId)
-        //{
-        //    var employee = await _employeeService.GetEmployeeByIdAsync(Guid.Parse(EmployeeId));
-        //    var orgId = employee.OrgId;
-        //    var result = await _partService.GetPartByOrgIdAsync(orgId);
-        //    return Ok(ApiResponse<object>.Ok(result, "Get All Part here Successfully!"));
-        //}
-
-        //[HttpGet("filter")] // ???
-        //public async Task<IActionResult> GetPart([FromQuery] string? model)
-        //{
-        //    var entities = await _partService.GetPartsAsync(model);
-        //    return Ok(ApiResponse<object>.Ok(entities, "Get parts successfully!"));
-        //}
-
-        [HttpGet("category")]
+        [HttpGet("categories")]
         public IActionResult GetCategory()
         {
             var entities = _partService.GetPartCategories();
             return Ok(ApiResponse<object>.Ok(entities, "Get part categories successfully!"));
         }
 
-        [HttpGet("model")] // TODO - thêm s
+        [HttpGet("models")]
         public IActionResult GetModelsByCategory([FromQuery] string category)
         {
             var entities = _partService.GetPartModels(category);
@@ -66,14 +48,5 @@ namespace OEMEVWarrantyManagement.API.Controllers
             var category = _partService.GetCategoryByModel(model);
             return Ok(ApiResponse<string>.Ok(category, "Get category by model successfully!"));
         }
-
-        //[HttpPut("{orderID}")]
-        //public async Task<IActionResult>Update(string orderID)
-        //{
-        //    var entities = await _partService.UpdateQuantityAsync(Guid.Parse(orderID));
-        //    return Ok(ApiResponse<object>.Ok(entities, "update qunantity successfully"));
-
-        //}
-
     }
 }

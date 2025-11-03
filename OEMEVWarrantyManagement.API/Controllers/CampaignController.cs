@@ -39,25 +39,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<PagedResult<CampaignDto>>.Ok(result, "Get campaigns successfully!"));
         }
 
-        [HttpGet("status/{status}")]
-        [Authorize]
-        public async Task<IActionResult> GetByStatus(string status, [FromQuery] PaginationRequest request)
-        {
-            if (_currentUserService.GetRole() == RoleIdEnum.Technician.GetRoleId()) throw new UnauthorizedAccessException();
-
-            var result = await _campaignService.GetByStatusAsync(status, request);
-            if (_currentUserService.GetRole() == RoleIdEnum.ScStaff.GetRoleId())
-            {
-                foreach (var campaign in result.Items)
-                {
-                    // Hide TotalAffectedVehicles for SC Staff
-                    campaign.TotalAffectedVehicles = 0;
-                }
-            }
-
-            return Ok(ApiResponse<PagedResult<CampaignDto>>.Ok(result, "Get campaigns by status successfully!"));
-        }
-
         [HttpGet("{id}")]
         [Authorize]
         public async Task<IActionResult> GetById(string id)

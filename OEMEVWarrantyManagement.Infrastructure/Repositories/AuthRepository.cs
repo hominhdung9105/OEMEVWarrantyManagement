@@ -60,14 +60,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return await _context.Employees.FirstAsync(e => e.UserId == id);
         }
 
-        public async Task SaveRefreshToken(string id, string refreshToken, DateTime expiryTime)
-        {
-            var employee = await _context.Employees.FirstAsync(e => e.UserId.ToString() == id);
-            employee.RefreshToken = refreshToken;
-            employee.RefreshTokenExpiryTime = expiryTime;
-            await _context.SaveChangesAsync();
-        }
-
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();

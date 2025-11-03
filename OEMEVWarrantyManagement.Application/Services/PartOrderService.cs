@@ -27,27 +27,6 @@ namespace OEMEVWarrantyManagement.Application.Services
             _partRepository = partRepository;
             _organizationRepository = organizationRepository;
         }
-        //Không dùng
-        public async Task<RequestPartOrderDto> CreateAsync()
-        {
-            var employee = await _employeeRepository.GetEmployeeByIdAsync(_currentUserService.GetUserId());
-            var entity = new PartOrder()
-            {
-                RequestDate = DateTime.Now,
-                ServiceCenterId = employee.OrgId,
-                CreatedBy = employee.UserId,
-                Status = "Pending" //TODO - ENUM
-            };
-            
-            var create = await _partOrderRepository.CreateAsync(entity);
-            return _mapper.Map<RequestPartOrderDto>(create);
-        }
-
-        public async Task<IEnumerable<PartOrderDto>> GetAllAsync()
-        {
-            var entities = await _partOrderRepository.GetAll();
-            return _mapper.Map<IEnumerable<PartOrderDto>>(entities);
-        }
 
         public async Task<PartOrderDto> GetByIdAsync(Guid id)
         {
@@ -107,13 +86,6 @@ namespace OEMEVWarrantyManagement.Application.Services
             };
 
         }
-        //public async Task<PartOrderDto> UpdateStatusAsync(Guid id)
-        //{
-        //    var entity = await _partOrderRepository.GetPartOrderByIdAsync(id);
-        //    entity.Status = "shipped";//TODO????
-        //    var update = await _partOrderRepository.UpdateAsync(entity);
-        //    return _mapper.Map<PartOrderDto>(update);
-        //}
 
         public async Task<PartOrderDto> UpdateStatusAsync(Guid orderId, PartOrderStatus status)
         {

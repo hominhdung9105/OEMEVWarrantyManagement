@@ -13,11 +13,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<Part>> GetAllAsync()
-        {
-            return await _context.Parts.ToListAsync();
-        }
-
         public async Task<IEnumerable<Part>> GetByOrgIdAsync(Guid orgId)
         {
             return await _context.Parts.Where(p => p.OrgId == orgId).ToListAsync();
@@ -26,18 +21,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         public async Task<Part> GetPartsAsync(string model, Guid orgId)
         {
             return await _context.Parts.FirstOrDefaultAsync(p => p.Model == model && p.OrgId == orgId);
-        }
-
-        public async Task<Part> GetPartsByIdAsync(Guid PartId)
-        {
-            return await _context.Parts.FindAsync(PartId);
-        }
-
-        public async Task<Part> UpdateQuantityAsync(Part part)
-        {
-            var entity = _context.Parts.Update(part);
-            await _context.SaveChangesAsync();
-            return part;
         }
 
         public async Task UpdateRangeAsync(IEnumerable<Part> entities)
@@ -49,11 +32,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         public async Task<Part> GetPartByModelAsync(string model)
         {
             return await _context.Parts.FirstOrDefaultAsync(p => p.Model == model);
-        }
-
-        public IQueryable<Part> Query()
-        {
-            return _context.Parts.AsNoTracking();
         }
 
         public IQueryable<Part> QueryByOrgId(Guid orgId)

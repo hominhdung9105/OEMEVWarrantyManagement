@@ -30,45 +30,6 @@ namespace OEMEVWarrantyManagement.Application.Services
             _claimRepository = warrantyClaimRepository;
             _currentUserService = currentUserService;
         }
-        public async Task<IEnumerable<PartDto>> GetPartByOrgIdAsync(Guid id)
-        {
-            var entities = await _partRepository.GetByOrgIdAsync(id);
-            var result = _mapper.Map<IEnumerable<PartDto>>(entities);
-            if (!entities.Any())
-            {
-                throw new ApiException(ResponseError.NotFoundPartHere);
-            }
-            foreach (var part in result)
-            {
-                if (part.StockQuantity > 0 && part.StockQuantity < 10)
-                {
-                    part.Status = PartStatus.LowStock.GetPartStatus();
-                }
-                else if (part.StockQuantity == 0)
-                {
-                    part.Status = PartStatus.OutOfStock.GetPartStatus();
-                }
-                else
-                {
-                    part.Status = PartStatus.InStock.GetPartStatus();
-                }
-            }
-            return result;
-        }
-
-        public async Task<IEnumerable<PartDto>> GetAllAsync()
-        {
-            var entities = await _partRepository.GetAllAsync();
-            return _mapper.Map<IEnumerable<PartDto>>(entities);
-        }
-        //K dùng =  xoá
-        public async Task<IEnumerable<PartDto>> GetPartsAsync(string model)
-        {
-            var orgId = await _currentUserService.GetOrgId();
-
-            var parts = await _partRepository.GetPartsAsync(model, orgId);
-            return _mapper.Map<IEnumerable<PartDto>>(parts);
-        }
 
         public async Task<PagedResult<PartDto>> GetPagedAsync(PaginationRequest request, string? search = null, string? status = null)
         {
@@ -183,7 +144,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<IEnumerable<PartDto>>(parts);
         }
 
-        public async Task UpdateEnoughClaimPartsAsync(Guid orgId, IEnumerable<Part> parts)
+        private async Task UpdateEnoughClaimPartsAsync(Guid orgId, IEnumerable<Part> parts)
         {
             var warrantyClaims = await _claimRepository.GetAllWarrantyClaimByOrgIdAsync(orgId);
 
@@ -231,10 +192,6 @@ namespace OEMEVWarrantyManagement.Application.Services
             await _partRepository.UpdateRangeAsync(parts);
         }
 
-        /// <summary>
-        /// Kiểm tra xem tất cả các phụ tùng trong 1 claim có đủ tồn kho hay không.
-        /// Gom nhóm theo Model để so sánh số lượng yêu cầu và tồn kho.
-        /// </summary>
         public static bool HasEnoughPartsForClaim(IEnumerable<ClaimPart> claimParts, IEnumerable<Part> partsInStock)
         {
             // Gom nhóm theo model để tính số lượng yêu cầu

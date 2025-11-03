@@ -25,8 +25,8 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly ICustomerRepository _customerRepository;
         private readonly IBackWarrantyClaimRepository _backWarrantyClaimRepository;
         private readonly IImageRepository _imageRepository;
-        //private readonly IWorkOrderService _workOrderService;
-        public WarrantyClaimService(IMapper mapper, IWarrantyClaimRepository warrantyClaimRepository, IVehicleRepository vehicleRepository, IWorkOrderRepository workOrderRepository, IEmployeeRepository employeeRepository, ICurrentUserService currentUserService, IClaimPartRepository claimPartRepository, IPartRepository partRepository, IWarrantyPolicyRepository warrantyPolicyRepository, IVehicleWarrantyPolicyRepository vehicleWarrantyPolicyRepository, ICustomerRepository customerRepository, IBackWarrantyClaimRepository backWarrantyClaimRepository, IImageRepository imageRepository)
+        private readonly IWorkOrderService _workOrderService;
+        public WarrantyClaimService(IMapper mapper, IWarrantyClaimRepository warrantyClaimRepository, IVehicleRepository vehicleRepository, IWorkOrderRepository workOrderRepository, IEmployeeRepository employeeRepository, ICurrentUserService currentUserService, IClaimPartRepository claimPartRepository, IPartRepository partRepository, IWarrantyPolicyRepository warrantyPolicyRepository, IVehicleWarrantyPolicyRepository vehicleWarrantyPolicyRepository, ICustomerRepository customerRepository, IBackWarrantyClaimRepository backWarrantyClaimRepository, IImageRepository imageRepository, IWorkOrderService workOrderService)
         {
             _mapper = mapper;
             _warrantyClaimRepository = warrantyClaimRepository;
@@ -41,6 +41,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             _customerRepository = customerRepository;
             _imageRepository = imageRepository;
             _backWarrantyClaimRepository = backWarrantyClaimRepository;
+            _workOrderService = workOrderService;
         }
 
         public async Task<ResponseWarrantyClaim> CreateAsync(RequestWarrantyClaim request)
@@ -78,117 +79,27 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             var create = await _warrantyClaimRepository.CreateAsync(entity);
 
+            // Centralized WorkOrder creation to avoid duplication
+            var techIds = new List<Guid>();
             if (request.AssignTo != null)
             {
-                var workOrderEntity = new WorkOrder()
-                {
-                    StartDate = DateTime.Now,
-                    TargetId = (Guid)create.ClaimId,
-                    Type = WorkOrderType.Inspection.GetWorkOrderType(),
-                    Target = WorkOrderTarget.Warranty.GetWorkOrderTarget(),
-                    Status = WorkOrderStatus.InProgress.GetWorkOrderStatus(),
-                    AssignedTo = request.AssignTo
-                };
-                _ = await _workOrderRepository.CreateAsync(workOrderEntity);
-
-                create.Status = WarrantyClaimStatus.UnderInspection.GetWarrantyClaimStatus();
-                await _warrantyClaimRepository.UpdateAsync(create);
+                techIds.Add(request.AssignTo.Value);
             }
             else if (request.AssignsTo != null && request.AssignsTo.Count > 0)
             {
-                foreach (var techId in request.AssignsTo)
-                {
-                    var workOrderEntity = new WorkOrder()
-                    {
-                        StartDate = DateTime.Now,
-                        TargetId = (Guid)create.ClaimId,
-                        Type = WorkOrderType.Inspection.GetWorkOrderType(),
-                        Target = WorkOrderTarget.Warranty.GetWorkOrderTarget(),
-                        Status = WorkOrderStatus.InProgress.GetWorkOrderStatus(),
-                        AssignedTo = techId
-                    };
+                techIds.AddRange(request.AssignsTo);
+            }
 
-                    _ = await _workOrderRepository.CreateAsync(workOrderEntity);
-                }
-                create.Status = WarrantyClaimStatus.UnderInspection.GetWarrantyClaimStatus();
-                await _warrantyClaimRepository.UpdateAsync(create);
+            if (techIds.Count > 0)
+            {
+                _ = await _workOrderService.CreateForWarrantyAsync(create.ClaimId, techIds);
+                // Status update is handled inside CreateForWarrantyAsync
             }
 
             var result = _mapper.Map<ResponseWarrantyClaim>(create);
             result.AssignTo = request.AssignTo;
             result.AssignsTo = request.AssignsTo;
             return result;
-        }
-
-        public async Task<bool> DeleteAsync(Guid claimId)
-        {
-            var entity = await _warrantyClaimRepository
-                .GetWarrantyClaimByIdAsync(claimId) ?? throw new ApiException(ResponseError.NotFoundWarrantyClaim);
-            return await _warrantyClaimRepository.DeleteAsync(entity);
-        }
-
-        public async Task<PagedResult<WarrantyClaimDto>> GetAllWarrantyClaimAsync(PaginationRequest request)
-        {
-            var (entities, totalRecords) = await _warrantyClaimRepository.GetAllWarrantyClaimAsync(request);
-            var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
-
-            var results = _mapper.Map<IEnumerable<WarrantyClaimDto>>(entities);
-
-            return new PagedResult<WarrantyClaimDto>
-            {
-                PageNumber = request.Page,
-                PageSize = request.Size,
-                TotalRecords = totalRecords,
-                TotalPages = totalPages,
-                Items = results
-            };
-        }
-
-        public async Task<WarrantyClaimDto> GetWarrantyClaimByIdAsync(Guid id)
-        {
-            var entity = await _warrantyClaimRepository.GetWarrantyClaimByIdAsync(id);
-            return _mapper.Map<WarrantyClaimDto>(entity);
-        }
-
-        public async Task<PagedResult<WarrantyClaimDto>> GetWarrantyClaimByVinAsync(string vin, PaginationRequest request)
-        {
-            var (entities, totalRecords) = await _warrantyClaimRepository.GetWarrantyClaimsByVinAsync(vin, request);
-            if (entities == null || !entities.Any())
-            {
-                throw new ApiException(ResponseError.NotfoundVin);
-            }
-            var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
-            var results = _mapper.Map<IEnumerable<WarrantyClaimDto>>(entities);
-
-            return new PagedResult<WarrantyClaimDto>
-            {
-                PageNumber = request.Page,
-                PageSize = request.Size,
-                TotalRecords = totalRecords,
-                TotalPages = totalPages,
-                Items = results
-            };
-        }
-
-        public async Task<PagedResult<WarrantyClaimDto>> GetWarrantyClaimByVinByOrgIdAsync(string vin, PaginationRequest request)
-        {
-            var staffId = _currentUserService.GetUserId();
-            var (entities, totalRecords) = await _warrantyClaimRepository.GetWarrantyClaimsByVinAsync(vin, staffId.ToString(), request);
-            if (entities == null || !entities.Any())
-            {
-                throw new ApiException(ResponseError.NotFoundWarrantyClaim);
-            }
-            var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
-            var results = _mapper.Map<IEnumerable<WarrantyClaimDto>>(entities);
-
-            return new PagedResult<WarrantyClaimDto>
-            {
-                PageNumber = request.Page,
-                PageSize = request.Size,
-                TotalRecords = totalRecords,
-                TotalPages = totalPages,
-                Items = results
-            };
         }
 
         public async Task<bool> HasWarrantyClaim(Guid warrantyClaimId)
@@ -309,180 +220,29 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             return _mapper.Map<WarrantyClaimDto>(update);
         }
-        public async Task<PagedResult<WarrantyClaimDto>> GetWarrantyClaimsByStatusAndOrgIdAsync(string status, PaginationRequest request)
-        {
-            var orgId = await _currentUserService.GetOrgId();
-            var (entities, totalRecords) = await _warrantyClaimRepository.GetWarrantyClaimsByStatusAndOrgIdAsync(status, orgId, request);
-            var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
-            var results = _mapper.Map<IEnumerable<WarrantyClaimDto>>(entities);
 
-            return new PagedResult<WarrantyClaimDto>
+        public async Task<PagedResult<ResponseWarrantyClaimDto>> GetPagedUnifiedAsync(PaginationRequest request, string? search, string? status)
+        {
+            // Role-based access: evm + admin => all; sc staff => org only; tech => forbidden
+            var role = _currentUserService.GetRole();
+            Guid? orgId = null;
+
+            if (role == RoleIdEnum.Technician.GetRoleId())
             {
-                PageNumber = request.Page,
-                PageSize = request.Size,
-                TotalRecords = totalRecords,
-                TotalPages = totalPages,
-                Items = results
-            };
-        }
-
-        public async Task<PagedResult<WarrantyClaimDto>> GetWarrantyClaimByStatusAsync(string status, PaginationRequest request)
-        {
-            var (entities, totalRecords) = await _warrantyClaimRepository.GetWarrantyClaimByStatusAsync(status, request);
-            var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
-            var results = _mapper.Map<IEnumerable<WarrantyClaimDto>>(entities);
-
-            return new PagedResult<WarrantyClaimDto>
-            {
-                PageNumber = request.Page,
-                PageSize = request.Size,
-                TotalRecords = totalRecords,
-                TotalPages = totalPages,
-                Items = results
-            };
-        }
-
-        public async Task<IEnumerable<WarrantyClaimDto>> GetAllWarrantyClaimByOrganizationAsync()
-        {
-            var orgId = await _currentUserService.GetOrgId();
-            var entities = await _warrantyClaimRepository.GetAllWarrantyClaimByOrgIdAsync(orgId);
-            return _mapper.Map<IEnumerable<WarrantyClaimDto>>(entities);
-        }
-
-        //public async Task<IEnumerable<ResponseWarrantyClaimDto>> GetWarrantyClaimHavePolicyAndParts()
-        //{
-        //    var orgId = await _currentUserService.GetOrgId();
-        //    var entities = await _warranty_claimRepository.GetAllWarrantyClaimByOrgIdAsync(orgId);
-        //    var results = _mapper.Map<IEnumerable<ResponseWarrantyClaimDto>>(entities);
-
-        //    foreach (var claim in results)
-        //    {
-        //        var claimParts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
-        //        claim.ShowClaimParts = _mapper.Map<List<ShowClaimPartDto>>(claimParts);
-
-        //        var vehiclePolicies = await _vehicleWarrantyPolicyRepository.GetAllVehicleWarrantyPolicyByVinAsync(claim.Vin);
-
-        //        var policyDtos = new List<WarrantyPolicyDto>();
-        //        foreach (var vp in vehiclePolicies)
-        //        {
-        //            var policy = await _warrantyPolicyRepository.GetByIdAsync(vp.PolicyId);
-        //            if (policy != null)
-        //            {
-        //                var mapped = _mapper.Map<WarrantyPolicyDto>(policy);
-        //                policyDtos.Add(mapped);
-        //            }
-        //        }
-
-        //        claim.ShowPolicy = policyDtos;
-        //    }
-
-        //    return results;
-        //}
-        // OEMEVWarrantyManagement.Application.Services/WarrantyClaimService.cs
-
-        // ... (Các Repository và Dependency Injection khác)
-
-        // Trong OEMEVWarrantyManagement.Application.Services.WarrantyClaimService.cs
-
-        public async Task<PagedResult<ResponseWarrantyClaimDto>> GetWarrantyClaimHavePolicyAndPartsAndOrg(PaginationRequest request)
-        {
-            var orgId = await _currentUserService.GetOrgId();
-            var (claims, totalRecords) = await _warrantyClaimRepository.GetAllWarrantyClaimAsync(request);
-
-            var claimDtos = _mapper.Map<List<ResponseWarrantyClaimDto>>(claims);
-            var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
-
-            var vins = claimDtos.Select(c => c.Vin).Distinct().ToList();
-            var vehicles = await _vehicleRepository.GetVehiclesByVinsAsync(vins);
-            var vehicleDict = vehicles.ToDictionary(v => v.Vin);
-
-            var customerIds = vehicles.Select(v => v.CustomerId).Distinct().ToList();
-            var customers = await _customerRepository.GetCustomersByIdsAsync(customerIds);
-            var customerDict = customers.ToDictionary(c => c.CustomerId);
-
-            var allPolicies = await _warranty_policyRepository.GetAllAsync();
-            var policyLookup = allPolicies.ToDictionary(p => p.PolicyId);
-
-            foreach (var claim in claimDtos)
-            {
-                if (claim.PolicyId != Guid.Empty && policyLookup.TryGetValue(claim.PolicyId, out var policy))
-                {
-                    claim.PolicyName = policy.Name;
-                }
-
-                if (vehicleDict.TryGetValue(claim.Vin, out var vehicle))
-                {
-                    claim.Model = vehicle.Model;
-                    claim.Year = vehicle.Year;
-
-                    if (customerDict.TryGetValue(vehicle.CustomerId, out var customer))
-                    {
-                        claim.CustomerName = customer.Name;
-                        claim.CustomerPhoneNumber = customer.Phone;
-                    }
-                }
-
-                var claimParts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
-                var showClaimParts = new List<ShowClaimPartDto>();
-
-                foreach (var cp in claimParts)
-                {
-                    var dto = _mapper.Map<ShowClaimPartDto>(cp);
-                    var part = await _partRepository.GetPartByModelAsync(cp.Model);
-                    dto.Category = part?.Category ?? "N/A";
-                    showClaimParts.Add(dto);
-                }
-                claim.ShowClaimParts = showClaimParts;
-
-                var vehiclePolicies = await _vehicleWarrantyPolicyRepository.GetAllVehicleWarrantyPolicyByVinAsync(claim.Vin);
-
-                claim.ShowPolicy = vehiclePolicies
-                    .Where(vp => policyLookup.ContainsKey(vp.PolicyId))
-                    .Select(vp =>
-                    {
-                        var policyInfo = policyLookup[vp.PolicyId];
-                        return new PolicyInformationDto
-                        {
-                            VehicleWarrantyId = vp.VehicleWarrantyId,
-                            PolicyName = policyInfo.Name,
-                            StartDate = vp.StartDate,
-                            EndDate = vp.EndDate
-                        };
-                    }).ToList();
-
-                if (claim.Status == WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyClaimStatus())
-                {
-                    var backClaims = await _backWarrantyClaimRepository.GetBackWarrantyClaimsByIdAsync(claim.ClaimId);
-                    var latestBackClaim = backClaims?.OrderByDescending(b => b.CreatedDate).FirstOrDefault();
-                    if (latestBackClaim != null)
-                    {
-                        claim.Notes = latestBackClaim.Description;
-                    }
-                }
-
-                var attachments = await _imageRepository.GetImagesByWarrantyClaimIdAsync(claim.ClaimId);
-                claim.Attachments = attachments.Select(a => _mapper.Map<ImageDto>(a)).ToList();
+                throw new ApiException(ResponseError.Forbidden);
             }
-
-            return new PagedResult<ResponseWarrantyClaimDto>
+            else if (role == RoleIdEnum.ScStaff.GetRoleId())
             {
-                PageNumber = request.Page,
-                PageSize = request.Size,
-                TotalRecords = totalRecords,
-                TotalPages = totalPages,
-                Items = claimDtos
-            };
-        }
+                orgId = await _currentUserService.GetOrgId();
+            }
+            // Admin or EvmStaff: orgId remains null (no restriction)
 
-        // New: get all claims across all organizations that are in SentToManufacturer status
-        public async Task<PagedResult<ResponseWarrantyClaimDto>> GetWarrantyClaimsSentToManufacturerAsync(PaginationRequest request)
-        {
-            var status = WarrantyClaimStatus.SentToManufacturer.GetWarrantyClaimStatus();
-            var (claims, totalRecords) = await _warrantyClaimRepository.GetWarrantyClaimByStatusAsync(status, request);
+            var (claims, totalRecords) = await _warrantyClaimRepository.GetPagedUnifiedAsync(request, orgId, search, status);
             var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
 
             var claimDtos = _mapper.Map<List<ResponseWarrantyClaimDto>>(claims);
 
+            // Enrich
             var vins = claimDtos.Select(c => c.Vin).Where(v => !string.IsNullOrEmpty(v)).Distinct().ToList();
             var vehicles = await _vehicleRepository.GetVehiclesByVinsAsync(vins);
             var vehicleDict = vehicles.ToDictionary(v => v.Vin);
@@ -508,92 +268,11 @@ namespace OEMEVWarrantyManagement.Application.Services
                     }
                 }
 
-                var claimParts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
-                var showClaimParts = new List<ShowClaimPartDto>();
-
-                foreach (var cp in claimParts)
-                {
-                    var dto = _mapper.Map<ShowClaimPartDto>(cp);
-                    var part = await _partRepository.GetPartByModelAsync(cp.Model);
-                    dto.Category = part?.Category ?? "N/A";
-                    showClaimParts.Add(dto);
-                }
-                claim.ShowClaimParts = showClaimParts;
-
-                var vehiclePolicies = await _vehicleWarrantyPolicyRepository.GetAllVehicleWarrantyPolicyByVinAsync(claim.Vin);
-
-                claim.ShowPolicy = vehiclePolicies
-                    .Where(vp => policyLookup.ContainsKey(vp.PolicyId))
-                    .Select(vp =>
-                    {
-                        var policyInfo = policyLookup[vp.PolicyId];
-                        return new PolicyInformationDto
-                        {
-                            VehicleWarrantyId = vp.VehicleWarrantyId,
-                            PolicyName = policyInfo.Name,
-                            StartDate = vp.StartDate,
-                            EndDate = vp.EndDate
-                        };
-                    }).ToList();
-
-                var backClaims = await _backWarrantyClaimRepository.GetBackWarrantyClaimsByIdAsync(claim.ClaimId);
-                var latestBackClaim = backClaims?.OrderByDescending(b => b.CreatedDate).FirstOrDefault();
-                if (latestBackClaim != null)
-                {
-                    claim.Notes = latestBackClaim.Description;
-                }
-
-                var attachments = await _imageRepository.GetImagesByWarrantyClaimIdAsync(claim.ClaimId);
-                claim.Attachments = attachments.Select(a => _mapper.Map<ImageDto>(a)).ToList();
-            }
-
-            return new PagedResult<ResponseWarrantyClaimDto>
-            {
-                PageNumber = request.Page,
-                PageSize = request.Size,
-                TotalRecords = totalRecords,
-                TotalPages = totalPages,
-                Items = claimDtos
-            };
-        }
-        public async Task<PagedResult<ResponseWarrantyClaimDto>> GetWarrantyClaimHavePolicyAndPartsAndOrgByStatus(string status, PaginationRequest request)
-        {
-            var orgId = await _currentUserService.GetOrgId();
-            var (claims, totalRecords) = await _warrantyClaimRepository.GetWarrantyClaimsByStatusAndOrgIdAsync(status, orgId, request);
-            var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
-
-            var claimDtos = _mapper.Map<List<ResponseWarrantyClaimDto>>(claims);
-
-            var vins = claimDtos.Select(c => c.Vin).Distinct().ToList();
-            var vehicles = await _vehicleRepository.GetVehiclesByVinsAsync(vins);
-            var vehicleDict = vehicles.ToDictionary(v => v.Vin);
-
-            var customerIds = vehicles.Select(v => v.CustomerId).Distinct().ToList();
-            var customers = await _customerRepository.GetCustomersByIdsAsync(customerIds);
-            var customerDict = customers.ToDictionary(c => c.CustomerId);
-
-            var allPolicies = await _warranty_policyRepository.GetAllAsync();
-            var policyLookup = allPolicies.ToDictionary(p => p.PolicyId);
-
-            foreach (var claim in claimDtos)
-            {
                 if (claim.PolicyId != Guid.Empty && policyLookup.TryGetValue(claim.PolicyId, out var policy))
                 {
                     claim.PolicyName = policy.Name;
                 }
 
-                if (!string.IsNullOrEmpty(claim.Vin) && vehicleDict.TryGetValue(claim.Vin, out var vehicle))
-                {
-                    claim.Model = vehicle.Model;
-                    claim.Year = vehicle.Year;
-
-                    if (customerDict.TryGetValue(vehicle.CustomerId, out var customer))
-                    {
-                        claim.CustomerName = customer.Name;
-                        claim.CustomerPhoneNumber = customer.Phone;
-                    }
-                }
-
                 var claimParts = await _claimPartRepository.GetClaimPartByClaimIdAsync(claim.ClaimId);
                 var showClaimParts = new List<ShowClaimPartDto>();
 
@@ -610,16 +289,12 @@ namespace OEMEVWarrantyManagement.Application.Services
 
                 claim.ShowPolicy = vehiclePolicies
                     .Where(vp => policyLookup.ContainsKey(vp.PolicyId))
-                    .Select(vp =>
+                    .Select(vp => new PolicyInformationDto
                     {
-                        var policyInfo = policyLookup[vp.PolicyId];
-                        return new PolicyInformationDto
-                        {
-                            VehicleWarrantyId = vp.VehicleWarrantyId,
-                            PolicyName = policyInfo.Name,
-                            StartDate = vp.StartDate,
-                            EndDate = vp.EndDate
-                        };
+                        VehicleWarrantyId = vp.VehicleWarrantyId,
+                        PolicyName = policyLookup[vp.PolicyId].Name,
+                        StartDate = vp.StartDate,
+                        EndDate = vp.EndDate
                     }).ToList();
 
                 if (claim.Status == WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyClaimStatus())

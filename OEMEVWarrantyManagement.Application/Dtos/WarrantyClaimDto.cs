@@ -71,4 +71,10 @@
         public Guid? ClaimId { get; set; }
         public List<UpdateClaimPartDto> Parts { get; set; }
     }
+
+    // New: request for assigning technicians to a warranty claim
+    public class AssignTechRequestDto
+    {
+        public List<Guid> AssignedTo { get; set; }
+    }
 }

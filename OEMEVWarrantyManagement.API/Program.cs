@@ -16,8 +16,6 @@ using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Middlewares;
 using OEMEVWarrantyManagement.Share.Models.Response;
 using Scalar.AspNetCore;
-using OEMEVWarrantyManagement.Infrastructure.Persistence; // <-- Thêm using này
-using Microsoft.EntityFrameworkCore; // <-- Thêm using này
 
 namespace OEMEVWarrantyManagement.API
 {

@@ -17,10 +17,10 @@ namespace OEMEVWarrantyManagement.API.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetVehicleWarrantyInfo([FromQuery] PaginationRequest request)
+        [Authorize]
+        public async Task<IActionResult> GetVehicleWarrantyInfo([FromQuery] PaginationRequest request, [FromQuery] string? search)
         {
-            var result = await _vehicleService.GetPagedAsync(request);
+            var result = await _vehicleService.GetPagedAsync(request, search);
             return Ok(ApiResponse<object>.Ok(result,"Get vehicle successfully!!"));
         }
     }

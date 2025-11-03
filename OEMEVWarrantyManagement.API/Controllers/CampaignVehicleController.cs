@@ -20,25 +20,11 @@ namespace OEMEVWarrantyManagement.API.Controllers
             _currentUserService = currentUserService;
         }
 
-        [HttpGet("campaign/{campaignId}")]
-        [Authorize]
-        public async Task<IActionResult> GetByCampaign(string campaignId, [FromQuery] PaginationRequest request)
-        {
-            if (_currentUserService.GetRole() == RoleIdEnum.Technician.GetRoleId()) throw new UnauthorizedAccessException();
-
-            if (!Guid.TryParse(campaignId, out var id))
-                return BadRequest(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
-
-            var result = await _service.GetByCampaignIdAsync(id, request);
-            return Ok(ApiResponse<PagedResult<CampaignVehicleDto>>.Ok(result, "Get campaign vehicles successfully!"));
-        }
-
-        // Unified GET with optional filters via query string: search (vin/title/customer), type, status
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> GetAll([FromQuery] PaginationRequest request, [FromQuery] string? search, [FromQuery] string? type, [FromQuery] string? status)
         {
-            if (_currentUserService.GetRole() == RoleIdEnum.Technician.GetRoleId()) throw new UnauthorizedAccessException();
+            if (_currentUserService.GetRole() == RoleIdEnum.Technician.GetRoleId()) return Unauthorized(ApiResponse<object>.Fail(ResponseError.AuthenticationFailed));
 
             var result = await _service.GetAllAsync(request, search, type, status);
             return Ok(ApiResponse<PagedResult<CampaignVehicleDto>>.Ok(result, "Get all campaign vehicles successfully!"));

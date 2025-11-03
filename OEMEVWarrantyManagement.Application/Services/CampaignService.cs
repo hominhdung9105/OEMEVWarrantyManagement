@@ -155,28 +155,6 @@ namespace OEMEVWarrantyManagement.Application.Services
             };
         }
 
-        public async Task<PagedResult<CampaignDto>> GetByStatusAsync(string status, PaginationRequest request)
-        {
-            // Validate status against enum
-            var validStatuses = new[] { CampaignStatus.Active.GetCampaignStatus(), CampaignStatus.Closed.GetCampaignStatus() };
-            if (!validStatuses.Contains(status))
-            {
-                throw new ApiException(ResponseError.InternalServerError);
-            }
-
-            var (data, totalRecords) = await _campaignRepository.GetByStatusAsync(status, request);
-            var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
-            var items = _mapper.Map<IEnumerable<CampaignDto>>(data);
-            return new PagedResult<CampaignDto>
-            {
-                PageNumber = request.Page,
-                PageSize = request.Size,
-                TotalRecords = totalRecords,
-                TotalPages = totalPages,
-                Items = items
-            };
-        }
-
         public async Task<CampaignDto> CloseAsync(Guid id)
         {
             var entity = await _campaignRepository.GetByIdAsync(id) ?? throw new ApiException(ResponseError.InternalServerError);
