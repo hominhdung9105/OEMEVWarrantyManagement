@@ -28,6 +28,8 @@ namespace OEMEVWarrantyManagement.API
             //Bind AppSettings from appsettings.json
             builder.Services.Configure<AppSettings>(
                 builder.Configuration.GetSection("AppSettings"));
+            builder.Services.Configure<EmailSettings>(
+                builder.Configuration.GetSection("EmailSettings"));
 
             // Add Controllers - ignore null value in response
 
@@ -191,6 +193,8 @@ namespace OEMEVWarrantyManagement.API
             // Campaign Vehicle
             builder.Services.AddScoped<ICampaignVehicleRepository, CampaignVehicleRepository>();
             builder.Services.AddScoped<ICampaignVehicleService, CampaignVehicleService>();
+            // Email
+            builder.Services.AddScoped<IEmailService, EmailService>();
 
             builder.Services.AddCors(options =>
             {

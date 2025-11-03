@@ -17,14 +17,25 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IMapper _mapper;
         private readonly IVehicleRepository _vehicleRepository;
         private readonly IVehiclePartRepository _vehiclePartRepository;
+        private readonly IEmailService _emailService;
+        private readonly ICustomerRepository _customerRepository;
 
-        public CampaignService(ICampaignRepository campaignRepository, ICurrentUserService currentUserService, IMapper mapper, IVehicleRepository vehicleRepository, IVehiclePartRepository vehiclePartRepository)
+        public CampaignService(
+            ICampaignRepository campaignRepository,
+            ICurrentUserService currentUserService,
+            IMapper mapper,
+            IVehicleRepository vehicleRepository,
+            IVehiclePartRepository vehiclePartRepository,
+            IEmailService emailService,
+            ICustomerRepository customerRepository)
         {
             _campaignRepository = campaignRepository;
             _currentUserService = currentUserService;
             _mapper = mapper;
             _vehicleRepository = vehicleRepository;
             _vehiclePartRepository = vehiclePartRepository;
+            _emailService = emailService;
+            _customerRepository = customerRepository;
         }
 
         public async Task<CampaignDto> CreateAsync(RequestCampaignDto request)
@@ -71,6 +82,10 @@ namespace OEMEVWarrantyManagement.Application.Services
             entity.TotalAffectedVehicles = await CountAffectedVehiclesAsync(entity.PartModel);
 
             var created = await _campaignRepository.CreateAsync(entity);
+
+            // Fire-and-forget email notifications to affected customers
+            await NotifyAffectedCustomersAsync(created);
+
             return _mapper.Map<CampaignDto>(created);
         }
 
@@ -91,6 +106,47 @@ namespace OEMEVWarrantyManagement.Application.Services
             }
 
             return count;
+        }
+
+        private async Task NotifyAffectedCustomersAsync(Campaign campaign)
+        {
+            if (string.IsNullOrWhiteSpace(campaign.PartModel)) return;
+
+            try
+            {
+                var vehicles = await _vehicleRepository.GetAllAsync();
+
+                foreach (var v in vehicles)
+                {
+                    if (!await _vehiclePartRepository.ExistsByVinAndModelAsync(v.Vin, campaign.PartModel))
+                        continue;
+
+                    var customer = await _customerRepository.GetCustomerByIdAsync(v.CustomerId);
+                    if (customer == null || string.IsNullOrWhiteSpace(customer.Email))
+                        continue;
+
+                    try
+                    {
+                        await _emailService.SendCampaignPartIssueEmailAsync(
+                            to: customer.Email,
+                            customerName: customer.Name,
+                            vin: v.Vin,
+                            partModel: campaign.PartModel,
+                            campaignTitle: campaign.Title,
+                            note: campaign.Description,
+                            bookingUrl: null
+                        );
+                    }
+                    catch
+                    {
+                        // ignore send errors per recipient
+                    }
+                }
+            }
+            catch
+            {
+                // ignore global errors to not impact creation flow
+            }
         }
 
         public async Task<CampaignDto?> GetByIdAsync(Guid id)
