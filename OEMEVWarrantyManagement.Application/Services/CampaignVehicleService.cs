@@ -44,7 +44,12 @@ namespace OEMEVWarrantyManagement.Application.Services
             // Check duplicate
             var existing = await _campaignVehicleRepository.GetByCampaignAndVinsAsync(request.CampaignId, new[] { request.Vin });
             if (existing.Any()) throw new ApiException(ResponseError.InternalServerError);
-            
+
+            var parts = _vehiclePartRepository.GetVehiclePartByVinAndModelAsync(request.Vin, campaign.PartModel);
+
+            if (parts == null || !parts.Result.Any())
+                throw new ApiException(ResponseError.InternalServerError);
+
             var now = DateTime.UtcNow;
             var entity = new CampaignVehicle
             {

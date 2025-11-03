@@ -40,7 +40,7 @@
     public class InspectionDto
     {
         public string? Description { get; set; }
-        public List<PartsInClaimPartDto> Parts { get; set; }
+        public List<PartsInClaimPartDto>? Parts { get; set; }
     }
 
     public class ResponseWarrantyClaimDto

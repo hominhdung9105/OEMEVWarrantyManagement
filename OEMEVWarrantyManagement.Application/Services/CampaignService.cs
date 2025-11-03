@@ -52,6 +52,8 @@ namespace OEMEVWarrantyManagement.Application.Services
                 if (!PartModel.IsValidModel(request.ReplacementPartModel))
                     throw new ApiException(ResponseError.InvalidPartModel);
 
+                if (request.PartModel == request.ReplacementPartModel) throw new ApiException(ResponseError.InternalServerError);
+
                 var faultyCategory = PartModel.GetCategoryByModel(request.PartModel!);
                 var replacementCategory = PartModel.GetCategoryByModel(request.ReplacementPartModel!);
 

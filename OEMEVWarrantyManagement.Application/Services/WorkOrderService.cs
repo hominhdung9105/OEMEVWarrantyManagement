@@ -266,7 +266,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                             var vehicleParts = await _vehiclePartRepository.GetVehiclePartByVinAndModelAsync(cv.Vin, campDto.PartModel);
 
                             var oldSerials = vehicleParts
-                                .Where(vp => string.Equals(vp.Status, VehiclePartStatus.UnInstalled.GetVehiclePartStatus(), StringComparison.OrdinalIgnoreCase))
+                                .Where(vp => string.Equals(vp.Status, VehiclePartStatus.Installed.GetVehiclePartStatus(), StringComparison.OrdinalIgnoreCase))
                                 .Select(vp => vp.SerialNumber)
                                 .Distinct()
                                 .ToList();

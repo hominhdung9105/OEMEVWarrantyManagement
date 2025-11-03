@@ -30,18 +30,34 @@ namespace OEMEVWarrantyManagement.Application.Services
 
         public async Task<List<RequestClaimPart>> CreateManyClaimPartsAsync(Guid claimId, List<PartsInClaimPartDto> dto)
         {
-            var entities = dto.Select(p => new ClaimPart
-            {
-                ClaimId = claimId,
-                Model = p.Model,
-                SerialNumberOld = p.SerialNumber,
-                Action = p.Action,
-                Status = p.Status,
-                Cost = 0 // TODO - chưa xử lí
-            }).ToList();
+            var list = await _claimPartRepository.GetClaimPartByClaimIdAsync(claimId);
 
-            await _claimPartRepository.CreateManyClaimPartsAsync(entities);
-            return _mapper.Map<List<RequestClaimPart>>(entities);
+            if (dto != null && dto.Any())
+            {
+                if (list != null && list.Any())
+                {
+                    foreach (var item in list)
+                    {
+                        dto.RemoveAll(p => p.Model == item.Model && p.SerialNumber == item.SerialNumberOld);
+                    }
+                }
+
+                var entities = dto.Select(p => new ClaimPart
+                {
+                    ClaimId = claimId,
+                    Model = p.Model,
+                    SerialNumberOld = p.SerialNumber,
+                    Action = p.Action,
+                    Status = p.Status,
+                    Cost = 0 // TODO - chưa xử lí
+                }).ToList();
+
+                await _claimPartRepository.CreateManyClaimPartsAsync(entities);
+            }
+
+            list = await _claimPartRepository.GetClaimPartByClaimIdAsync(claimId);
+
+            return _mapper.Map<List<RequestClaimPart>>(list);
         }
 
         public async Task<IEnumerable<RequestClaimPart>> GetClaimPartsAsync(Guid claimId)

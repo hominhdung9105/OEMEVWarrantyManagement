@@ -2,6 +2,7 @@
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
+using OEMEVWarrantyManagement.Share.Enums;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 {
@@ -23,7 +24,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         public async Task<IEnumerable<VehiclePart>> GetVehiclePartByVinAndModelAsync(string vin, string model)
         {
             return await _context.VehicleParts
-                .Where(vp => vp.Vin == vin && vp.Model == model)
+                .Where(vp => vp.Vin == vin && vp.Model == model && vp.Status == VehiclePartStatus.Installed.GetVehiclePartStatus())
                 .ToListAsync();
         }
 
