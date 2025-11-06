@@ -9,5 +9,7 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<IEnumerable<WorkOrder>> GetWorkOrders(Guid targetId, string type, string target);
         Task<IEnumerable<WorkOrder>> GetWorkOrderByTech(Guid techId);
         Task<IEnumerable<WorkOrder>> CreateRangeAsync(List<WorkOrder> workOrders);
+        Task<int> CountByTechIdAsync(Guid techId);
+        Task<IEnumerable<WorkOrder>> GetWorkOrdersByOrgIdAsync(Guid orgId);
     }
 }

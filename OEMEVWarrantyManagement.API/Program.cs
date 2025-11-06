@@ -33,22 +33,22 @@ namespace OEMEVWarrantyManagement.API
 
             // Add Controllers - ignore null value in response
 
-            builder.Services.AddControllers()
-                .ConfigureApiBehaviorOptions(options =>
-                {
-                    options.InvalidModelStateResponseFactory = context =>
-                    {
-                        var errors = context.ModelState
-                            .Where(x => x.Value?.Errors.Count > 0)
-                            .Select(x => new
-                            {
-                                field = x.Key,
-                                messages = x.Value!.Errors.Select(e => e.ErrorMessage)
-                            });
+            builder.Services.AddControllers() // TODO - chay that thi tat cmt
+                //.ConfigureApiBehaviorOptions(options =>
+                //{
+                //    options.InvalidModelStateResponseFactory = context =>
+                //    {
+                //        var errors = context.ModelState
+                //            .Where(x => x.Value?.Errors.Count > 0)
+                //            .Select(x => new
+                //            {
+                //                field = x.Key,
+                //                messages = x.Value!.Errors.Select(e => e.ErrorMessage)
+                //            });
 
-                        return new BadRequestObjectResult(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
-                    };
-                })
+                //        return new BadRequestObjectResult(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
+                //    };
+                //})
                 .AddJsonOptions(options =>
                 {
                     options.AllowInputFormatterExceptionMessages = true;
@@ -187,14 +187,21 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddScoped<IImageService, ImageService>();
             // Organization
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+            builder.Services.AddScoped<IOrganizationService, OrganizationService>();
+            // Appointment
+            builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+            builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+            // Email
+            builder.Services.AddScoped<IEmailService, EmailService>();
+            // Dashboard
+            builder.Services.AddScoped<IDashboardService, DashboardService>();
+            builder.Services.AddScoped<ICampaignRepository, CampaignRepository>();
             // Campaign
             builder.Services.AddScoped<ICampaignRepository, CampaignRepository>();
             builder.Services.AddScoped<ICampaignService, CampaignService>();
             // Campaign Vehicle
             builder.Services.AddScoped<ICampaignVehicleRepository, CampaignVehicleRepository>();
             builder.Services.AddScoped<ICampaignVehicleService, CampaignVehicleService>();
-            // Email
-            builder.Services.AddScoped<IEmailService, EmailService>();
 
             builder.Services.AddCors(options =>
             {

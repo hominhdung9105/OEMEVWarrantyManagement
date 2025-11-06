@@ -14,28 +14,17 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
 
             builder.Property(a => a.AppointmentType).IsRequired();
             builder.Property(a => a.Vin).IsRequired();
-            builder.Property(a => a.CustomerId).IsRequired();
-            builder.Property(a => a.CampaignVehicleId).IsRequired(false);
             builder.Property(a => a.ServiceCenterId).IsRequired();
             builder.Property(a => a.AppointmentDate).HasColumnType("date");
+            builder.Property(a => a.Slot).IsRequired();
             builder.Property(a => a.Status).IsRequired();
             builder.Property(a => a.CreatedAt).HasColumnType("datetime2");
             builder.Property(a => a.Note);
 
             builder.HasOne(a => a.Vehicle)
-                   .WithMany()
+                   .WithMany() // no inverse navigation on Vehicle
                    .HasForeignKey(a => a.Vin)
                    .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasOne(a => a.Customer)
-                   .WithMany()
-                   .HasForeignKey(a => a.CustomerId)
-                   .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasOne(a => a.CampaignVehicle)
-                   .WithMany()
-                   .HasForeignKey(a => a.CampaignVehicleId)
-                   .OnDelete(DeleteBehavior.SetNull);
 
             builder.HasOne(a => a.ServiceCenter)
                    .WithMany()

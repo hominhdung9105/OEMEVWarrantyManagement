@@ -55,5 +55,26 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         {
             return _context.Campaigns.AsNoTracking();
         }
+
+        public async Task<int> CountByStatusAsync(string status)
+        {
+            return await _context.Campaigns
+                .Where(c => c.Status == status)
+                .CountAsync();
+        }
+
+        public async Task<int> CountCampaignVehiclesByStatusAsync(string status)
+        {
+            return await _context.Set<Domain.Entities.CampaignVehicle>()
+                .Where(cv => cv.Status == status)
+                .CountAsync();
+        }
+
+        public async Task<int> CountCampaignVehiclesNotInStatusAsync(string status)
+        {
+            return await _context.Set<Domain.Entities.CampaignVehicle>()
+                .Where(cv => cv.Status != status)
+                .CountAsync();
+        }
     }
 }

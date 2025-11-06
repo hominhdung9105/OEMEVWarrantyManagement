@@ -8,5 +8,6 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<(IEnumerable<Vehicle> Data, int TotalRecords)> GetPagedVehicleAsync(int pageNumber, int pageSize, string? search);
         Task<List<Vehicle>> GetVehiclesByVinsAsync(List<string> vins);
         Task<IEnumerable<Vehicle>> GetAllAsync();
+        Task<int> CountByOrgIdAsync(Guid orgId);
     }
 }

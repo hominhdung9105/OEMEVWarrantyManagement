@@ -55,5 +55,13 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return await _context.Vehicles.AsNoTracking().ToListAsync();
         }
 
+        public async Task<int> CountByOrgIdAsync(Guid orgId)
+        {
+            // Vehicles belong to customers, customers belong to org
+            return await _context.Vehicles
+                .Where(v => _context.Customers.Any(c => c.CustomerId == v.CustomerId && c.OrganizationOrgId == orgId))
+                .CountAsync();
+        }
+
     }
 }

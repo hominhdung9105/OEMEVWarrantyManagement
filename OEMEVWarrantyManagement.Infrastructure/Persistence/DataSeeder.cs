@@ -589,26 +589,38 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             context.BackWarrantyClaims.AddRange(backClaims);
 
             // A few appointments
-            var vinToCustomer = vehicles.ToDictionary(v => v.Vin, v => v.CustomerId);
+            //var vinToCustomer = vehicles.ToDictionary(v => v.Vin, v => v.CustomerId);
+            //var appointments = new Faker<Appointment>("en")
+            //    .RuleFor(a => a.AppointmentId, f => f.Database.Random.Guid())
+            //    .RuleFor(a => a.AppointmentType, f => f.PickRandom(new[] { "Warranty", "Campaign" }))
+            //    .RuleFor(a => a.Vin, f => f.PickRandom(vehicles).Vin)
+            //    .RuleFor(a => a.CustomerId, (f, a) => vinToCustomer[a.Vin])
+            //    .RuleFor(a => a.CampaignVehicleId, (f, a) =>
+            //    {
+            //        if (a.AppointmentType == "CAMPAIGN")
+            //        {
+            //            return (Guid?)context.CampaignVehicles.OrderBy(_ => Guid.NewGuid()).Select(x => x.CampaignVehicleId).FirstOrDefault();
+            //        }
+            //        return (Guid?)null;
+            //    })
+            //    .RuleFor(a => a.ServiceCenterId, f => f.PickRandom(scOrgs).OrgId)
+            //    .RuleFor(a => a.AppointmentDate, f => DateOnly.FromDateTime(f.Date.Soon(30)))
+            //    .RuleFor(a => a.Status, f => f.PickRandom(new[] { "SCHEDULED", "CHECKED_IN", "CANCELLED" }))
+            //    .RuleFor(a => a.CreatedAt, f => f.Date.Recent(30))
+            //    .RuleFor(a => a.Note, f => f.Random.Bool(0.3f) ? f.Lorem.Sentence() : null)
+            //    .Generate(8);
+
             var appointments = new Faker<Appointment>("en")
                 .RuleFor(a => a.AppointmentId, f => f.Database.Random.Guid())
-                .RuleFor(a => a.AppointmentType, f => f.PickRandom(new[] { "WARRANTY", "CAMPAIGN" }))
+                .RuleFor(a => a.AppointmentType, f => f.PickRandom(new[] { "Warranty", "Campaign" }))
                 .RuleFor(a => a.Vin, f => f.PickRandom(vehicles).Vin)
-                .RuleFor(a => a.CustomerId, (f, a) => vinToCustomer[a.Vin])
-                .RuleFor(a => a.CampaignVehicleId, (f, a) =>
-                {
-                    if (a.AppointmentType == "CAMPAIGN")
-                    {
-                        return (Guid?)context.CampaignVehicles.OrderBy(_ => Guid.NewGuid()).Select(x => x.CampaignVehicleId).FirstOrDefault();
-                    }
-                    return (Guid?)null;
-                })
                 .RuleFor(a => a.ServiceCenterId, f => f.PickRandom(scOrgs).OrgId)
                 .RuleFor(a => a.AppointmentDate, f => DateOnly.FromDateTime(f.Date.Soon(30)))
-                .RuleFor(a => a.Status, f => f.PickRandom(new[] { "SCHEDULED", "CHECKED_IN", "CANCELLED" }))
-                .RuleFor(a => a.CreatedAt, f => f.Date.Recent(30))
-                .RuleFor(a => a.Note, f => f.Random.Bool(0.3f) ? f.Lorem.Sentence() : null)
-                .Generate(8);
+                .RuleFor(a => a.Slot, f => f.PickRandom(new[] { "Slot1", "Slot2", "Slot3", "Slot4", "Slot5", "Slot6", "Slot7", "Slot8" }))
+                .RuleFor(a => a.Status, f => f.PickRandom(new[] { "Scheduled", "Checked_in", "Canceled", "Done", "No_show", "Pending" }))
+                .RuleFor(a => a.CreatedAt, f => f.Date.Recent(60))
+                .RuleFor(a => a.Note, f => f.Random.Bool(0.4f) ? f.Lorem.Sentence() : null)
+                .Generate(25);
             context.Appointments.AddRange(appointments);
 
             context.SaveChanges();

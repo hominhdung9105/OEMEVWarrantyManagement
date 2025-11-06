@@ -1,11 +1,8 @@
-﻿using OEMEVWarrantyManagement.Application.IRepository;
+﻿using Microsoft.EntityFrameworkCore;
+using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 {
@@ -16,6 +13,12 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         {
             _context = context;
         }
+
+        public async Task<IEnumerable<Organization>> GetAllOrganizationsAsync()
+        {
+            return await _context.Organizations.ToListAsync();
+        }
+
         public async Task<Organization> GetOrganizationById(Guid orgId)
         {
             return await _context.Organizations.FindAsync(orgId);

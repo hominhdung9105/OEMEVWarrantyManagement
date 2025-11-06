@@ -117,7 +117,10 @@
         InvalidOrderId,
 
         [ResponseErrorAttr("Not enough stock.", 400, 39)]
-        NotEnoughStock
+        NotEnoughStock,
+
+        [ResponseErrorAttr("Not found appointment.", 400, 40)]
+        NotFoundAppointment
     }
 
     public class ApiResponse<T>
