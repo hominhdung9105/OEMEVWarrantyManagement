@@ -12,17 +12,21 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.ToTable("Campaigns");
             builder.HasKey(c => c.CampaignId);
             builder.Property(c => c.CampaignId).ValueGeneratedOnAdd();
-            builder.Property(c => c.Name).IsRequired();
+            builder.Property(c => c.Title).IsRequired();
             builder.Property(c => c.Type);
             builder.Property(c => c.Description);
             builder.Property(c => c.StartDate);
             builder.Property(c => c.EndDate);
             builder.Property(c => c.Status);
+            builder.Property(c => c.CreatedAt);
+            builder.Property(c => c.PartModel);
+            builder.Property(c => c.ReplacementPartModel);
 
-            //builder.HasOne(c => c.Organization)
-            //       .WithMany(o => o.Campaigns)
-            //       .HasForeignKey(c => c.OrgId)
-            //       .OnDelete(DeleteBehavior.Restrict);
+            // CreatedBy FK -> Employee
+            builder.HasOne(c => c.CreatedByEmployee)
+                   .WithMany(e => e.CreatedCampaigns)
+                   .HasForeignKey(c => c.CreatedBy)
+                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

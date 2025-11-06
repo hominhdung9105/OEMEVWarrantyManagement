@@ -8,8 +8,9 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public Guid CampaignVehicleId { get; set; }
         public Guid CampaignId { get; set; }
         public string Vin { get; set; }
-        public DateTime? NotifiedDate { get; set; }
-        public DateTime? HandledDate { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        public DateTime? CompletedAt { get; set; }
+        public string? NewSerial { get; set; }
         public string Status { get; set; }
 
         // Navigation Properties
@@ -17,5 +18,8 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public Campaign Campaign { get; set; }
         [JsonIgnore]
         public Vehicle Vehicle { get; set; }
+        // Weak entity collection to store old/new serial pairs after repair
+        [JsonIgnore]
+        public ICollection<CampaignVehicleReplacement> Replacements { get; set; } = new List<CampaignVehicleReplacement>();
     }
 }

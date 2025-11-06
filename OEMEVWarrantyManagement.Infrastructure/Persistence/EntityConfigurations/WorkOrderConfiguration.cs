@@ -19,7 +19,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.Property(wo => wo.Status);
             builder.Property(wo => wo.StartDate);
             builder.Property(wo => wo.EndDate);
-            builder.Property(wo => wo.Notes);
 
             builder.HasOne(wo => wo.AssignedToEmployee)
                    .WithMany(e => e.AssignedWorkOrders)

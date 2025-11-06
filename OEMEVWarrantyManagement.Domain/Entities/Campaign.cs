@@ -1,24 +1,30 @@
 ﻿using System.Text.Json.Serialization;
 
-
 namespace OEMEVWarrantyManagement.Domain.Entities
 {
     public class Campaign
     {
         public Guid CampaignId { get; set; }
-        public string Name { get; set; }
-        public string Type { get; set; } // recall | service
+        public string Type { get; set; } // RECALL | SERVICE
+        public string Title { get; set; }
         public string Description { get; set; }
+        public string? PartModel { get; set; }
+        public string? ReplacementPartModel { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-        public string Status { get; set; }
-        public Guid OrganizationOrgId { get; set; }
+        public string Status { get; set; } // DRAFT | ACTIVE | CLOSED
+        public Guid CreatedBy { get; set; }
+        public DateTime CreatedAt { get; set; }
+
+        // Vehicle counters
+        public int TotalAffectedVehicles { get; set; }
+        public int PendingVehicles { get; set; }
+        public int InProgressVehicles { get; set; }
+        public int CompletedVehicles { get; set; }
 
         // Navigation Properties
         [JsonIgnore]
-        public Organization Organization { get; set; }
-        [JsonIgnore]
-        public ICollection<CampaignTarget> CampaignTargets { get; set; } = new List<CampaignTarget>();
+        public Employee? CreatedByEmployee { get; set; }
         [JsonIgnore]
         public ICollection<CampaignVehicle> CampaignVehicles { get; set; } = new List<CampaignVehicle>();
     }

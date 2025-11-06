@@ -39,9 +39,8 @@
 
     public class InspectionDto
     {
-        public Guid? ClaimId { get; set; }
         public string? Description { get; set; }
-        public List<PartsInClaimPartDto> Parts { get; set; }
+        public List<PartsInClaimPartDto>? Parts { get; set; }
     }
 
     public class ResponseWarrantyClaimDto
@@ -61,6 +60,7 @@
         public string FailureDesc { get; set; }
         public string Description { get; set; }
         public Guid PolicyId { get; set; }
+        public string? PolicyName { get; set; }
         public string? Notes { get; set; }
         public List<ShowClaimPartDto> ShowClaimParts { get; set; }
         public List<PolicyInformationDto> ShowPolicy { get; set; }
@@ -68,7 +68,13 @@
     }
     public class RepairRequestDto
     {
-        public Guid ClaimId { get; set; }
+        public Guid? ClaimId { get; set; }
         public List<UpdateClaimPartDto> Parts { get; set; }
+    }
+
+    // New: request for assigning technicians to a warranty claim
+    public class AssignTechRequestDto
+    {
+        public List<Guid> AssignedTo { get; set; }
     }
 }

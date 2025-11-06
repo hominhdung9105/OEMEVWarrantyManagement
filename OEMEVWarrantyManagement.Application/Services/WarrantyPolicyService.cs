@@ -2,8 +2,10 @@
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
+using OEMEVWarrantyManagement.Share.Models.Pagination;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace OEMEVWarrantyManagement.Application.Services
@@ -21,6 +23,29 @@ namespace OEMEVWarrantyManagement.Application.Services
         {
             var entities = await _warrantyPolicyRepository.GetAllAsync();
             return _mapper.Map<IEnumerable<WarrantyPolicyDto>>(entities);
+        }
+
+        public async Task<PagedResult<WarrantyPolicyDto>> GetAllAsync(PaginationRequest request)
+        {
+            var query = _warrantyPolicyRepository.Query();
+
+            var total = await query.LongCountAsync();
+
+            var items = await query
+                .Skip(request.Page * request.Size)
+                .Take(request.Size)
+                .ToListAsync();
+
+            var dtoItems = _mapper.Map<List<WarrantyPolicyDto>>(items);
+
+            return new PagedResult<WarrantyPolicyDto>
+            {
+                PageNumber = request.Page,
+                PageSize = request.Size,
+                TotalRecords = total,
+                TotalPages = (int)Math.Ceiling(total / (double)request.Size),
+                Items = dtoItems
+            };
         }
     }
 }

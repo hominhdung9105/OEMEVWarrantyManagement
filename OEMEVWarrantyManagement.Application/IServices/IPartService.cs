@@ -1,18 +1,21 @@
 ﻿using OEMEVWarrantyManagement.Application.Dtos;
-using OEMEVWarrantyManagement.Domain.Entities;
+using OEMEVWarrantyManagement.Share.Models.Pagination;
 
 
 namespace OEMEVWarrantyManagement.Application.IServices
 {
     public interface IPartService
     {
-        Task<IEnumerable<PartDto>> GetAllAsync();
-        Task<IEnumerable<PartDto>> GetPartByOrgIdAsync(Guid id);
-        Task<IEnumerable<PartDto>> GetPartsAsync(string model);
-        Task <IEnumerable<PartDto>> UpdateQuantityAsync(Guid orderID);
-        Task UpdateEnoughClaimPartsAsync(Guid orgId, IEnumerable<Part> parts);
+        // Pagination + filters
+        Task<PagedResult<PartDto>> GetPagedAsync(PaginationRequest request, string? search = null, string? status = null);
 
+        // Metadata helpers
         IEnumerable<string> GetPartCategories();
         IEnumerable<string> GetPartModels(string category);
+        string? GetCategoryByModel(string model);
+
+        // Stock updates triggered by order workflows
+        Task<IEnumerable<PartDto>> UpdateQuantityAsync(Guid orderID);
+        Task<IEnumerable<PartDto>> UpdateEvmQuantityAsync(Guid orderId);
     }
 }

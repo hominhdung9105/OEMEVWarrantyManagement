@@ -5,7 +5,7 @@ namespace OEMEVWarrantyManagement.Application.IServices
     public interface IClaimPartService
     {
         Task<IEnumerable<RequestClaimPart>> GetClaimPartsAsync(Guid claimId);
-        Task<List<RequestClaimPart>> CreateManyClaimPartsAsync(InspectionDto dto);
+        Task<List<RequestClaimPart>> CreateManyClaimPartsAsync(Guid claimId, List<PartsInClaimPartDto> dto);
         Task UpdateClaimPartsAsync(RepairRequestDto dto);
     }   
         

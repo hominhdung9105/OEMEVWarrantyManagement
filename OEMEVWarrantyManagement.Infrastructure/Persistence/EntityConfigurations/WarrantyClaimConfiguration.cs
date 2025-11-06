@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OEMEVWarrantyManagement.Domain.Entities;
 
-
 namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfigurations
 {
     public class WarrantyClaimConfiguration : IEntityTypeConfiguration<WarrantyClaim>
@@ -22,7 +21,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.Property(wc => wc.ConfirmBy);
             builder.Property(wc => wc.ConfirmDate);
             builder.Property(wc => wc.failureDesc);
-            builder.Property(wc => wc.PolicyId).HasColumnName("PolicyId");
+            builder.Property(wc => wc.VehicleWarrantyId).HasColumnName("VehicleWarrantyId");
 
 
             builder.HasOne(wc => wc.Vehicle)
@@ -46,9 +45,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
                    .IsRequired(false) // Important for nullable FK
                    .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(wc => wc.WarrantyPolicy)      
-                   .WithMany(p => p.WarrantyClaims)      
-                   .HasForeignKey(wc => wc.PolicyId)     
+            builder.HasOne(wc => wc.VehicleWarrantyPolicy)
+                   .WithMany()
+                   .HasForeignKey(wc => wc.VehicleWarrantyId)
                    .OnDelete(DeleteBehavior.Restrict);
         }
     }

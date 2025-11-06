@@ -26,12 +26,13 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         public async Task<IEnumerable <BackWarrantyClaim>> GetAllBackWarrantyClaimsAsync()
         {
-            return await _context.BackWarrantyClaims.ToListAsync();
+            return await _context.BackWarrantyClaims.OrderBy(bwc => bwc.CreatedDate).ToListAsync();
         }
 
         public async Task<IEnumerable<BackWarrantyClaim>> GetBackWarrantyClaimsByIdAsync(Guid warrantyClaimId)
         {
             return await _context.BackWarrantyClaims
+                .OrderBy(bwc => bwc.CreatedDate)
                 .Where(bwc => bwc.WarrantyClaimId == warrantyClaimId)
                 .OrderByDescending(bwc => bwc.CreatedDate)
                 .ToListAsync();

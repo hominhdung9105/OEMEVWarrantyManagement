@@ -20,6 +20,10 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public int? Year { get; set; }
         public string? CustomerName { get; set; }
         public string? CustomerPhoneNumber { get; set; }
+
+        // Enriched info similar to WorkOrderDetailDto
+        public WarrantyClaimInfoDto? WarrantyClaim { get; set; }
+        public CampaignInfoDto? Campaign { get; set; }
     }
     public class RequestCreateWorkOrderDto
     {
@@ -34,8 +38,8 @@ namespace OEMEVWarrantyManagement.Application.Dtos
 
     public class RequestCreateWorkOrdersDto
     {
-        public List<Guid> AssignedTo { get; set; }
-        public string Target { get; set; }// claim hay campaign
+        public List<string> AssignedTo { get; set; }
+        public string? Target { get; set; }// claim hay campaign
         public Guid? TargetId { get; set; }
     }
 

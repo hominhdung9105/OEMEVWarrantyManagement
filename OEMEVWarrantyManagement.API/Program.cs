@@ -16,8 +16,6 @@ using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Middlewares;
 using OEMEVWarrantyManagement.Share.Models.Response;
 using Scalar.AspNetCore;
-using OEMEVWarrantyManagement.Infrastructure.Persistence; // <-- Thêm using này
-using Microsoft.EntityFrameworkCore; // <-- Thêm using này
 
 namespace OEMEVWarrantyManagement.API
 {
@@ -30,25 +28,27 @@ namespace OEMEVWarrantyManagement.API
             //Bind AppSettings from appsettings.json
             builder.Services.Configure<AppSettings>(
                 builder.Configuration.GetSection("AppSettings"));
+            builder.Services.Configure<EmailSettings>(
+                builder.Configuration.GetSection("EmailSettings"));
 
             // Add Controllers - ignore null value in response
 
-            builder.Services.AddControllers()
-                .ConfigureApiBehaviorOptions(options =>
-                {
-                    //options.InvalidModelStateResponseFactory = context =>
-                    //{
-                    //    var errors = context.ModelState
-                    //        .Where(x => x.Value?.Errors.Count > 0)
-                    //        .Select(x => new
-                    //        {
-                    //            field = x.Key,
-                    //            messages = x.Value!.Errors.Select(e => e.ErrorMessage)
-                    //        });
+            builder.Services.AddControllers() // TODO - chay that thi tat cmt
+                //.ConfigureApiBehaviorOptions(options =>
+                //{
+                //    options.InvalidModelStateResponseFactory = context =>
+                //    {
+                //        var errors = context.ModelState
+                //            .Where(x => x.Value?.Errors.Count > 0)
+                //            .Select(x => new
+                //            {
+                //                field = x.Key,
+                //                messages = x.Value!.Errors.Select(e => e.ErrorMessage)
+                //            });
 
-                    //    return new BadRequestObjectResult(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
-                    //};
-                })
+                //        return new BadRequestObjectResult(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
+                //    };
+                //})
                 .AddJsonOptions(options =>
                 {
                     options.AllowInputFormatterExceptionMessages = true;
@@ -185,6 +185,23 @@ namespace OEMEVWarrantyManagement.API
             // Attechment
             builder.Services.AddScoped<IImageRepository, ImageRepository>();
             builder.Services.AddScoped<IImageService, ImageService>();
+            // Organization
+            builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+            builder.Services.AddScoped<IOrganizationService, OrganizationService>();
+            // Appointment
+            builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+            builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+            // Email
+            builder.Services.AddScoped<IEmailService, EmailService>();
+            // Dashboard
+            builder.Services.AddScoped<IDashboardService, DashboardService>();
+            builder.Services.AddScoped<ICampaignRepository, CampaignRepository>();
+            // Campaign
+            builder.Services.AddScoped<ICampaignRepository, CampaignRepository>();
+            builder.Services.AddScoped<ICampaignService, CampaignService>();
+            // Campaign Vehicle
+            builder.Services.AddScoped<ICampaignVehicleRepository, CampaignVehicleRepository>();
+            builder.Services.AddScoped<ICampaignVehicleService, CampaignVehicleService>();
 
             builder.Services.AddCors(options =>
             {
@@ -198,9 +215,9 @@ namespace OEMEVWarrantyManagement.API
 
             var app = builder.Build();
 
-            //// =================================================================
-            //// KHỐI MÃ SEEDING: Thêm khối này vào | chạy 1 lần nếu muốn lấy data mẫu
-            //// =================================================================
+            ////// =================================================================
+            ////// KHỐI MÃ SEEDING: Thêm khối này vào | chạy 1 lần nếu muốn lấy data mẫu
+            ////// =================================================================
             //using (var scope = app.Services.CreateScope())
             //{
             //    var services = scope.ServiceProvider;
@@ -221,9 +238,9 @@ namespace OEMEVWarrantyManagement.API
             //        logger.LogError(ex, "Đã xảy ra lỗi khi seeding database.");
             //    }
             //}
-            //// =================================================================
-            //// KẾT THÚC KHỐI MÃ SEEDING
-            //// =================================================================
+            ////// =================================================================
+            ////// KẾT THÚC KHỐI MÃ SEEDING
+            ////// =================================================================
 
             // Dev
 
@@ -235,9 +252,9 @@ namespace OEMEVWarrantyManagement.API
 
             }
             app.UseCors("AllowAll");
-            // Thay tất cả exception middleware bằng global response
 
-            //app.UseMiddleware<GlobalResponseMiddleware>();
+            // Thay tất cả exception middleware bằng global response
+            app.UseMiddleware<GlobalResponseMiddleware>();
 
             //app.UseHttpsRedirection();
 

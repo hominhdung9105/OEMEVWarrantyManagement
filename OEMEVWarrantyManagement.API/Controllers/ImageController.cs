@@ -17,10 +17,10 @@ namespace OEMEVWarrantyManagement.API.Controllers
         [Authorize(Policy = "RequireScTech")]
         public async Task<IActionResult> UploadImage(string wanrantyId, [FromForm] IFormFile file)
         {
-            if(! await IsValidGuid(wanrantyId))
+            if (!await IsValidGuid(wanrantyId))
                 return BadRequest(ApiResponse<object>.Fail(ResponseError.InvalidWarrantyClaimId));
 
-            if(!IsValidImage(file))
+            if (!IsValidImage(file))
                 return BadRequest(ApiResponse<object>.Fail(ResponseError.InvalidImage));
 
             // Giới hạn dung lượng 5MB

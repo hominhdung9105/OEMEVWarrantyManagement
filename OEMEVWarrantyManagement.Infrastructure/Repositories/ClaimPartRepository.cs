@@ -13,13 +13,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<ClaimPart> CreateClaimPartAsync(ClaimPart request)
-        {
-            var _ = _context.ClaimParts.AddAsync(request);
-            await _context.SaveChangesAsync();
-            return request;
-        }
-
         public async Task<IEnumerable<ClaimPart>> GetClaimPartByClaimIdAsync(Guid claimId)
         {
             return await _context.ClaimParts.Where(cp => cp.ClaimId == claimId).ToListAsync();

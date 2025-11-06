@@ -13,9 +13,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.Property(cv => cv.CampaignVehicleId).ValueGeneratedOnAdd();
             builder.Property(cv => cv.CampaignId);
             builder.Property(cv => cv.Vin);
-            builder.Property(cv => cv.NotifiedDate);
-            builder.Property(cv => cv.HandledDate);
-            builder.Property(cv => cv.Status);
+            builder.Property(cv => cv.CreatedAt);
+            builder.Property(cv => cv.CompletedAt);
+            builder.Property(cv => cv.NewSerial);
+            builder.Property(cv => cv.Status).IsRequired();
 
             builder.HasOne(cv => cv.Campaign)
                    .WithMany(c => c.CampaignVehicles)

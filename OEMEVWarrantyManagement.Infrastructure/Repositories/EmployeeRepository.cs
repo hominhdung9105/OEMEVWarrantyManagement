@@ -24,6 +24,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return await _context.Employees.FindAsync(userId);
         }
 
-
+        public async Task<IEnumerable<Employee>> GetAllTechAsync()
+        {
+            return await _context.Employees
+                .Where(e => e.Role == RoleIdEnum.Technician.GetRoleId())
+                .ToListAsync();
+        }
     }
 }

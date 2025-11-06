@@ -13,10 +13,8 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public string? Description { get; set; }
         public Guid? ConfirmBy { get; set; }
         public DateTime? ConfirmDate { get; set; }
-        public Guid? PolicyId { get; set; }
+        public Guid? VehicleWarrantyId { get; set; }
         public string failureDesc { get; set; }
-
-
 
         // Navigation Properties
         [JsonIgnore]
@@ -32,7 +30,7 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         [JsonIgnore]
         public ICollection<ClaimPart> ClaimParts { get; set; } = new List<ClaimPart>();
         [JsonIgnore]
-        public WarrantyPolicy WarrantyPolicy { get; set; }
+        public VehicleWarrantyPolicy VehicleWarrantyPolicy { get; set; }
         [JsonIgnore]
         public ICollection<BackWarrantyClaim> Feedbacks { get; set; } = new List<BackWarrantyClaim>();
     }

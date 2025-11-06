@@ -1,25 +1,21 @@
 ﻿using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Share.Enums;
+using OEMEVWarrantyManagement.Share.Models.Pagination;
+using System.Collections.Generic;
+using System;
 
 namespace OEMEVWarrantyManagement.Application.IServices
 {
     public interface IWarrantyClaimService
     {
-        Task<IEnumerable<WarrantyClaimDto>> GetAllWarrantyClaimAsync();
-        Task<IEnumerable<WarrantyClaimDto>> GetAllWarrantyClaimByOrganizationAsync();
-        Task<IEnumerable<WarrantyClaimDto>> GetWarrantyClaimByVinAsync(string vin, string staffId);
-        Task<IEnumerable<WarrantyClaimDto>> GetWarrantyClaimByVinAsync(string vin);
-        Task<IEnumerable<ResponseWarrantyClaimDto>> GetWarrantyClaimHavePolicyAndPartsAndOrg();
-        Task<WarrantyClaimDto> GetWarrantyClaimByIdAsync(Guid id);
-        Task<bool> HasWarrantyClaim(Guid warrantyClaimId);
         Task<ResponseWarrantyClaim> CreateAsync(RequestWarrantyClaim request);
-        // policyId is optional and used when approving a claim to associate a vehicle policy
         Task<WarrantyClaimDto> UpdateStatusAsync(Guid claimId, WarrantyClaimStatus status, Guid? policyId = null);
-        //Task<WarrantyClaimDto> UpdateApproveStatusAsync(Guid claimId, Guid staffId);
-        Task<bool> DeleteAsync(Guid id);
         Task<WarrantyClaimDto> UpdateDescription(Guid claimId, string description);
-        Task<IEnumerable<WarrantyClaimDto>> GetWarrantyClaimsByStatusAndOrgIdAsync(string status, Guid orgId);
-        Task<IEnumerable<WarrantyClaimDto>> GetWarrantyClaimByStatusAsync(string status);
-        Task<IEnumerable<ResponseWarrantyClaimDto>> GetWarrantyClaimsSentToManufacturerAsync();
+        Task<PagedResult<ResponseWarrantyClaimDto>> GetPagedUnifiedAsync(PaginationRequest request, string? search, string? status);
+        Task<bool> HasWarrantyClaim(Guid warrantyClaimId);
+        Task<int> CountSentToManufacturerAsync();
+        Task<IEnumerable<TimeCountDto>> GetWarrantyClaimCountsAsync(char unit, int take, Guid? orgId = null);
+        Task<IEnumerable<PolicyTopDto>> GetTopApprovedPoliciesAsync(int? month, int? year, int take = 5);
+        Task<IEnumerable<ServiceCenterTopDto>> GetTopServiceCentersAsync(int? month, int? year, int take = 3);
     }
 }

@@ -23,7 +23,6 @@
 
     public class PartsInClaimPartDto
     {
-        public Guid PartId { get; set; }
         public string Model { get; set; }
         //public int Quantity { get; set; }
         public string SerialNumber { get; set; }
@@ -33,7 +32,7 @@
 
     public class UpdateClaimPartDto
     {
-        public Guid ClaimPartId { get; set; }
+        public string ClaimPartId { get; set; }
         public required string SerialNumber { get; set; }
     }
 

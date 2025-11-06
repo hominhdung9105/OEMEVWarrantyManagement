@@ -14,11 +14,5 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         // Navigation Properties
         [JsonIgnore]
         public Organization Organization { get; set; }
-        [JsonIgnore]
-        public ICollection<VehiclePart> VehicleParts { get; set; } = new List<VehiclePart>();
-        [JsonIgnore]
-        public ICollection<ClaimPart> ClaimParts { get; set; } = new List<ClaimPart>();
-        [JsonIgnore]
-        public ICollection<PartOrderItem> PartOrderItems { get; set; } = new List<PartOrderItem>();
     }
 }

@@ -11,5 +11,6 @@ namespace OEMEVWarrantyManagement.Application.IRepository
     {
         Task<IEnumerable<WarrantyPolicy>> GetAllAsync();
         Task<WarrantyPolicy> GetByIdAsync(Guid policyId);
+        IQueryable<WarrantyPolicy> Query();
     }
 }

@@ -1,0 +1,323 @@
+﻿using AutoMapper;
+using OEMEVWarrantyManagement.Application.Dtos;
+using OEMEVWarrantyManagement.Application.IRepository;
+using OEMEVWarrantyManagement.Application.IServices;
+using OEMEVWarrantyManagement.Domain.Entities;
+using OEMEVWarrantyManagement.Share.Enums;
+using OEMEVWarrantyManagement.Share.Exceptions;
+using OEMEVWarrantyManagement.Share.Models.Pagination;
+using OEMEVWarrantyManagement.Share.Models.Response;
+using System.Text.Json;
+
+namespace OEMEVWarrantyManagement.Application.Services
+{
+    public class CampaignVehicleService : ICampaignVehicleService
+    {
+        private readonly ICampaignRepository _campaignRepository;
+        private readonly IVehicleRepository _vehicleRepository;
+        private readonly ICampaignVehicleRepository _campaignVehicleRepository;
+        private readonly IWorkOrderRepository _workOrderRepository;
+        private readonly IEmployeeRepository _employeeRepository;
+        private readonly IVehiclePartRepository _vehiclePartRepository;
+        private readonly IMapper _mapper;
+        private readonly IWorkOrderService _workOrderService;
+
+        public CampaignVehicleService(ICampaignRepository campaignRepository, IVehicleRepository vehicleRepository, ICampaignVehicleRepository campaignVehicleRepository, IWorkOrderRepository workOrderRepository, IEmployeeRepository employeeRepository, IVehiclePartRepository vehiclePartRepository, IMapper mapper, IWorkOrderService workOrderService)
+        {
+            _campaignRepository = campaignRepository;
+            _vehicleRepository = vehicleRepository;
+            _campaignVehicleRepository = campaignVehicleRepository;
+            _workOrderRepository = workOrderRepository;
+            _employeeRepository = employeeRepository;
+            _vehiclePartRepository = vehiclePartRepository;
+            _mapper = mapper;
+            _workOrderService = workOrderService;
+        }
+
+        public async Task<CampaignVehicleDto> AddVehicleAsync(RequestAddCampaignVehicleDto request)
+        {
+            var campaign = await _campaignRepository.GetByIdAsync(request.CampaignId) ?? throw new ApiException(ResponseError.NotFoundCampaign);
+
+            // Validate VIN
+            var vehicle = await _vehicleRepository.GetVehicleByVinAsync(request.Vin) ?? throw new ApiException(ResponseError.NotfoundVin);
+
+            // Check duplicate
+            var existing = await _campaignVehicleRepository.GetByCampaignAndVinsAsync(request.CampaignId, new[] { request.Vin });
+            if (existing.Any()) throw new ApiException(ResponseError.DuplicateCampaignVehicle);
+
+            var parts = _vehiclePartRepository.GetVehiclePartByVinAndModelAsync(request.Vin, campaign.PartModel);
+
+            if (parts == null || !parts.Result.Any())
+                throw new ApiException(ResponseError.NotFoundVehiclePart);
+
+            var now = DateTime.UtcNow;
+            var entity = new CampaignVehicle
+            {
+                CampaignVehicleId = Guid.NewGuid(),
+                CampaignId = request.CampaignId,
+                Vin = request.Vin,
+                Status = CampaignVehicleStatus.WaitingForUnassignedRepair.GetCampaignVehicleStatus(),
+                CreatedAt = now
+            };
+
+            await _campaignVehicleRepository.AddRangeAsync(entity);
+
+            // Assign technicians if provided using centralized service
+            if (request.AssignedTo != null && request.AssignedTo.Any())
+            {
+                var parsedTechIds = new List<Guid>();
+                foreach (var techStr in request.AssignedTo)
+                {
+                    if (!Guid.TryParse(techStr, out var techId)) throw new ApiException(ResponseError.NotFoundEmployee);
+                    parsedTechIds.Add(techId);
+                }
+
+                _ = await _workOrderService.CreateForCampaignAsync(entity.CampaignVehicleId, parsedTechIds);
+            }
+
+            campaign.InProgressVehicles += 1;
+            await _campaignRepository.UpdateAsync(campaign);
+
+            return _mapper.Map<CampaignVehicleDto>(entity);
+        }
+
+        public async Task<PagedResult<CampaignVehicleDto>> GetByCampaignIdAsync(Guid campaignId, PaginationRequest request)
+        {
+            var (data, total) = await _campaignVehicleRepository.GetByCampaignIdAsync(campaignId, request);
+            var items = _mapper.Map<IEnumerable<CampaignVehicleDto>>(data);
+            return new PagedResult<CampaignVehicleDto>
+            {
+                PageNumber = request.Page,
+                PageSize = request.Size,
+                TotalRecords = total,
+                TotalPages = (int)Math.Ceiling(total / (double)request.Size),
+                Items = items
+            };
+        }
+
+        public async Task<PagedResult<CampaignVehicleDto>> GetAllAsync(PaginationRequest request)
+        {
+            var (data, total) = await _campaignVehicleRepository.GetAllAsync(request);
+            var items = _mapper.Map<IEnumerable<CampaignVehicleDto>>(data);
+            return new PagedResult<CampaignVehicleDto>
+            {
+                PageNumber = request.Page,
+                PageSize = request.Size,
+                TotalRecords = total,
+                TotalPages = (int)Math.Ceiling(total / (double)request.Size),
+                Items = items
+            };
+        }
+
+        public async Task<PagedResult<CampaignVehicleDto>> GetAllAsync(PaginationRequest request, string? search = null, string? type = null, string? status = null)
+        {
+            // If no filters, keep repository paging
+            if (string.IsNullOrWhiteSpace(search) && string.IsNullOrWhiteSpace(type) && string.IsNullOrWhiteSpace(status))
+            {
+                return await GetAllAsync(request);
+            }
+
+            // Build DB-side query, apply filters, then paginate once
+            var query = _campaignVehicleRepository.Query();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.Trim();
+                query = query.Where(cv =>
+                    (cv.Campaign != null && cv.Campaign.Title != null && cv.Campaign.Title.Contains(s)) ||
+                    (cv.Vin != null && cv.Vin.Contains(s)) ||
+                    (cv.Vehicle != null && cv.Vehicle.Customer != null && cv.Vehicle.Customer.Name != null && cv.Vehicle.Customer.Name.Contains(s))
+                );
+            }
+
+            if (!string.IsNullOrWhiteSpace(type))
+            {
+                query = query.Where(cv => cv.Campaign != null && cv.Campaign.Type == type);
+            }
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                query = query.Where(cv => cv.Status == status);
+            }
+
+            var totalRecords = query.Count();
+            var data = query
+                .OrderByDescending(cv => cv.CreatedAt)
+                .Skip(request.Page * request.Size)
+                .Take(request.Size)
+                .ToList();
+
+            var items = _mapper.Map<IEnumerable<CampaignVehicleDto>>(data);
+
+            return new PagedResult<CampaignVehicleDto>
+            {
+                PageNumber = request.Page,
+                PageSize = request.Size,
+                TotalRecords = totalRecords,
+                TotalPages = (int)Math.Ceiling(totalRecords / (double)request.Size),
+                Items = items
+            };
+        }
+
+        public async Task<CampaignVehicleDto> UpdateStatusAsync(UpdateCampaignVehicleStatusDto request)
+        {
+            var entity = await _campaignVehicleRepository.GetByIdAsync(request.CampaignVehicleId) ?? throw new ApiException(ResponseError.NotFoundCampaignVehicle);
+            var campaign = await _campaignRepository.GetByIdAsync(entity.CampaignId) ?? throw new ApiException(ResponseError.NotFoundCampaign);
+
+            switch (request.Status)
+            {
+                case CampaignVehicleStatus.Repaired:
+                    if (entity.Status != CampaignVehicleStatus.UnderRepair.GetCampaignVehicleStatus())
+                        throw new ApiException(ResponseError.InvalidCampaignVehicleStatus);
+
+                    // Validate replacements payload
+                    if (request.Replacements == null || request.Replacements.Count == 0)
+                        throw new ApiException(ResponseError.InvalidJsonFormat);
+
+                    if (string.IsNullOrWhiteSpace(campaign.PartModel))
+                        throw new ApiException(ResponseError.InvalidPartModel);
+
+                    // For campaign, new part must use ReplacementPartModel
+                    if (string.IsNullOrWhiteSpace(campaign.ReplacementPartModel))
+                        throw new ApiException(ResponseError.InvalidPartModel);
+
+                    // Get all vehicle parts by VIN and campaign model (old/failed model)
+                    var parts = await _vehiclePartRepository.GetVehiclePartByVinAndModelAsync(entity.Vin, campaign.PartModel);
+                    var installedParts = parts.Where(p => p.Status == VehiclePartStatus.Installed.GetVehiclePartStatus()).ToList();
+
+                    var now = DateTime.UtcNow;
+
+                    // Process each provided replacement (no strict equality with installed count, follow warranty repair semantics)
+                    var newSerials = new List<string>();
+                    var replacementEntities = new List<CampaignVehicleReplacement>();
+                    foreach (var rep in request.Replacements)
+                    {
+                        if (string.IsNullOrWhiteSpace(rep.OldSerial) || string.IsNullOrWhiteSpace(rep.NewSerial))
+                            throw new ApiException(ResponseError.InvalidJsonFormat);
+
+                        // Validate old serial exists in installed list
+                        var vp = installedParts.FirstOrDefault(p => p.SerialNumber == rep.OldSerial);
+                        if (vp == null)
+                            throw new ApiException(ResponseError.NotFoundVehiclePart);
+
+                        // Mark old as uninstalled
+                        vp.Status = VehiclePartStatus.UnInstalled.GetVehiclePartStatus();
+                        vp.UninstalledDate = now;
+                        await _vehiclePartRepository.UpdateVehiclePartAsync(vp);
+
+                        // Add new installed part entry with replacement model
+                        var newVp = new VehiclePart
+                        {
+                            VehiclePartId = Guid.NewGuid(),
+                            Vin = entity.Vin,
+                            Model = campaign.ReplacementPartModel!,
+                            SerialNumber = rep.NewSerial,
+                            InstalledDate = now,
+                            UninstalledDate = DateTime.MinValue,
+                            Status = VehiclePartStatus.Installed.GetVehiclePartStatus()
+                        };
+                        await _vehiclePartRepository.AddVehiclePartAsync(newVp);
+
+                        // add weak entity record
+                        replacementEntities.Add(new CampaignVehicleReplacement
+                        {
+                            CampaignVehicleReplacementId = Guid.NewGuid(),
+                            CampaignVehicleId = entity.CampaignVehicleId,
+                            OldSerial = rep.OldSerial,
+                            NewSerial = rep.NewSerial,
+                            ReplacedAt = now
+                        });
+
+                        newSerials.Add(rep.NewSerial);
+                    }
+
+                    if (replacementEntities.Count > 0)
+                    {
+                        await _campaignVehicleRepository.AddReplacementsAsync(replacementEntities);
+                        // update in-memory navigation for immediate response
+                        entity.Replacements ??= new List<CampaignVehicleReplacement>();
+                        foreach (var r in replacementEntities)
+                        {
+                            entity.Replacements.Add(r);
+                        }
+                    }
+
+                    // Keep legacy NewSerial field updated for backward compatibility (stores JSON array)
+                    entity.NewSerial = JsonSerializer.Serialize(newSerials, (JsonSerializerOptions?)null);
+                    entity.CompletedAt = now;
+                    entity.Status = CampaignVehicleStatus.Repaired.GetCampaignVehicleStatus();
+
+                    // complete all related campaign work orders for this target
+                    var relatedWos = await _workOrderRepository.GetWorkOrders(entity.CampaignVehicleId, WorkOrderType.Repair.GetWorkOrderType(), WorkOrderTarget.Campaign.GetWorkOrderTarget());
+                    foreach (var wo in relatedWos)
+                    {
+                        wo.Status = WorkOrderStatus.Completed.GetWorkOrderStatus();
+                        wo.EndDate = DateTime.UtcNow;
+                        await _workOrderRepository.UpdateAsync(wo);
+                    }
+                    break;
+                case CampaignVehicleStatus.Done:
+                    if (entity.Status != CampaignVehicleStatus.Repaired.GetCampaignVehicleStatus())
+                        throw new ApiException(ResponseError.InvalidCampaignVehicleStatus);
+                    entity.Status = CampaignVehicleStatus.Done.GetCampaignVehicleStatus();
+
+                    campaign.InProgressVehicles -= 1;
+                    campaign.CompletedVehicles += 1;
+
+                    await _campaignRepository.UpdateAsync(campaign);
+                    break;
+                default:
+                    throw new ApiException(ResponseError.InvalidCampaignVehicleStatus);
+            }
+
+            await _campaignVehicleRepository.UpdateAsync(entity);
+            // Return a fresh entity including navigations to ensure Replacements is populated
+            var refreshed = await _campaignVehicleRepository.GetByIdAsync(entity.CampaignVehicleId) ?? entity;
+            return _mapper.Map<CampaignVehicleDto>(refreshed);
+        }
+
+        // Assign technicians after creation when currently unassigned -> move to UnderRepair
+        public async Task<CampaignVehicleDto> AssignTechniciansAsync(Guid campaignVehicleId, AssignTechsRequest request)
+        {
+            var entity = await _campaignVehicleRepository.GetByIdAsync(campaignVehicleId) ?? throw new ApiException(ResponseError.NotFoundCampaignVehicle);
+
+            // Only allow assignment if currently waiting for unassigned repair
+            if (entity.Status != CampaignVehicleStatus.WaitingForUnassignedRepair.GetCampaignVehicleStatus())
+                throw new ApiException(ResponseError.InvalidCampaignVehicleStatus);
+
+            if (request.AssignedTo == null || !request.AssignedTo.Any())
+                throw new ApiException(ResponseError.InvalidTechnicianList);
+
+            var now = DateTime.UtcNow;
+
+            // Validate technicians and create work orders
+            var workOrders = new List<WorkOrder>();
+            foreach (var techStr in request.AssignedTo)
+            {
+                if (!Guid.TryParse(techStr, out var techId)) throw new ApiException(ResponseError.NotFoundEmployee);
+                _ = await _employeeRepository.GetEmployeeByIdAsync(techId) ?? throw new ApiException(ResponseError.NotFoundEmployee);
+
+                workOrders.Add(new WorkOrder
+                {
+                    AssignedTo = techId,
+                    Type = WorkOrderType.Repair.GetWorkOrderType(),
+                    Target = WorkOrderTarget.Campaign.GetWorkOrderTarget(),
+                    TargetId = entity.CampaignVehicleId,
+                    Status = WorkOrderStatus.InProgress.GetWorkOrderStatus(),
+                    StartDate = now
+                });
+            }
+
+            if (workOrders.Any())
+            {
+                await _workOrderRepository.CreateRangeAsync(workOrders);
+            }
+
+            // Update campaign vehicle status to UnderRepair
+            entity.Status = CampaignVehicleStatus.UnderRepair.GetCampaignVehicleStatus();
+            var updated = await _campaignVehicleRepository.UpdateAsync(entity);
+
+            return _mapper.Map<CampaignVehicleDto>(updated);
+        }
+    }
+}

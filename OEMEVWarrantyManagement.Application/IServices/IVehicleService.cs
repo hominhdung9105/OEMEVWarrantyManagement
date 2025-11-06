@@ -1,14 +1,10 @@
 ﻿using OEMEVWarrantyManagement.Application.Dtos;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using OEMEVWarrantyManagement.Share.Models.Pagination;
 
 namespace OEMEVWarrantyManagement.Application.IServices
 {
     public interface IVehicleService
     {
-        Task<IEnumerable<ResponseVehicleDto>> GetAllVehicleAsync();
+        Task<PagedResult<ResponseVehicleDto>> GetPagedAsync(PaginationRequest request, string? search);
     }
 }

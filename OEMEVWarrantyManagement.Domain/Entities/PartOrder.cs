@@ -12,6 +12,8 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public DateTime? ShippedDate { get; set; }
         public string Status { get; set; }
         public Guid CreatedBy { get; set; }
+        public DateOnly? ExpectedDate { get; set; }
+        public DateTime? PartDelivery { get; set; }
 
         // Navigation Properties
         [JsonIgnore]
