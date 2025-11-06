@@ -37,8 +37,8 @@ namespace OEMEVWarrantyManagement.Application.Services
         {
             var orgId = await _currentUserService.GetOrgId();
 
-            var vehicleCount = await _vehicleRepository.CountByOrgIdAsync(orgId);
-            //var vehicleInServiceCount = await _workOrderRepository.
+            //var vehicleCount = await _vehicleRepository.CountByOrgIdAsync(orgId);
+            var vehicleInServiceCount = await _warrantyClaimRepository.CountDistinctVehiclesInServiceByOrgIdAsync(orgId);
 
             var scheduled = AppointmentStatus.Scheduled.GetAppointmentStatus();
             var scheduledAppointmentCount = await _appointmentRepository.CountByOrgIdAndStatusAsync(orgId, scheduled);
@@ -87,8 +87,8 @@ namespace OEMEVWarrantyManagement.Application.Services
             }
 
             // Tính toán ActiveCampaignProgress
-            var completedCampaignVehicles = await _campaignRepository.CountCampaignVehiclesByStatusAsync("DONE");
-            var inProgressCampaignVehicles = await _campaignRepository.CountCampaignVehiclesNotInStatusAsync("DONE");
+            var completedCampaignVehicles = await _campaignRepository.CountCampaignVehiclesByStatusAsync("repaired");
+            var inProgressCampaignVehicles = await _campaignRepository.CountCampaignVehiclesNotInStatusAsync("repaired");
             var pendingCampaignAppointments = await _appointmentRepository.CountByTypeAndStatusAsync("Campaign", scheduled);
 
             var activeCampaignProgress = new ActiveCampaignProgressDto
@@ -100,7 +100,8 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             return new DashboardSummaryDto
             {
-                VehicleCount = vehicleCount,
+                //VehicleCount = vehicleCount,
+                VehicleInServiceCount = vehicleInServiceCount,
                 ScheduledAppointmentCount = scheduledAppointmentCount,
                 ActiveCampaignCount = activeCampaignCount,
                 RepairedWarrantyClaimCount = repairedWarrantyClaimCount,

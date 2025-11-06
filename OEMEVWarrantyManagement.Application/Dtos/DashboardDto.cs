@@ -2,7 +2,8 @@ namespace OEMEVWarrantyManagement.Application.Dtos
 {
     public class DashboardSummaryDto
     {
-        public int VehicleCount { get; set; }
+        //public int VehicleCount { get; set; }
+        public int VehicleInServiceCount { get; set; }
         public int ScheduledAppointmentCount { get; set; }
         public int ActiveCampaignCount { get; set; }
         public int RepairedWarrantyClaimCount { get; set; }

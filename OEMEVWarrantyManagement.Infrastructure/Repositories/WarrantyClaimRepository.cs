@@ -114,5 +114,21 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
             return groupedByMonth;
         }
+
+        public async Task<int> CountDistinctVehiclesInServiceByOrgIdAsync(Guid orgId)
+        {
+            // Count distinct vehicles in warranty claims with in-service statuses:
+            // approved, waiting for unassigned repair, under repair, repaired, car back home
+            return await _context.WarrantyClaims
+                .Where(wc => wc.ServiceCenterId == orgId && 
+                    (wc.Status == WarrantyClaimStatus.Approved.GetWarrantyClaimStatus() ||
+                     wc.Status == WarrantyClaimStatus.WaitingForUnassignedRepair.GetWarrantyClaimStatus() ||
+                     wc.Status == WarrantyClaimStatus.UnderRepair.GetWarrantyClaimStatus() ||
+                     wc.Status == WarrantyClaimStatus.Repaired.GetWarrantyClaimStatus() ||
+                     wc.Status == WarrantyClaimStatus.CarBackHome.GetWarrantyClaimStatus()))
+                .Select(wc => wc.Vin)
+                .Distinct()
+                .CountAsync();
+        }
     }
 }
