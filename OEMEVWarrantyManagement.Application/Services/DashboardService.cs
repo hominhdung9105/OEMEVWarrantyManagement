@@ -37,8 +37,8 @@ namespace OEMEVWarrantyManagement.Application.Services
         {
             var orgId = await _currentUserService.GetOrgId();
 
-            var vehicleCount = await _vehicleRepository.CountByOrgIdAsync(orgId);
-            //var vehicleInServiceCount = await _workOrderRepository.
+            //var vehicleCount = await _vehicleRepository.CountByOrgIdAsync(orgId);
+            var vehicleInServiceCount = await _warrantyClaimRepository.CountDistinctVehiclesInServiceByOrgIdAsync(orgId);
 
             var scheduled = AppointmentStatus.Scheduled.GetAppointmentStatus();
             var scheduledAppointmentCount = await _appointmentRepository.CountByOrgIdAndStatusAsync(orgId, scheduled);
@@ -87,8 +87,8 @@ namespace OEMEVWarrantyManagement.Application.Services
             }
 
             // Tính toán ActiveCampaignProgress
-            var completedCampaignVehicles = await _campaignRepository.CountCampaignVehiclesByStatusAsync("DONE");
-            var inProgressCampaignVehicles = await _campaignRepository.CountCampaignVehiclesNotInStatusAsync("DONE");
+            var completedCampaignVehicles = await _campaignRepository.CountCampaignVehiclesByStatusAsync("repaired");
+            var inProgressCampaignVehicles = await _campaignRepository.CountCampaignVehiclesNotInStatusAsync("repaired");
             var pendingCampaignAppointments = await _appointmentRepository.CountByTypeAndStatusAsync("Campaign", scheduled);
 
             var activeCampaignProgress = new ActiveCampaignProgressDto
@@ -100,7 +100,83 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             return new DashboardSummaryDto
             {
-                VehicleCount = vehicleCount,
+                //VehicleCount = vehicleCount,
+                VehicleInServiceCount = vehicleInServiceCount,
+                ScheduledAppointmentCount = scheduledAppointmentCount,
+                ActiveCampaignCount = activeCampaignCount,
+                RepairedWarrantyClaimCount = repairedWarrantyClaimCount,
+                WarrantyClaimLastSixMonths = warrantyClaimLastSixMonths,
+                TechWorkOrderCounts = techWorkOrderCounts,
+                ActiveCampaignProgress = activeCampaignProgress
+            };
+        }
+
+        public async Task<DashboardSummaryDto> GetGlobalSummaryAsync()
+        {
+            // Global summary without orgId filtering
+            var vehicleInServiceCount = await _warrantyClaimRepository.CountDistinctVehiclesInServiceAsync();
+
+            var scheduled = AppointmentStatus.Scheduled.GetAppointmentStatus();
+            var scheduledAppointmentCount = await _appointmentRepository.CountByStatusAsync(scheduled);
+
+            var activeCampaignCount = await _campaignRepository.CountByStatusAsync("Active");//TODO-ENUM
+
+            var repaired = WarrantyClaimStatus.Repaired;
+            var repairedWarrantyClaimCount = await _warrantyClaimRepository.CountByStatusAsync(repaired);
+
+            // Lấy số lượng warranty claim theo từng tháng trong 6 tháng gần nhất
+            var warrantyClaimsByMonth = await _warrantyClaimRepository.CountGroupByMonthAsync(6);
+            
+            // Tạo danh sách đầy đủ 6 tháng (bao gồm cả tháng không có claim)
+            var warrantyClaimLastSixMonths = new List<MonthlyWarrantyClaimDto>();
+            var now = DateTime.Now;
+            
+            for (int i = 5; i >= 0; i--)
+            {
+                var monthDate = now.AddMonths(-i);
+                var firstDayOfMonth = new DateTime(monthDate.Year, monthDate.Month, 1);
+                
+                warrantyClaimsByMonth.TryGetValue(firstDayOfMonth, out int count);
+                
+                warrantyClaimLastSixMonths.Add(new MonthlyWarrantyClaimDto
+                {
+                    Year = monthDate.Year,
+                    Month = monthDate.Month,
+                    MonthName = monthDate.ToString("MMM yyyy"), // e.g., "Jan 2024"
+                    Count = count
+                });
+            }
+
+            // Lấy danh sách tất cả các technician (không giới hạn theo organization)
+            var technicians = await _employeeRepository.GetAllTechAsync();
+
+            // Đếm số work order cho mỗi technician
+            var techWorkOrderCounts = new List<TechWorkOrderCountDto>();
+            foreach (var tech in technicians)
+            {
+                var workOrderCount = await _workOrderRepository.CountByTechIdAsync(tech.UserId);
+                techWorkOrderCounts.Add(new TechWorkOrderCountDto
+                {
+                    TechName = tech.Name,
+                    WorkOrderCount = workOrderCount
+                });
+            }
+
+            // Tính toán ActiveCampaignProgress
+            var completedCampaignVehicles = await _campaignRepository.CountCampaignVehiclesByStatusAsync("repaired");
+            var inProgressCampaignVehicles = await _campaignRepository.CountCampaignVehiclesNotInStatusAsync("repaired");
+            var pendingCampaignAppointments = await _appointmentRepository.CountByTypeAndStatusAsync("Campaign", scheduled);
+
+            var activeCampaignProgress = new ActiveCampaignProgressDto
+            {
+                Completed = completedCampaignVehicles,
+                InProgress = inProgressCampaignVehicles,
+                Pending = pendingCampaignAppointments
+            };
+
+            return new DashboardSummaryDto
+            {
+                VehicleInServiceCount = vehicleInServiceCount,
                 ScheduledAppointmentCount = scheduledAppointmentCount,
                 ActiveCampaignCount = activeCampaignCount,
                 RepairedWarrantyClaimCount = repairedWarrantyClaimCount,

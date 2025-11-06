@@ -16,11 +16,19 @@ namespace OEMEVWarrantyManagement.API.Controllers
             _dashboardService = dashboardService;
         }
 
-        [HttpGet("summary")]
+        [HttpGet("sc/summary")]
         [Authorize]
         public async Task<IActionResult> GetSummary()
         {
             var summary = await _dashboardService.GetSummaryAsync();
+            return Ok(ApiResponse<object>.Ok(summary, "Get dashboard summary successfully!"));
+        }
+
+        [HttpGet("evm/summary")]
+        [Authorize(policy: "RequireEvmStaff")]
+        public async Task<IActionResult> GetGlobalSummary()
+        {
+            var summary = await _dashboardService.GetGlobalSummaryAsync();
             return Ok(ApiResponse<object>.Ok(summary, "Get dashboard summary successfully!"));
         }
     }

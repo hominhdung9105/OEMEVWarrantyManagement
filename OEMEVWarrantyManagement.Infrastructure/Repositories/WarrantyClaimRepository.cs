@@ -196,5 +196,52 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             var done = WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus();
             return await _context.WarrantyClaims.AnyAsync(wc => wc.Vin == vin && wc.Status != done);
         }
+
+        public async Task<int> CountDistinctVehiclesInServiceByOrgIdAsync(Guid orgId)
+        {
+            // Count distinct vehicles in warranty claims with in-service statuses:
+            // approved, waiting for unassigned repair, under repair, repaired, car back home
+            return await _context.WarrantyClaims
+                .Where(wc => wc.ServiceCenterId == orgId && 
+                    (wc.Status == WarrantyClaimStatus.Approved.GetWarrantyClaimStatus() ||
+                     wc.Status == WarrantyClaimStatus.WaitingForUnassignedRepair.GetWarrantyClaimStatus() ||
+                     wc.Status == WarrantyClaimStatus.UnderRepair.GetWarrantyClaimStatus() ||
+                     wc.Status == WarrantyClaimStatus.Repaired.GetWarrantyClaimStatus() ||
+                     wc.Status == WarrantyClaimStatus.CarBackHome.GetWarrantyClaimStatus()))
+                .Select(wc => wc.Vin)
+                .Distinct()
+                .CountAsync();
+        }
+
+        public async Task<Dictionary<DateTime, int>> CountGroupByMonthAsync(int months)
+        {
+            var fromDate = DateTime.Now.AddMonths(-months);
+            
+            var claims = await _context.WarrantyClaims
+                .Where(wc => wc.CreatedDate >= fromDate)
+                .ToListAsync();
+
+            // Group by year and month
+            var groupedByMonth = claims
+                .GroupBy(wc => new DateTime(wc.CreatedDate.Year, wc.CreatedDate.Month, 1))
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            return groupedByMonth;
+        }
+
+        public async Task<int> CountDistinctVehiclesInServiceAsync()
+        {
+            // Count distinct vehicles in warranty claims with in-service statuses (globally)
+            return await _context.WarrantyClaims
+                .Where(wc => 
+                    wc.Status == WarrantyClaimStatus.Approved.GetWarrantyClaimStatus() ||
+                    wc.Status == WarrantyClaimStatus.WaitingForUnassignedRepair.GetWarrantyClaimStatus() ||
+                    wc.Status == WarrantyClaimStatus.UnderRepair.GetWarrantyClaimStatus() ||
+                    wc.Status == WarrantyClaimStatus.Repaired.GetWarrantyClaimStatus() ||
+                    wc.Status == WarrantyClaimStatus.CarBackHome.GetWarrantyClaimStatus())
+                .Select(wc => wc.Vin)
+                .Distinct()
+                .CountAsync();
+        }
     }
 }

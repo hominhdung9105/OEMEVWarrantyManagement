@@ -21,5 +21,9 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<IEnumerable<(Guid PolicyId, string PolicyName, int Count)>> GetTopApprovedPoliciesAsync(DateTime from, DateTime to, int take);
         Task<IEnumerable<(Guid OrgId, string OrgName, int Count)>> GetTopServiceCentersAsync(DateTime from, DateTime to, int take, IEnumerable<string> statuses);
         Task<bool> HasActiveClaimByVinAsync(string vin);
+        Task<int> CountDistinctVehiclesInServiceByOrgIdAsync(Guid orgId);
+        
+        Task<Dictionary<DateTime, int>> CountGroupByMonthAsync(int months);
+        Task<int> CountDistinctVehiclesInServiceAsync();
     }
 }

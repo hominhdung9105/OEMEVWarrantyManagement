@@ -6,5 +6,6 @@ namespace OEMEVWarrantyManagement.Application.IServices
     public interface IDashboardService
     {
         Task<DashboardSummaryDto> GetSummaryAsync();
+        Task<DashboardSummaryDto> GetGlobalSummaryAsync();
     }
 }
