@@ -18,5 +18,19 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                 .Where(c => c.Status == status)
                 .CountAsync();
         }
+
+        public async Task<int> CountCampaignVehiclesByStatusAsync(string status)
+        {
+            return await _context.Set<Domain.Entities.CampaignVehicle>()
+                .Where(cv => cv.Status == status)
+                .CountAsync();
+        }
+
+        public async Task<int> CountCampaignVehiclesNotInStatusAsync(string status)
+        {
+            return await _context.Set<Domain.Entities.CampaignVehicle>()
+                .Where(cv => cv.Status != status)
+                .CountAsync();
+        }
     }
 }

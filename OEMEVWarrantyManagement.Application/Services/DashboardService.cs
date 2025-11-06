@@ -38,6 +38,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             var orgId = await _currentUserService.GetOrgId();
 
             var vehicleCount = await _vehicleRepository.CountByOrgIdAsync(orgId);
+            //var vehicleInServiceCount = await _workOrderRepository.
 
             var scheduled = AppointmentStatus.Scheduled.GetAppointmentStatus();
             var scheduledAppointmentCount = await _appointmentRepository.CountByOrgIdAndStatusAsync(orgId, scheduled);
@@ -85,6 +86,18 @@ namespace OEMEVWarrantyManagement.Application.Services
                 });
             }
 
+            // Tính toán ActiveCampaignProgress
+            var completedCampaignVehicles = await _campaignRepository.CountCampaignVehiclesByStatusAsync("DONE");
+            var inProgressCampaignVehicles = await _campaignRepository.CountCampaignVehiclesNotInStatusAsync("DONE");
+            var pendingCampaignAppointments = await _appointmentRepository.CountByTypeAndStatusAsync("Campaign", scheduled);
+
+            var activeCampaignProgress = new ActiveCampaignProgressDto
+            {
+                Completed = completedCampaignVehicles,
+                InProgress = inProgressCampaignVehicles,
+                Pending = pendingCampaignAppointments
+            };
+
             return new DashboardSummaryDto
             {
                 VehicleCount = vehicleCount,
@@ -92,7 +105,8 @@ namespace OEMEVWarrantyManagement.Application.Services
                 ActiveCampaignCount = activeCampaignCount,
                 RepairedWarrantyClaimCount = repairedWarrantyClaimCount,
                 WarrantyClaimLastSixMonths = warrantyClaimLastSixMonths,
-                TechWorkOrderCounts = techWorkOrderCounts
+                TechWorkOrderCounts = techWorkOrderCounts,
+                ActiveCampaignProgress = activeCampaignProgress
             };
         }
     }

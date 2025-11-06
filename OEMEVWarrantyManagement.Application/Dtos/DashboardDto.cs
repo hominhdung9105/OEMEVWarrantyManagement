@@ -8,6 +8,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public int RepairedWarrantyClaimCount { get; set; }
         public IEnumerable<MonthlyWarrantyClaimDto> WarrantyClaimLastSixMonths { get; set; }
         public IEnumerable<TechWorkOrderCountDto> TechWorkOrderCounts { get; set; }
+        public ActiveCampaignProgressDto ActiveCampaignProgress { get; set; }
     }
 
     public class MonthlyWarrantyClaimDto
@@ -22,5 +23,12 @@ namespace OEMEVWarrantyManagement.Application.Dtos
     {
         public string TechName { get; set; }
         public int WorkOrderCount { get; set; }
+    }
+
+    public class ActiveCampaignProgressDto
+    {
+        public int Completed { get; set; }
+        public int InProgress { get; set; }
+        public int Pending { get; set; }
     }
 }

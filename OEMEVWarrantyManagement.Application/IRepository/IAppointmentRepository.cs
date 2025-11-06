@@ -15,5 +15,6 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<Appointment> GetAppointmentByIdAsync(Guid appointmentId);
         Task<(IEnumerable<Appointment> Data, int TotalRecords)> GetPagedAsync(int pageNumber, int pageSize);
         Task<int> CountByOrgIdAndStatusAsync(Guid orgId, string status);
+        Task<int> CountByTypeAndStatusAsync(string appointmentType, string status);
     }
 }
