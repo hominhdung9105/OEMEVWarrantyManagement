@@ -130,5 +130,44 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                 .Distinct()
                 .CountAsync();
         }
+
+        // Global methods without orgId filtering
+        public async Task<int> CountByStatusAsync(string status)
+        {
+            return await _context.WarrantyClaims
+                .Where(wc => wc.Status == status)
+                .CountAsync();
+        }
+
+        public async Task<Dictionary<DateTime, int>> CountGroupByMonthAsync(int months)
+        {
+            var fromDate = DateTime.Now.AddMonths(-months);
+            
+            var claims = await _context.WarrantyClaims
+                .Where(wc => wc.CreatedDate >= fromDate)
+                .ToListAsync();
+
+            // Group by year and month
+            var groupedByMonth = claims
+                .GroupBy(wc => new DateTime(wc.CreatedDate.Year, wc.CreatedDate.Month, 1))
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            return groupedByMonth;
+        }
+
+        public async Task<int> CountDistinctVehiclesInServiceAsync()
+        {
+            // Count distinct vehicles in warranty claims with in-service statuses (globally)
+            return await _context.WarrantyClaims
+                .Where(wc => 
+                    wc.Status == WarrantyClaimStatus.Approved.GetWarrantyClaimStatus() ||
+                    wc.Status == WarrantyClaimStatus.WaitingForUnassignedRepair.GetWarrantyClaimStatus() ||
+                    wc.Status == WarrantyClaimStatus.UnderRepair.GetWarrantyClaimStatus() ||
+                    wc.Status == WarrantyClaimStatus.Repaired.GetWarrantyClaimStatus() ||
+                    wc.Status == WarrantyClaimStatus.CarBackHome.GetWarrantyClaimStatus())
+                .Select(wc => wc.Vin)
+                .Distinct()
+                .CountAsync();
+        }
     }
 }

@@ -16,5 +16,10 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<int> CountByOrgIdAndStatusAsync(Guid orgId, string status);
         Task<Dictionary<DateTime, int>> CountByOrgIdGroupByMonthAsync(Guid orgId, int months);
         Task<int> CountDistinctVehiclesInServiceByOrgIdAsync(Guid orgId);
+        
+        // Global methods without orgId filtering
+        Task<int> CountByStatusAsync(string status);
+        Task<Dictionary<DateTime, int>> CountGroupByMonthAsync(int months);
+        Task<int> CountDistinctVehiclesInServiceAsync();
     }
 }

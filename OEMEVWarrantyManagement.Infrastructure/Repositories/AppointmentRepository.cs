@@ -80,5 +80,12 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                 .Where(a => a.AppointmentType == appointmentType && a.Status == status)
                 .CountAsync();
         }
+
+        public async Task<int> CountByStatusAsync(string status)
+        {
+            return await _context.Appointments
+                .Where(a => a.Status == status)
+                .CountAsync();
+        }
     }
 }
