@@ -174,7 +174,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 .RuleFor(c => c.Description, f => f.Lorem.Sentence())
                 .RuleFor(c => c.StartDate, f => f.Date.Past(1))
                 .RuleFor(c => c.EndDate, f => f.Date.Future(1))
-                .RuleFor(c => c.Status, f => f.PickRandom(new[] { "DRAFT", "ACTIVE", "CLOSED" }))
+                .RuleFor(c => c.Status, f => f.PickRandom(new[] { "Active", "Close" }))
                 .RuleFor(c => c.OrganizationOrgId, (f, u) => f.PickRandom(organizations).OrgId);
             var campaigns = campaignFaker.Generate(primaryRecordCount);
             context.Campaigns.AddRange(campaigns);
@@ -461,7 +461,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 .RuleFor(a => a.ServiceCenterId, f => f.PickRandom(scOrgs).OrgId)
                 .RuleFor(a => a.AppointmentDate, f => DateOnly.FromDateTime(f.Date.Soon(30)))
                 .RuleFor(a => a.Slot, f => f.PickRandom(new[] { "Slot1", "Slot2", "Slot3", "Slot4", "Slot5", "Slot6", "Slot7", "Slot8" }))
-                .RuleFor(a => a.Status, f => f.PickRandom(new[] { "SCHEDULED", "CHECKED_IN", "CANCELLED", "DONE", "NO_SHOW" }))
+                .RuleFor(a => a.Status, f => f.PickRandom(new[] { "Scheduled", "Checked_in", "Canceled", "Done", "No_show", "Pending" }))
                 .RuleFor(a => a.CreatedAt, f => f.Date.Recent(60))
                 .RuleFor(a => a.Note, f => f.Random.Bool(0.4f) ? f.Lorem.Sentence() : null);
 

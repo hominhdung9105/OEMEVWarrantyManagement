@@ -23,6 +23,12 @@ namespace OEMEVWarrantyManagement.Share.Enums
         Slot8
     }
 
+    public class TimeSlotInfo
+    {
+        public string Slot { get; set; }
+        public string Time { get; set; }
+    }
+
     public static class TimeSlotExtensions
     {
         // Lấy giờ từ Description
@@ -42,27 +48,27 @@ namespace OEMEVWarrantyManagement.Share.Enums
         }
 
         // Lấy info tổng hợp
-        public static object? GetSlotInfo(string slotString)
+        public static TimeSlotInfo? GetSlotInfo(string slotString)
         {
             var slot = FromString(slotString);
             if (slot == null) return null;
 
-            return new
+            return new TimeSlotInfo
             {
-                slot = slot.Value.ToString(),
-                time = slot.Value.GetTime()
+                Slot = slot.Value.ToString(),
+                Time = slot.Value.GetTime()
             };
         }
 
         // Lấy tất cả các slot với thông tin chi tiết
-        public static IEnumerable<dynamic> GetAllSlots()
+        public static IEnumerable<TimeSlotInfo> GetAllSlots()
         {
             return Enum.GetValues<TimeSlotEnum>()
-           .Select(slot => new
-           {
-                slot = slot.ToString(),
-                time = slot.GetTime()
-            });
+               .Select(slot => new TimeSlotInfo
+               {
+                   Slot = slot.ToString(),
+                   Time = slot.GetTime()
+               });
         }
     }
 }

@@ -21,5 +21,7 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimsByStatusAndOrgIdAsync(string status, Guid orgId);
         Task<(IEnumerable<WarrantyClaim> Data, int TotalRecords)> GetWarrantyClaimByStatusAsync(string status, PaginationRequest request);
         Task<IEnumerable<WarrantyClaim>> GetWarrantyClaimByStatusAsync(string status);
+        Task<int> CountByOrgIdAndStatusAsync(Guid orgId, string status);
+        Task<Dictionary<DateTime, int>> CountByOrgIdGroupByMonthAsync(Guid orgId, int months);
     }
 }

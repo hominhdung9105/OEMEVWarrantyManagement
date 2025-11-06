@@ -85,5 +85,20 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
             return workOrders;
         }
+
+        public async Task<int> CountByTechIdAsync(Guid techId)
+        {
+            return await _context.WorkOrders
+                .Where(wo => wo.AssignedTo == techId && wo.Status != WorkOrderStatus.Completed.GetWorkOrderStatus())
+                .CountAsync();
+        }
+
+        public async Task<IEnumerable<WorkOrder>> GetWorkOrdersByOrgIdAsync(Guid orgId)
+        {
+            return await _context.WorkOrders
+                .Include(wo => wo.AssignedToEmployee)
+                .Where(wo => wo.AssignedToEmployee.OrgId == orgId && wo.Status != WorkOrderStatus.Completed.GetWorkOrderStatus())
+                .ToListAsync();
+        }
     }
 }

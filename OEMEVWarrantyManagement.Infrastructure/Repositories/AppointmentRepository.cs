@@ -2,6 +2,7 @@
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
+using OEMEVWarrantyManagement.Share.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,8 +20,13 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         }
         public async Task<IEnumerable<Appointment>> GetAppoinmentByOrgIdAndDateAsync(Guid orgId, DateOnly desiredDate)
         {
+            var scheduled = AppointmentStatus.Scheduled.GetAppointmentStatus();
+            var checkedIn = AppointmentStatus.CheckedIn.GetAppointmentStatus();
+
             var entity = await _context.Appointments
-                .Where(a => a.ServiceCenterId == orgId && a.AppointmentDate == desiredDate && a.Status == "Scheduled")
+                .Where(a => a.ServiceCenterId == orgId
+                         && a.AppointmentDate == desiredDate
+                         && (a.Status == scheduled || a.Status == checkedIn))
                 .OrderBy(a => a.Slot)
                 .ToListAsync();
             return entity;
@@ -59,6 +65,13 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                 .ToListAsync();
 
             return (data, totalRecords);
+        }
+
+        public async Task<int> CountByOrgIdAndStatusAsync(Guid orgId, string status)
+        {
+            return await _context.Appointments
+                .Where(a => a.ServiceCenterId == orgId && a.Status == status)
+                .CountAsync();
         }
     }
 }

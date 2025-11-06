@@ -30,6 +30,8 @@ namespace OEMEVWarrantyManagement.API
             //Bind AppSettings from appsettings.json
             builder.Services.Configure<AppSettings>(
                 builder.Configuration.GetSection("AppSettings"));
+            builder.Services.Configure<EmailSettings>(
+               builder.Configuration.GetSection("EmailSettings"));
 
             // Add Controllers - ignore null value in response
 
@@ -191,6 +193,11 @@ namespace OEMEVWarrantyManagement.API
             // Appointment
             builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
             builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+            // Email
+            builder.Services.AddScoped<IEmailService, EmailService>();
+            // Dashboard
+            builder.Services.AddScoped<IDashboardService, DashboardService>();
+            builder.Services.AddScoped<ICampaignRepository, CampaignRepository>();
 
             builder.Services.AddCors(options =>
             {

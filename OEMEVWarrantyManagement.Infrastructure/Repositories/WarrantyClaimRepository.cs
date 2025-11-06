@@ -162,5 +162,28 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
             return (data, totalRecords);
         }
+
+        public async Task<int> CountByOrgIdAndStatusAsync(Guid orgId, string status)
+        {
+            return await _context.WarrantyClaims
+                .Where(wc => wc.ServiceCenterId == orgId && wc.Status == status)
+                .CountAsync();
+        }
+
+        public async Task<Dictionary<DateTime, int>> CountByOrgIdGroupByMonthAsync(Guid orgId, int months)
+        {
+            var fromDate = DateTime.Now.AddMonths(-months);
+            
+            var claims = await _context.WarrantyClaims
+                .Where(wc => wc.ServiceCenterId == orgId && wc.CreatedDate >= fromDate)
+                .ToListAsync();
+
+            // Group by year and month
+            var groupedByMonth = claims
+                .GroupBy(wc => new DateTime(wc.CreatedDate.Year, wc.CreatedDate.Month, 1))
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            return groupedByMonth;
+        }
     }
 }

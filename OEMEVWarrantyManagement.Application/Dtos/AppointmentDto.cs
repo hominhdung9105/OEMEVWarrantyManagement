@@ -58,4 +58,9 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string Model { get; set; }
         public int Year { get; set; }
     }
+    public class RescheduleRequest
+    {
+        public DateOnly AppointmentDate { get; set; }
+        public string Slot { get; set; }
+    }
 }
