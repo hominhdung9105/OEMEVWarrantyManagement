@@ -58,7 +58,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             var claim = await _claimRepository.GetWarrantyClaimByIdAsync(claimId) ?? throw new ApiException(ResponseError.InvalidWarrantyClaimId);
 
             if (techIds == null || !techIds.Any())
-                throw new ApiException(ResponseError.InternalServerError);
+                throw new ApiException(ResponseError.InvalidTechnicianList);
 
             string type;
             if (claim.Status == WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyClaimStatus())
@@ -66,7 +66,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             else if (claim.Status == WarrantyClaimStatus.WaitingForUnassignedRepair.GetWarrantyClaimStatus())
                 type = WorkOrderType.Repair.GetWorkOrderType();
             else
-                throw new ApiException(ResponseError.InternalServerError);
+                throw new ApiException(ResponseError.InvalidWarrantyClaimStatus);
 
             var now = DateTime.UtcNow;
             var workOrderStatus = WorkOrderStatus.InProgress.GetWorkOrderStatus();
@@ -100,10 +100,10 @@ namespace OEMEVWarrantyManagement.Application.Services
 
         public async Task<IEnumerable<WorkOrderDto>> CreateForCampaignAsync(Guid campaignVehicleId, IEnumerable<Guid> techIds)
         {
-            var cv = await _campaignVehicleRepository.GetByIdAsync(campaignVehicleId) ?? throw new ApiException(ResponseError.InternalServerError);
+            var cv = await _campaignVehicleRepository.GetByIdAsync(campaignVehicleId) ?? throw new ApiException(ResponseError.NotFoundCampaignVehicle);
 
             if (techIds == null || !techIds.Any())
-                throw new ApiException(ResponseError.InvalidJsonFormat);
+                throw new ApiException(ResponseError.InvalidTechnicianList);
 
             var now = DateTime.UtcNow;
             var workOrderStatus = WorkOrderStatus.InProgress.GetWorkOrderStatus();
@@ -150,7 +150,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             }
             else
             {
-                throw new ApiException(ResponseError.InternalServerError);
+                throw new ApiException(ResponseError.InvalidWorkOrderTarget);
             }
 
             var techIds = workOrders
@@ -301,6 +301,89 @@ namespace OEMEVWarrantyManagement.Application.Services
                 TotalRecords = totalRecords,
                 TotalPages = totalPages,
                 Items = paged
+            };
+        }
+
+        // New: counts for current user (technician): total, completed, in-progress within today/month
+        public async Task<TaskCountDto> GetTaskCountsAsync(char unit = 'd')
+        {
+            unit = char.ToLowerInvariant(unit);
+            if (unit != 'd' && unit != 'm' && unit != 'y') throw new ApiException(ResponseError.InvalidJsonFormat);
+
+            var userId = _currentUserService.GetUserId();
+
+            DateTime from;
+            DateTime to;
+            var now = DateTime.UtcNow;
+            if (unit == 'd')
+            {
+                from = now.Date;
+                to = from.AddDays(1);
+            }
+            else if (unit == 'm')
+            {
+                from = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+                to = from.AddMonths(1);
+            }
+            else
+            {
+                from = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                to = from.AddYears(1);
+            }
+
+            var workOrders = await _workOrderRepository.GetWorkOrdersByTechAndRangeAsync(userId, from, to);
+
+            var total = workOrders.Count();
+            var completed = workOrders.Count(wo => string.Equals(wo.Status, WorkOrderStatus.Completed.GetWorkOrderStatus(), StringComparison.OrdinalIgnoreCase));
+            var inProgress = workOrders.Count(wo => string.Equals(wo.Status, WorkOrderStatus.InProgress.GetWorkOrderStatus(), StringComparison.OrdinalIgnoreCase));
+
+            return new TaskCountDto
+            {
+                Period = unit == 'd' ? now.ToString("yyyy-MM-dd") : now.ToString("yyyy-MM"),
+                Total = total,
+                Completed = completed,
+                InProgress = inProgress
+            };
+        }
+
+        public async Task<TaskGroupCountDto> GetTaskGroupCountsAsync(char unit)
+        {
+            unit = char.ToLowerInvariant(unit);
+            if (unit != 'm' && unit != 'y') throw new ApiException(ResponseError.InvalidJsonFormat);
+
+            var userId = _currentUserService.GetUserId();
+            var now = DateTime.UtcNow;
+
+            DateTime from;
+            DateTime to;
+            if (unit == 'm')
+            {
+                from = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+                to = from.AddMonths(1);
+            }
+            else
+            {
+                from = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                to = from.AddYears(1);
+            }
+
+            var workOrders = await _workOrderRepository.GetWorkOrdersByTechMonthlyAsync(userId, from, to);
+
+            var items = workOrders
+                .GroupBy(wo => new { Target = wo.Target, Type = wo.Type })
+                .Select(g => new TaskGroupCountItemDto
+                {
+                    Target = g.Key.Target,
+                    Type = g.Key.Type,
+                    Count = g.Count()
+                })
+                .ToList();
+
+            return new TaskGroupCountDto
+            {
+                Period = unit == 'm' ? now.ToString("yyyy-MM") : now.ToString("yyyy"),
+                Total = workOrders.Count(),
+                Items = items
             };
         }
     }

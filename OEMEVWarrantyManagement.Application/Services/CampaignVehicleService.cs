@@ -36,19 +36,19 @@ namespace OEMEVWarrantyManagement.Application.Services
 
         public async Task<CampaignVehicleDto> AddVehicleAsync(RequestAddCampaignVehicleDto request)
         {
-            var campaign = await _campaignRepository.GetByIdAsync(request.CampaignId) ?? throw new ApiException(ResponseError.InternalServerError);
+            var campaign = await _campaignRepository.GetByIdAsync(request.CampaignId) ?? throw new ApiException(ResponseError.NotFoundCampaign);
 
             // Validate VIN
             var vehicle = await _vehicleRepository.GetVehicleByVinAsync(request.Vin) ?? throw new ApiException(ResponseError.NotfoundVin);
 
             // Check duplicate
             var existing = await _campaignVehicleRepository.GetByCampaignAndVinsAsync(request.CampaignId, new[] { request.Vin });
-            if (existing.Any()) throw new ApiException(ResponseError.InternalServerError);
+            if (existing.Any()) throw new ApiException(ResponseError.DuplicateCampaignVehicle);
 
             var parts = _vehiclePartRepository.GetVehiclePartByVinAndModelAsync(request.Vin, campaign.PartModel);
 
             if (parts == null || !parts.Result.Any())
-                throw new ApiException(ResponseError.InternalServerError);
+                throw new ApiException(ResponseError.NotFoundVehiclePart);
 
             var now = DateTime.UtcNow;
             var entity = new CampaignVehicle
@@ -161,14 +161,14 @@ namespace OEMEVWarrantyManagement.Application.Services
 
         public async Task<CampaignVehicleDto> UpdateStatusAsync(UpdateCampaignVehicleStatusDto request)
         {
-            var entity = await _campaignVehicleRepository.GetByIdAsync(request.CampaignVehicleId) ?? throw new ApiException(ResponseError.InternalServerError);
-            var campaign = await _campaignRepository.GetByIdAsync(entity.CampaignId) ?? throw new ApiException(ResponseError.InternalServerError);
+            var entity = await _campaignVehicleRepository.GetByIdAsync(request.CampaignVehicleId) ?? throw new ApiException(ResponseError.NotFoundCampaignVehicle);
+            var campaign = await _campaignRepository.GetByIdAsync(entity.CampaignId) ?? throw new ApiException(ResponseError.NotFoundCampaign);
 
             switch (request.Status)
             {
                 case CampaignVehicleStatus.Repaired:
                     if (entity.Status != CampaignVehicleStatus.UnderRepair.GetCampaignVehicleStatus())
-                        throw new ApiException(ResponseError.InvalidJsonFormat);
+                        throw new ApiException(ResponseError.InvalidCampaignVehicleStatus);
 
                     // Validate replacements payload
                     if (request.Replacements == null || request.Replacements.Count == 0)
@@ -258,7 +258,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                     break;
                 case CampaignVehicleStatus.Done:
                     if (entity.Status != CampaignVehicleStatus.Repaired.GetCampaignVehicleStatus())
-                        throw new ApiException(ResponseError.InvalidJsonFormat);
+                        throw new ApiException(ResponseError.InvalidCampaignVehicleStatus);
                     entity.Status = CampaignVehicleStatus.Done.GetCampaignVehicleStatus();
 
                     campaign.InProgressVehicles -= 1;
@@ -267,7 +267,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                     await _campaignRepository.UpdateAsync(campaign);
                     break;
                 default:
-                    throw new ApiException(ResponseError.InternalServerError);
+                    throw new ApiException(ResponseError.InvalidCampaignVehicleStatus);
             }
 
             await _campaignVehicleRepository.UpdateAsync(entity);
@@ -279,14 +279,14 @@ namespace OEMEVWarrantyManagement.Application.Services
         // Assign technicians after creation when currently unassigned -> move to UnderRepair
         public async Task<CampaignVehicleDto> AssignTechniciansAsync(Guid campaignVehicleId, AssignTechsRequest request)
         {
-            var entity = await _campaignVehicleRepository.GetByIdAsync(campaignVehicleId) ?? throw new ApiException(ResponseError.InternalServerError);
+            var entity = await _campaignVehicleRepository.GetByIdAsync(campaignVehicleId) ?? throw new ApiException(ResponseError.NotFoundCampaignVehicle);
 
             // Only allow assignment if currently waiting for unassigned repair
             if (entity.Status != CampaignVehicleStatus.WaitingForUnassignedRepair.GetCampaignVehicleStatus())
-                throw new ApiException(ResponseError.InvalidJsonFormat);
+                throw new ApiException(ResponseError.InvalidCampaignVehicleStatus);
 
             if (request.AssignedTo == null || !request.AssignedTo.Any())
-                throw new ApiException(ResponseError.InvalidJsonFormat);
+                throw new ApiException(ResponseError.InvalidTechnicianList);
 
             var now = DateTime.UtcNow;
 

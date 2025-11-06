@@ -1,5 +1,6 @@
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
+using OEMEVWarrantyManagement.Share.Enums; // added
 
 namespace OEMEVWarrantyManagement.Application.IServices
 {
@@ -9,5 +10,8 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<CampaignDto?> GetByIdAsync(Guid id);
         Task<CampaignDto> CreateAsync(RequestCampaignDto request);
         Task<CampaignDto> CloseAsync(Guid id);
+        Task<int> CountByStatusAsync(CampaignStatus status);
+        Task<(int participating, int affected)> GetParticipationAggregateAsync();
+        Task<CampaignActiveSummaryDto> GetLatestActiveSummaryAsync();
     }
 }

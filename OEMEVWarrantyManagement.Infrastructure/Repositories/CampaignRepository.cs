@@ -3,6 +3,7 @@ using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
+using OEMEVWarrantyManagement.Share.Enums;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 {
@@ -75,6 +76,26 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return await _context.Set<Domain.Entities.CampaignVehicle>()
                 .Where(cv => cv.Status != status)
                 .CountAsync();
+        }
+
+        // New: aggregate participation and total affected vehicles across all campaigns
+        public async Task<(int ParticipatingVehicles, int TotalAffectedVehicles)> GetParticipationAggregateAsync()
+        {
+            // Now interpret as CompletedVehicles / TotalAffectedVehicles
+            var completed = await _context.Campaigns.Where(c => c.Status == CampaignStatus.Active.GetCampaignStatus()).SumAsync(c => c.CompletedVehicles);
+            var totalAffected = await _context.Campaigns.Where(c => c.Status == CampaignStatus.Active.GetCampaignStatus()).SumAsync(c => c.TotalAffectedVehicles);
+            return (completed, totalAffected);
+        }
+
+        // New: latest active campaign
+        public async Task<Campaign?> GetLatestActiveAsync()
+        {
+            var active = CampaignStatus.Active.GetCampaignStatus();
+            return await _context.Campaigns
+                .AsNoTracking()
+                .Where(c => c.Status == active)
+                .OrderByDescending(c => c.CreatedAt)
+                .FirstOrDefaultAsync();
         }
     }
 }

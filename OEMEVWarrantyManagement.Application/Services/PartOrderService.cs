@@ -168,5 +168,42 @@ namespace OEMEVWarrantyManagement.Application.Services
                 Items = result
             };
         }
+
+        // Flexible: count orders by status with optional org
+        public async Task<int> CountByStatusAsync(PartOrderStatus status, Guid? orgId = null)
+        {
+            return await _partOrderRepository.CountByStatusAsync(status, orgId);
+        }
+
+        // Convenience: count pending orders across all orgs
+        public async Task<int> CountPendingAsync()
+        {
+            return await _partOrderRepository.CountByStatusAsync(PartOrderStatus.Pending, null);
+        }
+
+        // New: top requested parts within month/year scope
+        public async Task<IEnumerable<PartRequestedTopDto>> GetTopRequestedPartsAsync(int? month, int? year, int take = 5)
+        {
+            if (take <= 0) take = 5;
+            var now = DateTime.UtcNow;
+            int targetYear = year ?? now.Year;
+
+            DateTime from;
+            DateTime to;
+            if (month.HasValue)
+            {
+                var targetMonth = Math.Clamp(month.Value, 1, 12);
+                from = new DateTime(targetYear, targetMonth, 1, 0, 0, 0, DateTimeKind.Utc);
+                to = from.AddMonths(1);
+            }
+            else
+            {
+                from = new DateTime(targetYear, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                to = from.AddYears(1);
+            }
+
+            var data = await _partOrderRepository.GetTopRequestedPartsAsync(from, to, take);
+            return data.Select(d => new PartRequestedTopDto { Model = d.Model, Quantity = d.Quantity });
+        }
     }
 }

@@ -51,5 +51,23 @@ namespace OEMEVWarrantyManagement.API.Controllers
             var assignedTechs = await _workOrderService.GetAssignedTechsByTargetAsync(id, parsedTarget);
             return Ok(ApiResponse<IEnumerable<AssignedTechDto>>.Ok(assignedTechs, "Get assigned technicians successfully"));
         }
+
+        // New: task counts for current tech (default: day). unit = d (day) | m (month)
+        [HttpGet("task-counts")]
+        [Authorize(policy: "RequireScTech")]
+        public async Task<IActionResult> GetTaskCounts([FromQuery] char unit = 'd')
+        {
+            var counts = await _workOrderService.GetTaskCountsAsync(unit);
+            return Ok(ApiResponse<TaskCountDto>.Ok(counts, "Get task counts successfully"));
+        }
+
+        // New: grouped counts by target and type for month/year for current tech. unit = m | y
+        [HttpGet("task-group-counts")]
+        [Authorize(policy: "RequireScTech")]
+        public async Task<IActionResult> GetTaskGroupCounts([FromQuery] char unit)
+        {
+            var data = await _workOrderService.GetTaskGroupCountsAsync(unit);
+            return Ok(ApiResponse<TaskGroupCountDto>.Ok(data, "Get grouped task counts successfully"));
+        }
     }
 }

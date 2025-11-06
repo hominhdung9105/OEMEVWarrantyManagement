@@ -4,6 +4,10 @@ using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
 using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 {
@@ -101,10 +105,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         public async Task<Dictionary<DateTime, int>> CountByOrgIdGroupByMonthAsync(Guid orgId, int months)
         {
-            var fromDate = DateTime.Now.AddMonths(-months);
+            var fromDateOnly = DateTime.Now.AddMonths(-months);
             
             var claims = await _context.WarrantyClaims
-                .Where(wc => wc.ServiceCenterId == orgId && wc.CreatedDate >= fromDate)
+                .Where(wc => wc.ServiceCenterId == orgId && wc.CreatedDate >= fromDateOnly)
                 .ToListAsync();
 
             // Group by year and month
@@ -113,6 +117,84 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                 .ToDictionary(g => g.Key, g => g.Count());
 
             return groupedByMonth;
+        }
+
+        public async Task<int> CountByStatusAsync(WarrantyClaimStatus status, Guid? orgId = null)
+        {
+            var statusStr = status.GetWarrantyClaimStatus();
+            var query = _context.WarrantyClaims.AsQueryable();
+            query = query.Where(wc => wc.Status == statusStr);
+            if (orgId.HasValue)
+            {
+                query = query.Where(wc => wc.ServiceCenterId == orgId.Value);
+            }
+            return await query.CountAsync();
+        }
+
+        public async Task<IEnumerable<WarrantyClaim>> GetByCreatedDateAsync(DateTime fromDate, Guid? orgId = null)
+        {
+            var query = _context.WarrantyClaims.AsQueryable();
+            if (orgId.HasValue)
+            {
+                query = query.Where(wc => wc.ServiceCenterId == orgId.Value);
+            }
+            query = query.Where(wc => wc.CreatedDate >= fromDate);
+            return await query.ToListAsync();
+        }
+
+        // New aggregation: top accepted policies between dates (based on VehicleWarrantyId + ConfirmDate) without explicit VehicleWarrantyPolicies set usage
+        public async Task<IEnumerable<(Guid PolicyId, string PolicyName, int Count)>> GetTopApprovedPoliciesAsync(DateTime fromDate, DateTime toDate, int take)
+        {
+            var query = _context.WarrantyClaims
+                .Where(wc => wc.VehicleWarrantyId.HasValue
+                             && wc.ConfirmDate.HasValue
+                             && wc.ConfirmDate.Value >= fromDate
+                             && wc.ConfirmDate.Value < toDate)
+                .Select(wc => wc.VehicleWarrantyPolicy.WarrantyPolicy)
+                .GroupBy(wp => new { wp.PolicyId, wp.Name })
+                .Select(g => new { g.Key.PolicyId, g.Key.Name, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(take);
+
+            var results = await query.ToListAsync();
+            return results.Select(r => (r.PolicyId, r.Name, r.Count));
+        }
+
+        // New aggregation: top service centers by claim count with status filter
+        public async Task<IEnumerable<(Guid OrgId, string OrgName, int Count)>> GetTopServiceCentersAsync(DateTime from, DateTime to, int take, IEnumerable<string> statuses)
+        {
+            var statusList = statuses?.ToList() ?? new List<string>();
+
+            var query = _context.WarrantyClaims
+                .Where(wc => wc.CreatedDate >= from && wc.CreatedDate < to && wc.ServiceCenterId.HasValue);
+
+            if (statusList.Any())
+            {
+                query = query.Where(wc => statusList.Contains(wc.Status));
+            }
+
+            var grouped = await query
+                .GroupBy(wc => wc.ServiceCenterId!.Value)
+                .Select(g => new { OrgId = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(take)
+                .ToListAsync();
+
+            var orgIds = grouped.Select(x => x.OrgId).ToList();
+            var names = await _context.Organizations
+                .Where(o => orgIds.Contains(o.OrgId))
+                .Select(o => new { o.OrgId, o.Name })
+                .ToListAsync();
+            var nameMap = names.ToDictionary(n => n.OrgId, n => n.Name);
+
+            return grouped.Select(x => (x.OrgId, nameMap.TryGetValue(x.OrgId, out var name) ? name : string.Empty, x.Count));
+        }
+
+        // New: check if VIN has active (not done) claim
+        public async Task<bool> HasActiveClaimByVinAsync(string vin)
+        {
+            var done = WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus();
+            return await _context.WarrantyClaims.AnyAsync(wc => wc.Vin == vin && wc.Status != done);
         }
     }
 }

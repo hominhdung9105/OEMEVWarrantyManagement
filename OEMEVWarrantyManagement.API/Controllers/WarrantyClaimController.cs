@@ -6,6 +6,8 @@ using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
 using OEMEVWarrantyManagement.Share.Models.Response;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.API.Controllers
 {
@@ -43,6 +45,39 @@ namespace OEMEVWarrantyManagement.API.Controllers
         {
             var result = await _warrantyClaimService.GetPagedUnifiedAsync(request, search, status);
             return Ok(ApiResponse<PagedResult<ResponseWarrantyClaimDto>>.Ok(result, "Get Warranty Claims Successfully!"));
+        }
+
+        [HttpGet("count/sent-to-manufacturer")]
+        [Authorize]
+        public async Task<IActionResult> CountSentToManufacturer()
+        {
+            var count = await _warrantyClaimService.CountSentToManufacturerAsync();
+            return Ok(ApiResponse<int>.Ok(count, "Get count successfully"));
+        }
+
+        [HttpGet("counts")]
+        [Authorize]
+        public async Task<IActionResult> GetCounts([FromQuery] char unit, [FromQuery] int take, [FromQuery] Guid? orgId)
+        {
+            var counts = await _warrantyClaimService.GetWarrantyClaimCountsAsync(unit, take, orgId);
+            return Ok(ApiResponse<IEnumerable<TimeCountDto>>.Ok(counts, "Get counts successfully"));
+        }
+
+        [HttpGet("top-policies")]
+        [Authorize]
+        public async Task<IActionResult> GetTopPolicies([FromQuery] int? month, [FromQuery] int? year, [FromQuery] int take = 5)
+        {
+            var data = await _warrantyClaimService.GetTopApprovedPoliciesAsync(month, year, take);
+            return Ok(ApiResponse<IEnumerable<PolicyTopDto>>.Ok(data, "Get top policies successfully"));
+        }
+
+        // New: Top service centers by warranty claims (month or year). Default take=3
+        [HttpGet("top-service-centers")]
+        [Authorize(policy: "RequireEvmStaff")] // only EVM/Admin should see cross-center ranking
+        public async Task<IActionResult> GetTopServiceCenters([FromQuery] int? month, [FromQuery] int? year, [FromQuery] int take = 3)
+        {
+            var data = await _warrantyClaimService.GetTopServiceCentersAsync(month, year, take);
+            return Ok(ApiResponse<IEnumerable<ServiceCenterTopDto>>.Ok(data, "Get top service centers successfully"));
         }
 
         [HttpGet("{vin}/vehicle-policies")]
@@ -136,8 +171,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
             var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.Approved);
 
-            // TODO - Approved rồi check kho có đủ phụ tùng không
-
             return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Update Successfully!"));
         }
 
@@ -164,7 +197,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<IEnumerable<string>>.Ok(statuses, "Get All Warranty Claim Statuses Successfully!"));
         }
 
-        // New: assign technicians to a warranty claim (inspection or repair based on claim status)
         [HttpPost("{claimId}/assign-techs")]
         [Authorize(policy: "RequireScStaff")]
         public async Task<IActionResult> AssignTechniciansToClaim(string claimId, [FromBody] AssignTechRequestDto request)

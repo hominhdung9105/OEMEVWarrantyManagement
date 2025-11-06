@@ -1,6 +1,8 @@
 ﻿using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
-
+using OEMEVWarrantyManagement.Share.Enums; // added
+using System.Collections.Generic; // ensure namespace
+using System;
 
 namespace OEMEVWarrantyManagement.Application.IRepository
 {
@@ -11,9 +13,13 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<WarrantyClaim> CreateAsync(WarrantyClaim request);
         Task<WarrantyClaim> UpdateAsync(WarrantyClaim request);
         Task<bool> DeleteAsync(WarrantyClaim request);
-        // Unified filtering repository: optional orgId, status, search in VIN or customer
         Task<(IEnumerable<WarrantyClaim> Data, int TotalRecords)> GetPagedUnifiedAsync(PaginationRequest request, Guid? orgId, string? search, string? status);
         Task<int> CountByOrgIdAndStatusAsync(Guid orgId, string status);
         Task<Dictionary<DateTime, int>> CountByOrgIdGroupByMonthAsync(Guid orgId, int months);
+        Task<int> CountByStatusAsync(WarrantyClaimStatus status, Guid? orgId = null);
+        Task<IEnumerable<WarrantyClaim>> GetByCreatedDateAsync(DateTime fromDate, Guid? orgId = null);
+        Task<IEnumerable<(Guid PolicyId, string PolicyName, int Count)>> GetTopApprovedPoliciesAsync(DateTime from, DateTime to, int take);
+        Task<IEnumerable<(Guid OrgId, string OrgName, int Count)>> GetTopServiceCentersAsync(DateTime from, DateTime to, int take, IEnumerable<string> statuses);
+        Task<bool> HasActiveClaimByVinAsync(string vin);
     }
 }

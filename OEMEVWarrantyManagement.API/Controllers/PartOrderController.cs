@@ -7,6 +7,8 @@ using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
 using OEMEVWarrantyManagement.Share.Models.Response;
 using System.Security.Claims;
+using System.Collections.Generic;
+using System;
 
 namespace OEMEVWarrantyManagement.API.Controllers
 {
@@ -42,6 +44,33 @@ namespace OEMEVWarrantyManagement.API.Controllers
             }
 
             return Unauthorized(ApiResponse<object>.Fail(ResponseError.Forbidden));
+        }
+
+        // New flexible endpoint: count orders by status, optional org filter
+        [HttpGet("count")]
+        [Authorize]
+        public async Task<IActionResult> GetOrderCount([FromQuery] PartOrderStatus status = PartOrderStatus.Pending, [FromQuery] Guid? orgId = null)
+        {
+            var count = await _partOrderService.CountByStatusAsync(status, orgId);
+            return Ok(ApiResponse<int>.Ok(count, "Get order count successfully"));
+        }
+
+        // New: count pending orders (all orgs)
+        [HttpGet("pending/count")]
+        [Authorize]
+        public async Task<IActionResult> GetPendingOrderCount()
+        {
+            var count = await _partOrderService.CountPendingAsync();
+            return Ok(ApiResponse<int>.Ok(count, "Get pending order count successfully"));
+        }
+
+        // New: top requested parts (month or year scope)
+        [HttpGet("top-requested-parts")]
+        [Authorize(policy: "RequireEvmStaff")] // cross-org analytics
+        public async Task<IActionResult> GetTopRequestedParts([FromQuery] int? month, [FromQuery] int? year, [FromQuery] int take = 5)
+        {
+            var data = await _partOrderService.GetTopRequestedPartsAsync(month, year, take);
+            return Ok(ApiResponse<IEnumerable<PartRequestedTopDto>>.Ok(data, "Get top requested parts successfully"));
         }
 
         [HttpPut("{orderID}/expected-date")]

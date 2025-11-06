@@ -15,5 +15,11 @@ namespace OEMEVWarrantyManagement.Application.IServices
         // New centralized creation methods to avoid duplication
         Task<IEnumerable<WorkOrderDto>> CreateForWarrantyAsync(Guid claimId, IEnumerable<Guid> techIds);
         Task<IEnumerable<WorkOrderDto>> CreateForCampaignAsync(Guid campaignVehicleId, IEnumerable<Guid> techIds);
+        
+        // New: task counts (total, completed, in progress) for current day/month (default day)
+        Task<TaskCountDto> GetTaskCountsAsync(char unit = 'd');
+
+        // New: grouped counts by target (warranty/campaign) and type (inspection/repair) for month or year
+        Task<TaskGroupCountDto> GetTaskGroupCountsAsync(char unit);
     }
 }

@@ -52,7 +52,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                 if (!PartModel.IsValidModel(request.ReplacementPartModel))
                     throw new ApiException(ResponseError.InvalidPartModel);
 
-                if (request.PartModel == request.ReplacementPartModel) throw new ApiException(ResponseError.InternalServerError);
+                if (request.PartModel == request.ReplacementPartModel) throw new ApiException(ResponseError.InvalidPartModel);
 
                 var faultyCategory = PartModel.GetCategoryByModel(request.PartModel!);
                 var replacementCategory = PartModel.GetCategoryByModel(request.ReplacementPartModel!);
@@ -66,7 +66,7 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             if (string.IsNullOrWhiteSpace(request.Type) || ! CampaignTypeExtensions.IsValidType(request.Type))
             {
-                throw new ApiException(ResponseError.InternalServerError);
+                throw new ApiException(ResponseError.InvalidCampaignType);
             }
 
             var entity = _mapper.Map<Campaign>(request);
@@ -215,12 +215,44 @@ namespace OEMEVWarrantyManagement.Application.Services
 
         public async Task<CampaignDto> CloseAsync(Guid id)
         {
-            var entity = await _campaignRepository.GetByIdAsync(id) ?? throw new ApiException(ResponseError.InternalServerError);
+            var entity = await _campaignRepository.GetByIdAsync(id) ?? throw new ApiException(ResponseError.NotFoundCampaign);
 
             entity.Status = CampaignStatus.Closed.GetCampaignStatus();
 
             var updated = await _campaignRepository.UpdateAsync(entity);
             return _mapper.Map<CampaignDto>(updated);
+        }
+
+        // New: count campaigns by status (enum-based)
+        public async Task<int> CountByStatusAsync(CampaignStatus status)
+        {
+            var statusStr = status.GetCampaignStatus();
+            return await _campaignRepository.CountByStatusAsync(statusStr);
+        }
+
+        // New: aggregate participating vehicles vs affected vehicles across all campaigns
+        public async Task<(int participating, int affected)> GetParticipationAggregateAsync()
+        {
+            var (participatingVehicles, totalAffected) = await _campaignRepository.GetParticipationAggregateAsync();
+            return (participatingVehicles, totalAffected);
+        }
+
+        // New: latest active campaign summary
+        public async Task<CampaignActiveSummaryDto> GetLatestActiveSummaryAsync()
+        {
+            var entity = await _campaignRepository.GetLatestActiveAsync();
+            if (entity == null)
+            {
+                throw new ApiException(ResponseError.NotFoundCampaign); // or define NotFoundCampaign
+            }
+            return new CampaignActiveSummaryDto
+            {
+                Title = entity.Title,
+                TotalAffected = entity.TotalAffectedVehicles,
+                Completed = entity.CompletedVehicles,
+                InProgress = entity.InProgressVehicles,
+                Pending = entity.PendingVehicles
+            };
         }
     }
 }

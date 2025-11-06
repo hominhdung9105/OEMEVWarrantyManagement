@@ -120,7 +120,36 @@
         NotEnoughStock,
 
         [ResponseErrorAttr("Not found appointment.", 400, 40)]
-        NotFoundAppointment
+        NotFoundAppointment,
+
+        // New specific errors
+        [ResponseErrorAttr("Campaign not found.", 404, 41)]
+        NotFoundCampaign,
+
+        [ResponseErrorAttr("Campaign vehicle not found.", 404, 42)]
+        NotFoundCampaignVehicle,
+
+        [ResponseErrorAttr("Invalid campaign type.", 400, 43)]
+        InvalidCampaignType,
+
+        [ResponseErrorAttr("Campaign vehicle already exists.", 400, 44)]
+        DuplicateCampaignVehicle,
+
+        [ResponseErrorAttr("Invalid campaign vehicle status.", 400, 45)]
+        InvalidCampaignVehicleStatus,
+
+        [ResponseErrorAttr("Invalid technician list.", 400, 46)]
+        InvalidTechnicianList,
+
+        [ResponseErrorAttr("Invalid warranty claim status for creating work orders.", 400, 47)]
+        InvalidWarrantyClaimStatus,
+
+        [ResponseErrorAttr("Invalid work order target.", 400, 48)]
+        InvalidWorkOrderTarget,
+
+        // New error for duplicate active warranty claim (VIN already has non-done claim)
+        [ResponseErrorAttr("This VIN already has an active warranty claim.", 400, 49)]
+        DuplicateActiveWarrantyClaim
     }
 
     public class ApiResponse<T>

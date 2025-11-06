@@ -63,5 +63,19 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                 .Where(wo => wo.AssignedToEmployee.OrgId == orgId && wo.Status != WorkOrderStatus.Completed.GetWorkOrderStatus())
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<WorkOrder>> GetWorkOrdersByTechAndRangeAsync(Guid techId, DateTime from, DateTime to)
+        {
+            return await _context.WorkOrders
+                .Where(wo => wo.AssignedTo == techId && wo.StartDate >= from && wo.StartDate < to)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<WorkOrder>> GetWorkOrdersByTechMonthlyAsync(Guid techId, DateTime from, DateTime to)
+        {
+            return await _context.WorkOrders
+                .Where(wo => wo.AssignedTo == techId && wo.StartDate >= from && wo.StartDate < to)
+                .ToListAsync();
+        }
     }
 }
