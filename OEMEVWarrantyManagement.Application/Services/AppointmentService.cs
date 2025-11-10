@@ -106,10 +106,23 @@ namespace OEMEVWarrantyManagement.Application.Services
             var create = _mapper.Map<Appointment>(request);
             var createdAppointment = await _appointmentRepository.CreateAsync(create);
 
+            // Mask email before returning
+            var customer = await _customerRepository.GetCustomerByIdAsync(vehicle.CustomerId);
+            var email = customer?.Email;
+            if (!string.IsNullOrEmpty(email) && email.Contains("@"))
+            {
+                var parts = email.Split('@');
+                var user = parts[0];
+                var maskedUser = user.Length > 3 ? user.Substring(0, 3) + "****" : "****";
+                email = maskedUser + "@" + parts[1];
+            }
+
+
             // Send email to customer to confirm
             await TrySendAppointmentConfirmationEmailAsync(createdAppointment);
 
             var response = _mapper.Map<ResponseAppointmentDto>(createdAppointment);
+            response.Email = email;
             return response;
         }
 

@@ -54,6 +54,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public string? Note { get; set; }
+        public string? Email { get; set; }
 
         public string Model { get; set; }
         public int Year { get; set; }
