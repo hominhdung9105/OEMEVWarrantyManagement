@@ -10,5 +10,6 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<Employee?> CreateAsync(EmployeeDto request);
         Task<TokenResponseDto?> LoginAsync(LoginRequestDto request);
         Task<TokenResponseDto?> RefreshTokenAsync(RefreshTokenRequestDto request);
+        Task<TokenResponseDto?> GoogleLoginAsync(string email, string name);
     }
 }

@@ -66,6 +66,21 @@ namespace OEMEVWarrantyManagement.Application.Services
             return await CreateRefreshTokenAsync(employee);
         }
 
+        public async Task<TokenResponseDto?> GoogleLoginAsync(string email, string name)
+        {
+            // Kiểm tra xem user đã tồn tại chưa
+            var employee = await _authRepository.GetEmployeeByEmail(email);
+
+            // Nếu chưa tồn tại, tạo tài khoản mới
+            if (employee == null)
+            {
+                employee = await _authRepository.CreateGoogleEmployeeAsync(email, name);
+            }
+
+            // Tạo và trả về token
+            return await CreateRefreshTokenAsync(employee);
+        }
+
         private async Task<TokenResponseDto> CreateTokenResponse(Employee employee)
         {
             return new TokenResponseDto
