@@ -20,8 +20,8 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string? Title { get; set; }
         public string? Description { get; set; }
         public string? Type { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
+        public DateOnly? StartDate { get; set; }
+        public DateOnly? EndDate { get; set; }
         // New: expose detailed replacements (old/new)
         public List<SerialReplacementDto>? Replacements { get; set; }
     }

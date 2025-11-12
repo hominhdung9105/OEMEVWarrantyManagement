@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +17,7 @@ using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Middlewares;
 using OEMEVWarrantyManagement.Share.Models.Response;
 using Scalar.AspNetCore;
+using System.Text;
 
 namespace OEMEVWarrantyManagement.API
 {
@@ -33,22 +35,7 @@ namespace OEMEVWarrantyManagement.API
 
             // Add Controllers - ignore null value in response
 
-            builder.Services.AddControllers() // TODO - chay that thi tat cmt
-                //.ConfigureApiBehaviorOptions(options =>
-                //{
-                //    options.InvalidModelStateResponseFactory = context =>
-                //    {
-                //        var errors = context.ModelState
-                //            .Where(x => x.Value?.Errors.Count > 0)
-                //            .Select(x => new
-                //            {
-                //                field = x.Key,
-                //                messages = x.Value!.Errors.Select(e => e.ErrorMessage)
-                //            });
-
-                //        return new BadRequestObjectResult(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
-                //    };
-                //})
+            builder.Services.AddControllers()
                 .AddJsonOptions(options =>
                 {
                     options.AllowInputFormatterExceptionMessages = true;
@@ -62,33 +49,32 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // Authentication - JWT Bearer
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+            // Authentication: Use JWT as default (avoid redirect to Google on API unauthorized)
+            builder.Services.AddAuthentication(options =>
             {
-                options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.Events = new JwtBearerEvents
                 {
                     OnAuthenticationFailed = context =>
                     {
-                        context.NoResult(); // ngan asp .net xu ly mac dinh
+                        context.NoResult();
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                         context.Response.ContentType = "application/json";
-
                         var response = ApiResponse<object>.Fail(ResponseError.AuthenticationFailed);
-
                         return context.Response.WriteAsJsonAsync(response);
                     },
-
                     OnChallenge = context =>
                     {
-                        context.HandleResponse(); // chan challenge mac dinh
+                        context.HandleResponse();
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                         context.Response.ContentType = "application/json";
-
                         var response = ApiResponse<object>.Fail(ResponseError.AuthenticationFailed);
-
                         return context.Response.WriteAsJsonAsync(response);
                     },
-
                     OnForbidden = context =>
                     {
                         context.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -108,6 +94,15 @@ namespace OEMEVWarrantyManagement.API
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("AppSettings:Token")!))
                 };
+            })
+            // Optional Google external login (not default challenge to avoid redirect on API calls)
+            .AddCookie()
+            .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+            {
+                IConfigurationSection googleAuthNSection = builder.Configuration.GetSection("Authentication:Google");
+                options.ClientId = googleAuthNSection["ClientId"];
+                options.ClientSecret = googleAuthNSection["ClientSecret"];
+                options.CallbackPath = "/signin-google";
             });
 
             // Authorization
@@ -215,48 +210,14 @@ namespace OEMEVWarrantyManagement.API
 
             var app = builder.Build();
 
-            ////// =================================================================
-            ////// KHỐI MÃ SEEDING: Thêm khối này vào | chạy 1 lần nếu muốn lấy data mẫu
-            ////// =================================================================
-            //using (var scope = app.Services.CreateScope())
-            //{
-            //    var services = scope.ServiceProvider;
-            //    try
-            //    {
-            //        var dbContext = services.GetRequiredService<AppDbContext>();
-
-            //        // 1. Tự động chạy migration để tạo bảng
-            //        dbContext.Database.Migrate();
-
-            //        // 2. Gọi Seeder để thêm data (nó sẽ tự kiểm tra nếu DB trống)
-            //        DataSeeder.SeedDatabase(dbContext);
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        // Ghi log lỗi nếu có
-            //        var logger = services.GetRequiredService<ILogger<Program>>();
-            //        logger.LogError(ex, "Đã xảy ra lỗi khi seeding database.");
-            //    }
-            //}
-            ////// =================================================================
-            ////// KẾT THÚC KHỐI MÃ SEEDING
-            ////// =================================================================
-
-            // Dev
-
-
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
                 app.MapScalarApiReference();
-
             }
             app.UseCors("AllowAll");
 
-            // Thay tất cả exception middleware bằng global response
             app.UseMiddleware<GlobalResponseMiddleware>();
-
-            //app.UseHttpsRedirection();
 
             app.UseAuthentication();
             app.UseAuthorization();

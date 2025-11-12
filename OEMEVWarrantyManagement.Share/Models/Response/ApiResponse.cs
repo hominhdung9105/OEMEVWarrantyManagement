@@ -149,7 +149,14 @@
 
         // New error for duplicate active warranty claim (VIN already has non-done claim)
         [ResponseErrorAttr("This VIN already has an active warranty claim.", 400, 49)]
-        DuplicateActiveWarrantyClaim
+        DuplicateActiveWarrantyClaim,
+
+        // Google login errors
+        [ResponseErrorAttr("Invalid Google token.", 401, 50)]
+        InvalidGoogleToken,
+
+        [ResponseErrorAttr("Google login failed.", 500, 51)]
+        GoogleLoginFailed
     }
 
     public class ApiResponse<T>

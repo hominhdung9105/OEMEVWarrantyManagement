@@ -24,9 +24,9 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpGet] 
         [Authorize(policy: "RequireScTech")]
-        public async Task<IActionResult> GetWorkOrdersByTech([FromQuery] PaginationRequest request, [FromQuery] string? vin = null, [FromQuery] string? type = null, [FromQuery] string? task = null)
+        public async Task<IActionResult> GetWorkOrdersByTech([FromQuery] PaginationRequest request, [FromQuery] string? search = null, [FromQuery] string? target = null, [FromQuery] string? type = null)
         {
-            var result = await _workOrderService.GetWorkOrdersByTechUnifiedAsync(request, vin, type, task);
+            var result = await _workOrderService.GetWorkOrdersByTechUnifiedAsync(request, search, target, type);
             return Ok(ApiResponse<PagedResult<WorkOrderDto>>.Ok(result, "Get Work Orders by Tech successfully!!"));
         }
 
