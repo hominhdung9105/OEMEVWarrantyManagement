@@ -79,7 +79,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                         join v in _context.Vehicles on wc.Vin equals v.Vin
                         join c in _context.Customers on v.CustomerId equals c.CustomerId
                         where wc.Vin.ToLower().Contains(s)
-                              || v.Vin.ToLower().Contains(s)
                               || (c.Name != null && c.Name.ToLower().Contains(s))
                               || (c.Phone != null && c.Phone.ToLower().Contains(s))
                         select wc;

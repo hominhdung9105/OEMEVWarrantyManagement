@@ -8,8 +8,8 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string Description { get; set; }
         public string PartModel { get; set; }
         public string? ReplacementPartModel { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        public DateOnly StartDate { get; set; }
+        public DateOnly EndDate { get; set; }
         public string Status { get; set; }
         public Guid CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -26,7 +26,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string Description { get; set; }
         public string? PartModel { get; set; }
         public string? ReplacementPartModel { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        public DateOnly StartDate { get; set; }
+        public DateOnly EndDate { get; set; }
     }
 }

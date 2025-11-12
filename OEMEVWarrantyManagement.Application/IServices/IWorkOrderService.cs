@@ -6,8 +6,8 @@ namespace OEMEVWarrantyManagement.Application.IServices
 {
     public interface IWorkOrderService
     {
-        // Unified detail list for tech with filters (vin, task=status, type)
-        Task<PagedResult<WorkOrderDto>> GetWorkOrdersByTechUnifiedAsync(PaginationRequest request, string? vin = null, string? type = null, string? task = null);
+        // Unified detail list for tech with filters (search for vin, target for warranty/campaign, type for inspection/repair)
+        Task<PagedResult<WorkOrderDto>> GetWorkOrdersByTechUnifiedAsync(PaginationRequest request, string? search = null, string? target = null, string? type = null);
         
         // New: unified method to get assigned technicians for any target (Warranty or Campaign)
         Task<IEnumerable<AssignedTechDto>> GetAssignedTechsByTargetAsync(Guid targetId, WorkOrderTarget target);
