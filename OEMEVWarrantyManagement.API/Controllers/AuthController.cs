@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Google.Apis.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.Dtos.Request;
@@ -43,6 +44,30 @@ namespace OEMEVWarrantyManagement.API.Controllers
             var result = await _authService.RefreshTokenAsync(request);
 
             return Ok(ApiResponse<TokenResponseDto>.Ok(result, "Refresh Token successfully"));
+        }
+
+        [AllowAnonymous]
+        [HttpPost("google-login")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequestDto request)
+        {
+            try
+            {
+                // Validate Google token
+                var payload = await GoogleJsonWebSignature.ValidateAsync(request.Credential);
+                
+                // Kiểm tra và tạo/lấy thông tin user
+                var result = await _authService.GoogleLoginAsync(payload.Email, payload.Name);
+                
+                return Ok(ApiResponse<TokenResponseDto>.Ok(result, "Google login successfully"));
+            }
+            catch (InvalidJwtException)
+            {
+                return Unauthorized(ApiResponse<object>.Fail(ResponseError.InvalidGoogleToken));
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, ApiResponse<object>.Fail(ResponseError.GoogleLoginFailed));
+            }
         }
     }
 }

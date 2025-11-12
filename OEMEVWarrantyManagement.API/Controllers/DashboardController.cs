@@ -17,7 +17,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         }
 
         [HttpGet("sc/summary")]
-        [Authorize]
+        [Authorize(policy: "RequireScStaff")]
         public async Task<IActionResult> GetSummary()
         {
             var summary = await _dashboardService.GetSummaryAsync();
