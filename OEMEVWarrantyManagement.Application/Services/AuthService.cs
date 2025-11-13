@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using AutoMapper;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using OEMEVWarrantyManagement.Application.Dtos;
@@ -12,6 +13,7 @@ using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Share.Configs;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
+using Microsoft.AspNetCore.Identity;
 
 namespace OEMEVWarrantyManagement.Application.Services
 {
@@ -19,11 +21,13 @@ namespace OEMEVWarrantyManagement.Application.Services
     {
         private readonly IAuthRepository _authRepository;
         private readonly AppSettings _appSettings;
+        private readonly IMapper _mapper;
 
-        public AuthService(IAuthRepository authRepository, IOptions<AppSettings> configuration)
+        public AuthService(IAuthRepository authRepository, IOptions<AppSettings> configuration, IMapper mapper)
         {
             _authRepository = authRepository;
             _appSettings = configuration.Value;
+            _mapper = mapper;
         }
 
         public async Task<Employee?> CreateAsync(EmployeeDto request)
@@ -137,6 +141,33 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             await _authRepository.SaveChangesAsync();
             return refreshToken;
+        }
+
+        public async Task<EmployeeDto> UpdateAsync(string id, EmployeeDto request)
+        {
+            var employeeId = Guid.Parse(id);
+            var employee = await _authRepository.GetEmployeeById(employeeId) ?? throw new ApiException(ResponseError.NotFoundEmployee);
+            if (!string.IsNullOrWhiteSpace(request.Email))
+                employee.Email = request.Email;
+            if (!string.IsNullOrWhiteSpace(request.Role))
+                employee.Role = request.Role;
+            if (request.OrgId != Guid.Empty)
+                employee.OrgId = request.OrgId;
+            if (!string.IsNullOrWhiteSpace(request.PasswordHash))
+            {
+                var hasher = new PasswordHasher<Employee>();
+                employee.PasswordHash = hasher.HashPassword(employee, request.PasswordHash);
+            }
+            var updatedEmployee = await _authRepository.UpdateAsync(employee);
+
+            return new EmployeeDto
+            {
+                UserId = updatedEmployee.UserId,
+                Email = updatedEmployee.Email,
+                PasswordHash = updatedEmployee.PasswordHash,
+                Role = updatedEmployee.Role,
+                OrgId = updatedEmployee.OrgId,
+            };
         }
     }
 }

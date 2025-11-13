@@ -6,6 +6,7 @@ using OEMEVWarrantyManagement.Share.Models.Pagination;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
 using Microsoft.EntityFrameworkCore;
+using OEMEVWarrantyManagement.Domain.Entities;
 
 
 namespace OEMEVWarrantyManagement.Application.Services
@@ -46,6 +47,35 @@ namespace OEMEVWarrantyManagement.Application.Services
                 TotalPages = (int)Math.Ceiling(total / (double)request.Size),
                 Items = dtoItems
             };
+        }
+
+        public async Task<WarrantyPolicyDto?> GetByIdAsync(Guid id)
+        {
+            var entity = await _warrantyPolicyRepository.GetByIdAsync(id);
+            return _mapper.Map<WarrantyPolicyDto>(entity);
+        }
+
+        public async Task<WarrantyPolicyDto> CreateAsync(WarrantyPolicyDto request)
+        {
+            var entity = _mapper.Map<WarrantyPolicy>(request);
+            var created = await _warrantyPolicyRepository.AddAsync(entity);
+            return _mapper.Map<WarrantyPolicyDto>(created);
+        }
+
+        public async Task<WarrantyPolicyDto> UpdateAsync(Guid id, WarrantyPolicyDto request)
+        {
+            var entity = await _warrantyPolicyRepository.GetByIdAsync(id) ?? throw new ApiException(ResponseError.NotFoundWarrantyPolicy);
+            entity.Name = request.Name;
+            entity.CoveragePeriodMonths = request.CoveragePeriodMonths;
+            entity.Conditions = request.Conditions;
+
+            var updated = await _warrantyPolicyRepository.UpdateAsync(entity);
+            return _mapper.Map<WarrantyPolicyDto>(updated);
+        }
+
+        public async Task<bool> DeleteAsync(Guid id)
+        {
+            return await _warrantyPolicyRepository.DeleteAsync(id);
         }
     }
 }

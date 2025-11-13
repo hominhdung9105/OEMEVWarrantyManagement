@@ -25,5 +25,41 @@ namespace OEMEVWarrantyManagement.API.Controllers
             var page = await _policyService.GetAllAsync(request);
             return Ok(ApiResponse<PagedResult<WarrantyPolicyDto>>.Ok(page, "Get policy Successfully!"));
         }
+
+        [HttpGet("{id:guid}")]
+        [Authorize]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            var policy = await _policyService.GetByIdAsync(id);
+            if (policy == null)
+                return NotFound(ApiResponse<object>.Fail(ResponseError.NotFoundWarrantyPolicy));
+            return Ok(ApiResponse<WarrantyPolicyDto>.Ok(policy, "Get policy successfully!"));
+        }
+
+        [HttpPost]
+        [Authorize(Policy = "RequireAdmin")]
+        public async Task<IActionResult> Create([FromBody] WarrantyPolicyDto request)
+        {
+            var created = await _policyService.CreateAsync(request);
+            return Ok(ApiResponse<WarrantyPolicyDto>.Ok(created, "Create policy successfully!"));
+        }
+
+        [HttpPut("{id:guid}")]
+        [Authorize(Policy = "RequireAdmin")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] WarrantyPolicyDto request)
+        {
+            var updated = await _policyService.UpdateAsync(id, request);
+            return Ok(ApiResponse<WarrantyPolicyDto>.Ok(updated, "Update policy successfully!"));
+        }
+
+        [HttpDelete("{id:guid}")]
+        [Authorize(Policy = "RequireAdmin")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var deleted = await _policyService.DeleteAsync(id);
+            if (!deleted)
+                return NotFound(ApiResponse<object>.Fail(ResponseError.NotFoundWarrantyPolicy));
+            return Ok(ApiResponse<object>.Ok(null, "Delete policy successfully!"));
+        }
     }
 }

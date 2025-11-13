@@ -120,6 +120,9 @@ namespace OEMEVWarrantyManagement.API
                 options.AddPolicy("RequireEvmStaff", policy =>
                     policy.RequireRole(RoleIdEnum.EvmStaff.GetRoleId()));
 
+                options.AddPolicy("RequireAddmin", policy =>
+                    policy.RequireRole(RoleIdEnum.Admin.GetRoleId()));
+
                 options.AddPolicy("RequireScTechOrScStaff", policy =>
                     policy.RequireRole(RoleIdEnum.Technician.GetRoleId(), RoleIdEnum.ScStaff.GetRoleId()));
 
@@ -207,15 +210,15 @@ namespace OEMEVWarrantyManagement.API
                         .AllowAnyMethod());
             });
 
-
             var app = builder.Build();
+            app.UseCors("AllowAll");
 
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
                 app.MapScalarApiReference();
             }
-            app.UseCors("AllowAll");
+
 
             app.UseMiddleware<GlobalResponseMiddleware>();
 

@@ -12,5 +12,9 @@ namespace OEMEVWarrantyManagement.Application.IServices
     {
         Task<IEnumerable<WarrantyPolicyDto>> GetAllAsync();
         Task<PagedResult<WarrantyPolicyDto>> GetAllAsync(PaginationRequest request);
+        Task<WarrantyPolicyDto?> GetByIdAsync(Guid id);
+        Task<WarrantyPolicyDto> CreateAsync(WarrantyPolicyDto request);
+        Task<WarrantyPolicyDto> UpdateAsync(Guid id, WarrantyPolicyDto request);
+        Task<bool> DeleteAsync(Guid id);
     }
 }

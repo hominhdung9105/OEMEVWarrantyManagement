@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.Dtos.Request;
 using OEMEVWarrantyManagement.Application.IServices;
+using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
 
 namespace OEMEVWarrantyManagement.API.Controllers
@@ -20,12 +21,18 @@ namespace OEMEVWarrantyManagement.API.Controllers
         }
 
         [HttpPost("create")]
+        [Authorize(policy: "RequireAdmin")]
         public async Task<ActionResult> Create(EmployeeDto request)
         {
-            //var employee = await _authService.CreateAsync(request) ?? throw new ApiException(ResponseError.UsernameAlreadyExists);
-            //return Ok(employee);
-
-            throw new NotImplementedException();
+            var employee = await _authService.CreateAsync(request) ?? throw new ApiException(ResponseError.UsernameAlreadyExists);
+            return Ok(ApiResponse<object>.Ok(employee, "Create account suscessfull!"));
+        }
+        [HttpPut("update/{id}")]
+        [Authorize(policy: "RequireAdmin")]
+        public async Task<ActionResult> Update(string id, EmployeeDto request)
+        {
+            var employee = await _authService.UpdateAsync(id, request) ?? throw new ApiException(ResponseError.EmployeeNotFound);
+            return Ok(ApiResponse<object>.Ok(employee, "Update account suscessfull!"));
         }
 
         [AllowAnonymous]

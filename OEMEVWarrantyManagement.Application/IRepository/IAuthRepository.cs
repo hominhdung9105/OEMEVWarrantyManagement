@@ -13,6 +13,7 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<Employee?> GetEmployeeById(Guid id);
         Task<Employee?> GetEmployeeByEmail(string email);
         Task<Employee> CreateGoogleEmployeeAsync(string email, string name);
+        Task<Employee> UpdateAsync(Employee employee);
         Task SaveChangesAsync();
     }
 }

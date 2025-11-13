@@ -156,7 +156,14 @@
         InvalidGoogleToken,
 
         [ResponseErrorAttr("Google login failed.", 500, 51)]
-        GoogleLoginFailed
+        GoogleLoginFailed,
+
+        [ResponseErrorAttr("Employee not found.", 404, 52)]
+        EmployeeNotFound,
+
+        // Warranty policy errors
+        [ResponseErrorAttr("Warranty policy not found.", 404, 53)]
+        NotFoundWarrantyPolicy
     }
 
     public class ApiResponse<T>

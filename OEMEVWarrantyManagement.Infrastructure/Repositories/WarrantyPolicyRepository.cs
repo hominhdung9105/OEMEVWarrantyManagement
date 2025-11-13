@@ -22,7 +22,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return await _context.WarrantyPolicies.ToListAsync();
         }
 
-        public Task<WarrantyPolicy> GetByIdAsync(Guid policyId)
+        public Task<WarrantyPolicy?> GetByIdAsync(Guid policyId)
         {
             return _context.WarrantyPolicies.FirstOrDefaultAsync(wp => wp.PolicyId == policyId);
         }
@@ -30,6 +30,29 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         public IQueryable<WarrantyPolicy> Query()
         {
             return _context.WarrantyPolicies.AsNoTracking();
+        }
+
+        public async Task<WarrantyPolicy> AddAsync(WarrantyPolicy entity)
+        {
+            _context.WarrantyPolicies.Add(entity);
+            await _context.SaveChangesAsync();
+            return entity;
+        }
+
+        public async Task<WarrantyPolicy> UpdateAsync(WarrantyPolicy entity)
+        {
+            _context.WarrantyPolicies.Update(entity);
+            await _context.SaveChangesAsync();
+            return entity;
+        }
+
+        public async Task<bool> DeleteAsync(Guid policyId)
+        {
+            var entity = await _context.WarrantyPolicies.FirstOrDefaultAsync(w => w.PolicyId == policyId);
+            if (entity == null) return false;
+            _context.WarrantyPolicies.Remove(entity);
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

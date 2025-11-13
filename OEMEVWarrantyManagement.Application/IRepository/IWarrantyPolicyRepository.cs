@@ -10,7 +10,10 @@ namespace OEMEVWarrantyManagement.Application.IRepository
     public interface IWarrantyPolicyRepository
     {
         Task<IEnumerable<WarrantyPolicy>> GetAllAsync();
-        Task<WarrantyPolicy> GetByIdAsync(Guid policyId);
+        Task<WarrantyPolicy?> GetByIdAsync(Guid policyId);
         IQueryable<WarrantyPolicy> Query();
+        Task<WarrantyPolicy> AddAsync(WarrantyPolicy entity);
+        Task<WarrantyPolicy> UpdateAsync(WarrantyPolicy entity);
+        Task<bool> DeleteAsync(Guid policyId);
     }
 }

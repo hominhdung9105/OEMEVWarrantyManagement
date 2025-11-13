@@ -87,5 +87,12 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         {
             await _context.SaveChangesAsync();
         }
+
+        public async Task<Employee> UpdateAsync(Employee employee)
+        {
+            _context.Employees.Update(employee);
+            await _context.SaveChangesAsync();
+            return employee;
+        }
     }
 }
