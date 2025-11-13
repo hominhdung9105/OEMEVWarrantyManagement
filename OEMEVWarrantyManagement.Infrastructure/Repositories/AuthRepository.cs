@@ -21,24 +21,24 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         }
         //change
 
-        public async Task<Employee?> CreateAsync(EmployeeDto request)
-        {
-            if (await _context.Employees.AnyAsync(e => e.Email == request.Email))
-                return null;
+        //public async Task<Employee?> CreateAsync(EmployeeDto request)
+        //{
+        //    if (await _context.Employees.AnyAsync(e => e.Email == request.Email))
+        //        return null;
 
-            var employee = new Employee();
+        //    var employee = new Employee();
 
-            var hashedPassword = new PasswordHasher<Employee>().HashPassword(employee, request.PasswordHash);
+        //    var hashedPassword = new PasswordHasher<Employee>().HashPassword(employee, request.PasswordHash);
 
-            employee.Email = request.Email;
-            employee.PasswordHash = hashedPassword;
+        //    employee.Email = request.Email;
+        //    employee.PasswordHash = hashedPassword;
 
-            _context.Employees.Add(employee);
+        //    _context.Employees.Add(employee);
 
-            await _context.SaveChangesAsync();
+        //    await _context.SaveChangesAsync();
 
-            return employee;
-        }
+        //    return employee;
+        //}
 
         public async Task<bool> IsHaveEmployeeByUsername(string username)
         {
@@ -88,11 +88,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<Employee> UpdateAsync(Employee employee)
-        {
-            _context.Employees.Update(employee);
-            await _context.SaveChangesAsync();
-            return employee;
-        }
+        //public async Task<Employee> UpdateAsync(Employee employee)
+        //{
+        //    _context.Employees.Update(employee);
+        //    await _context.SaveChangesAsync();
+        //    return employee;
+        //}
     }
 }

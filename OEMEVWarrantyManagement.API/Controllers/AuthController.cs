@@ -20,21 +20,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             _authService = authService;
         }
 
-        [HttpPost("create")]
-        [Authorize(policy: "RequireAdmin")]
-        public async Task<ActionResult> Create(EmployeeDto request)
-        {
-            var employee = await _authService.CreateAsync(request) ?? throw new ApiException(ResponseError.UsernameAlreadyExists);
-            return Ok(ApiResponse<object>.Ok(employee, "Create account suscessfull!"));
-        }
-        [HttpPut("update/{id}")]
-        [Authorize(policy: "RequireAdmin")]
-        public async Task<ActionResult> Update(string id, EmployeeDto request)
-        {
-            var employee = await _authService.UpdateAsync(id, request) ?? throw new ApiException(ResponseError.EmployeeNotFound);
-            return Ok(ApiResponse<object>.Ok(employee, "Update account suscessfull!"));
-        }
-
         [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequestDto request)

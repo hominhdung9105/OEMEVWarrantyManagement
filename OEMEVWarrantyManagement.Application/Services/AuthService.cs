@@ -30,10 +30,10 @@ namespace OEMEVWarrantyManagement.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<Employee?> CreateAsync(EmployeeDto request)
-        {
-            return await _authRepository.CreateAsync(request);
-        }
+        //public async Task<Employee?> CreateAsync(EmployeeDto request)
+        //{
+        //    return await _authRepository.CreateAsync(request);
+        //}
 
         public async Task<TokenResponseDto?> LoginAsync(LoginRequestDto request)
         {
@@ -143,31 +143,31 @@ namespace OEMEVWarrantyManagement.Application.Services
             return refreshToken;
         }
 
-        public async Task<EmployeeDto> UpdateAsync(string id, EmployeeDto request)
-        {
-            var employeeId = Guid.Parse(id);
-            var employee = await _authRepository.GetEmployeeById(employeeId) ?? throw new ApiException(ResponseError.NotFoundEmployee);
-            if (!string.IsNullOrWhiteSpace(request.Email))
-                employee.Email = request.Email;
-            if (!string.IsNullOrWhiteSpace(request.Role))
-                employee.Role = request.Role;
-            if (request.OrgId != Guid.Empty)
-                employee.OrgId = request.OrgId;
-            if (!string.IsNullOrWhiteSpace(request.PasswordHash))
-            {
-                var hasher = new PasswordHasher<Employee>();
-                employee.PasswordHash = hasher.HashPassword(employee, request.PasswordHash);
-            }
-            var updatedEmployee = await _authRepository.UpdateAsync(employee);
+        //public async Task<EmployeeDto> UpdateAsync(string id, EmployeeDto request)
+        //{
+        //    var employeeId = Guid.Parse(id);
+        //    var employee = await _authRepository.GetEmployeeById(employeeId) ?? throw new ApiException(ResponseError.NotFoundEmployee);
+        //    if (!string.IsNullOrWhiteSpace(request.Email))
+        //        employee.Email = request.Email;
+        //    if (!string.IsNullOrWhiteSpace(request.Role))
+        //        employee.Role = request.Role;
+        //    if (request.OrgId != Guid.Empty)
+        //        employee.OrgId = request.OrgId;
+        //    if (!string.IsNullOrWhiteSpace(request.PasswordHash))
+        //    {
+        //        var hasher = new PasswordHasher<Employee>();
+        //        employee.PasswordHash = hasher.HashPassword(employee, request.PasswordHash);
+        //    }
+        //    var updatedEmployee = await _authRepository.UpdateAsync(employee);
 
-            return new EmployeeDto
-            {
-                UserId = updatedEmployee.UserId,
-                Email = updatedEmployee.Email,
-                PasswordHash = updatedEmployee.PasswordHash,
-                Role = updatedEmployee.Role,
-                OrgId = updatedEmployee.OrgId,
-            };
-        }
+        //    return new EmployeeDto
+        //    {
+        //        UserId = updatedEmployee.UserId,
+        //        Email = updatedEmployee.Email,
+        //        PasswordHash = updatedEmployee.PasswordHash,
+        //        Role = updatedEmployee.Role,
+        //        OrgId = updatedEmployee.OrgId,
+        //    };
+        //}
     }
 }
