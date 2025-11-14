@@ -142,7 +142,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 .RuleFor(p => p.Name, f => f.Commerce.ProductName() + " Warranty")
                 .RuleFor(p => p.CoveragePeriodMonths, f => f.PickRandom(new[] { 12, 24, 36, 48, 60 }))
                 .RuleFor(p => p.Conditions, f => f.Lorem.Sentence())
-                .RuleFor(p => p.OrganizationOrgId, _ => singleOem.OrgId);
+                .RuleFor(p => p.OrganizationOrgId, _ => singleOem.OrgId)
+                .RuleFor(p => p.Status, _ => "Active");
             var policies = policyFaker.Generate(recordCount);
             context.WarrantyPolicies.AddRange(policies);
 

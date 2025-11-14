@@ -10,6 +10,7 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public int CoveragePeriodMonths { get; set; }
         public string Conditions { get; set; }
         public Guid OrganizationOrgId { get; set; }
+        public string Status { get; set; }
 
         // Navigation Properties
         [JsonIgnore]

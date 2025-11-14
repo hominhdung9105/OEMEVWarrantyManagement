@@ -59,7 +59,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
             var deleted = await _policyService.DeleteAsync(id);
             if (!deleted)
                 return NotFound(ApiResponse<object>.Fail(ResponseError.NotFoundWarrantyPolicy));
-            return Ok(ApiResponse<object>.Ok(null, "Delete policy successfully!"));
+            return Ok(ApiResponse<object>.Ok(null, "Deactivate policy successfully!"));
         }
     }
 }

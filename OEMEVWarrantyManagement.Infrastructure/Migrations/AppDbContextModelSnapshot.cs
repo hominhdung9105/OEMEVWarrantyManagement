@@ -638,6 +638,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<Guid>("OrganizationOrgId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("PolicyId");
 
                     b.HasIndex("OrganizationOrgId");

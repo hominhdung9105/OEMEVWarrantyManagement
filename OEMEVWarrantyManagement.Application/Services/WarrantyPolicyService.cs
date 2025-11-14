@@ -58,6 +58,7 @@ namespace OEMEVWarrantyManagement.Application.Services
         public async Task<WarrantyPolicyDto> CreateAsync(WarrantyPolicyDto request)
         {
             var entity = _mapper.Map<WarrantyPolicy>(request);
+            entity.Status = "Active";
             var created = await _warrantyPolicyRepository.AddAsync(entity);
             return _mapper.Map<WarrantyPolicyDto>(created);
         }
