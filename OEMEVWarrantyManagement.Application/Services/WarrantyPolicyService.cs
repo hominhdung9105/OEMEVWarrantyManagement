@@ -15,10 +15,12 @@ namespace OEMEVWarrantyManagement.Application.Services
     {
         private readonly IWarrantyPolicyRepository _warrantyPolicyRepository;
         private readonly IMapper _mapper;
-        public WarrantyPolicyService(IWarrantyPolicyRepository warrantyPolicyRepository, IMapper mapper)
+        private readonly ICurrentUserService _currentUserService;
+        public WarrantyPolicyService(IWarrantyPolicyRepository warrantyPolicyRepository, IMapper mapper, ICurrentUserService currentUserService)
         {
             _warrantyPolicyRepository = warrantyPolicyRepository;
             _mapper = mapper;
+            _currentUserService = currentUserService;
         }
         public async Task<IEnumerable<WarrantyPolicyDto>> GetAllAsync()
         {
@@ -55,23 +57,30 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<WarrantyPolicyDto>(entity);
         }
 
-        public async Task<WarrantyPolicyDto> CreateAsync(WarrantyPolicyDto request)
+        public async Task<WarrantyPolicyCreateDto> CreateAsync(WarrantyPolicyCreateDto request)
         {
+            var orgId = await _currentUserService.GetOrgId();
             var entity = _mapper.Map<WarrantyPolicy>(request);
+            entity.OrganizationOrgId =(Guid)orgId;
             entity.Status = "Active";
             var created = await _warrantyPolicyRepository.AddAsync(entity);
-            return _mapper.Map<WarrantyPolicyDto>(created);
+            return _mapper.Map<WarrantyPolicyCreateDto>(created);
         }
 
-        public async Task<WarrantyPolicyDto> UpdateAsync(Guid id, WarrantyPolicyDto request)
+        public async Task<WarrantyPolicyUpdateDto> UpdateAsync(Guid id, WarrantyPolicyUpdateDto request)
         {
             var entity = await _warrantyPolicyRepository.GetByIdAsync(id) ?? throw new ApiException(ResponseError.NotFoundWarrantyPolicy);
             entity.Name = request.Name;
             entity.CoveragePeriodMonths = request.CoveragePeriodMonths;
             entity.Conditions = request.Conditions;
-
+            entity.Status = request.Status;
+            if(entity.Status != "Active" && entity.Status != "Inactive")
+            {
+                throw new ApiException(ResponseError.InvalidPolicy);
+            }
+            //var update = _mapper.Map<WarrantyPolicy>(request);
             var updated = await _warrantyPolicyRepository.UpdateAsync(entity);
-            return _mapper.Map<WarrantyPolicyDto>(updated);
+            return _mapper.Map<WarrantyPolicyUpdateDto>(updated);
         }
 
         public async Task<bool> DeleteAsync(Guid id)

@@ -38,18 +38,18 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpPost]
         [Authorize(Policy = "RequireAdmin")]
-        public async Task<IActionResult> Create([FromBody] WarrantyPolicyDto request)
+        public async Task<IActionResult> Create([FromBody] WarrantyPolicyCreateDto request)
         {
             var created = await _policyService.CreateAsync(request);
-            return Ok(ApiResponse<WarrantyPolicyDto>.Ok(created, "Create policy successfully!"));
+            return Ok(ApiResponse<WarrantyPolicyCreateDto>.Ok(created, "Create policy successfully!"));
         }
 
         [HttpPut("{id:guid}")]
         [Authorize(Policy = "RequireAdmin")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] WarrantyPolicyDto request)
+        public async Task<IActionResult> Update(Guid id, [FromBody] WarrantyPolicyUpdateDto request)
         {
             var updated = await _policyService.UpdateAsync(id, request);
-            return Ok(ApiResponse<WarrantyPolicyDto>.Ok(updated, "Update policy successfully!"));
+            return Ok(ApiResponse<WarrantyPolicyUpdateDto>.Ok(updated, "Update policy successfully!"));
         }
 
         [HttpDelete("{id:guid}")]
