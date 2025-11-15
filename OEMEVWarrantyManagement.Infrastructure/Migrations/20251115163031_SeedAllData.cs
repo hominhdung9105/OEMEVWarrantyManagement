@@ -59,7 +59,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     Role = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     OrgId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     RefreshToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RefreshTokenExpiryTime = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    RefreshTokenExpiryTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true)
                 },
                 constraints: table =>
                 {
@@ -102,7 +103,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CoveragePeriodMonths = table.Column<int>(type: "int", nullable: false),
                     Conditions = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    OrganizationOrgId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    OrganizationOrgId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
@@ -112,8 +113,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         name: "FK_WarrantyPolicies_Organizations_OrganizationOrgId",
                         column: x => x.OrganizationOrgId,
                         principalTable: "Organizations",
-                        principalColumn: "OrgId",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "OrgId");
                 });
 
             migrationBuilder.CreateTable(

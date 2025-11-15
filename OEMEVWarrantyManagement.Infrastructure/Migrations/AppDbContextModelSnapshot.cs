@@ -315,6 +315,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -635,7 +640,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("OrganizationOrgId")
+                    b.Property<Guid?>("OrganizationOrgId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
@@ -947,9 +952,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 {
                     b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Organization", "Organization")
                         .WithMany("WarrantyPolicies")
-                        .HasForeignKey("OrganizationOrgId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("OrganizationOrgId");
 
                     b.Navigation("Organization");
                 });

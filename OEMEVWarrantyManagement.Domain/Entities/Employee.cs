@@ -13,6 +13,7 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public Guid OrgId { get; set; }
         public string? RefreshToken { get; set; }
         public DateTime? RefreshTokenExpiryTime { get; set; }
+        public bool IsActive { get; set; } = true;
 
         // Navigation Properties
         [JsonIgnore]

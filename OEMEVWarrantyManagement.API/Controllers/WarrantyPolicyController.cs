@@ -52,12 +52,22 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<WarrantyPolicyUpdateDto>.Ok(updated, "Update policy successfully!"));
         }
 
-        [HttpDelete("{id:guid}")]
+        [HttpPatch("activatePolicy/{id:guid}")]
         [Authorize(Policy = "RequireAdmin")]
-        public async Task<IActionResult> Delete(Guid id)
+        public async Task<IActionResult> ActivatePolicy(Guid id)
         {
-            var deleted = await _policyService.DeleteAsync(id);
-            if (!deleted)
+            var result = await _policyService.SetPolicyStatusAsync(id, true);
+            if (!result)
+                return NotFound(ApiResponse<object>.Fail(ResponseError.NotFoundWarrantyPolicy));
+            return Ok(ApiResponse<object>.Ok(null, "Activate policy successfully!"));
+        }
+
+        [HttpPatch("deactivatePolicy/{id:guid}")]
+        [Authorize(Policy = "RequireAdmin")]
+        public async Task<IActionResult> DeactivatePolicy(Guid id)
+        {
+            var result = await _policyService.SetPolicyStatusAsync(id, false);
+            if (!result)
                 return NotFound(ApiResponse<object>.Fail(ResponseError.NotFoundWarrantyPolicy));
             return Ok(ApiResponse<object>.Ok(null, "Deactivate policy successfully!"));
         }

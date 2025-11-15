@@ -31,37 +31,34 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<IEnumerable<AllTech>>(entities);
         }
 
-        public async Task<EmployeeDto> CreateAccountAsync(EmployeeDto request)
+        public async Task<EmployeeDto> CreateAccountAsync(CreateEmployeeDto request)
         {
-            var created = await _employeeRepository.CreateAccountAsync(request);
+            var employee = _mapper.Map<Employee>(request);
+            var created = await _employeeRepository.CreateAccountAsync(employee);
             return _mapper.Map<EmployeeDto>(created);
         }
 
-        public async Task<EmployeeDto> UpdateAccountAsync(string id, EmployeeDto request)
+        public async Task<EmployeeDto> UpdateAccountAsync(Guid id, UpdateEmployeeDto request)
         {
-            var employeeId = Guid.Parse(id);
-            var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId) ?? throw new ApiException(ResponseError.NotFoundEmployee);
+            var employee = await _employeeRepository.GetEmployeeByIdAsync(id) ?? throw new ApiException(ResponseError.NotFoundEmployee);
+            
             if (!string.IsNullOrWhiteSpace(request.Email))
                 employee.Email = request.Email;
+            if (!string.IsNullOrWhiteSpace(request.Name))
+                employee.Name = request.Name;
             if (!string.IsNullOrWhiteSpace(request.Role))
                 employee.Role = request.Role;
-            if (request.OrgId != Guid.Empty)
-                employee.OrgId = request.OrgId;
-            if (!string.IsNullOrWhiteSpace(request.PasswordHash))
+            if (request.OrgId.HasValue && request.OrgId.Value != Guid.Empty)
+                employee.OrgId = request.OrgId.Value;
+            if (!string.IsNullOrWhiteSpace(request.Password))
             {
                 var hasher = new PasswordHasher<Employee>();
-                employee.PasswordHash = hasher.HashPassword(employee, request.PasswordHash);
+                employee.PasswordHash = hasher.HashPassword(employee, request.Password);
             }
+            
             var updatedEmployee = await _employeeRepository.UpdateAccountAsync(employee);
 
-            return new EmployeeDto
-            {
-                UserId = updatedEmployee.UserId,
-                Email = updatedEmployee.Email,
-                PasswordHash = updatedEmployee.PasswordHash,
-                Role = updatedEmployee.Role,
-                OrgId = updatedEmployee.OrgId,
-            };
+            return _mapper.Map<EmployeeDto>(updatedEmployee);
         }
 
         public async Task<IEnumerable<EmployeeDto>> GetAllAccountsAsync()
@@ -70,9 +67,9 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<IEnumerable<EmployeeDto>>(accounts);
         }
 
-        public async Task<bool> DeleteAccountAsync(Guid id)
+        public async Task<bool> SetAccountStatusAsync(Guid id, bool isActive)
         {
-            return await _employeeRepository.DeleteAccountAsync(id);
+            return await _employeeRepository.SetAccountStatusAsync(id, isActive);
         }
     }
 }

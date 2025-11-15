@@ -85,9 +85,9 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<WarrantyPolicyUpdateDto>(updated);
         }
 
-        public async Task<bool> DeleteAsync(Guid id)
+        public async Task<bool> SetPolicyStatusAsync(Guid id, bool isActive)
         {
-            return await _warrantyPolicyRepository.DeleteAsync(id);
+            return await _warrantyPolicyRepository.SetPolicyStatusAsync(id, isActive);
         }
     }
 }

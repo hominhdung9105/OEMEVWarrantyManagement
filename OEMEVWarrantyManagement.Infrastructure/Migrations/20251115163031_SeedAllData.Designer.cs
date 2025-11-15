@@ -12,7 +12,7 @@ using OEMEVWarrantyManagement.Infrastructure.Persistence;
 namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251114174513_SeedAllData")]
+    [Migration("20251115163031_SeedAllData")]
     partial class SeedAllData
     {
         /// <inheritdoc />
@@ -317,6 +317,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -638,7 +643,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("OrganizationOrgId")
+                    b.Property<Guid?>("OrganizationOrgId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
@@ -950,9 +955,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 {
                     b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Organization", "Organization")
                         .WithMany("WarrantyPolicies")
-                        .HasForeignKey("OrganizationOrgId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("OrganizationOrgId");
 
                     b.Navigation("Organization");
                 });

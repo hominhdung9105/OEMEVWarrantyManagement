@@ -50,14 +50,15 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return entity;
         }
 
-        public async Task<bool> DeleteAsync(Guid policyId)
+        public async Task<bool> SetPolicyStatusAsync(Guid policyId, bool isActive)
         {
             var entity = await _context.WarrantyPolicies.FirstOrDefaultAsync(w => w.PolicyId == policyId);
             if (entity == null) return false;
-            // Soft delete: mark as Inactive
-            entity.Status = "Inactive";
+            
+            entity.Status = isActive ? "Active" : "Inactive";
             _context.WarrantyPolicies.Update(entity);
             await _context.SaveChangesAsync();
+            
             return true;
         }
     }

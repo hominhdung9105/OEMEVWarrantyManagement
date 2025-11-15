@@ -284,7 +284,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             if (customer == null || string.IsNullOrWhiteSpace(customer.Email)) return;
 
             var token = GenerateConfirmationToken(appointment);
-            var confirmUrl = $"{_appSettings.Issuer?.TrimEnd('/')}/api/appointment/confirm?appointmentId={appointment.AppointmentId}&token={token}";
+            var confirmUrl = $"{_appSettings.Issuer?.TrimEnd('/')}?appointmentId={appointment.AppointmentId}&token={token}";
 
             var slotInfo = TimeSlotExtensions.GetSlotInfo(appointment.Slot);
             var time = slotInfo?.Time ?? appointment.Slot;

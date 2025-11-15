@@ -14,6 +14,6 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         IQueryable<WarrantyPolicy> Query();
         Task<WarrantyPolicy> AddAsync(WarrantyPolicy entity);
         Task<WarrantyPolicy> UpdateAsync(WarrantyPolicy entity);
-        Task<bool> DeleteAsync(Guid policyId);
+        Task<bool> SetPolicyStatusAsync(Guid policyId, bool isActive);
     }
 }
