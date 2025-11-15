@@ -17,7 +17,7 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IMapper _mapper;
         private readonly IVehicleRepository _vehicleRepository;
         private readonly IVehiclePartRepository _vehiclePartRepository;
-        private readonly IEmailService _emailService;
+        private readonly ICampaignNotificationService _notificationService;
         private readonly ICustomerRepository _customerRepository;
 
         public CampaignService(
@@ -26,7 +26,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             IMapper mapper,
             IVehicleRepository vehicleRepository,
             IVehiclePartRepository vehiclePartRepository,
-            IEmailService emailService,
+            ICampaignNotificationService notificationService,
             ICustomerRepository customerRepository)
         {
             _campaignRepository = campaignRepository;
@@ -34,7 +34,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             _mapper = mapper;
             _vehicleRepository = vehicleRepository;
             _vehiclePartRepository = vehiclePartRepository;
-            _emailService = emailService;
+            _notificationService = notificationService;
             _customerRepository = customerRepository;
         }
 
@@ -85,8 +85,8 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             var created = await _campaignRepository.CreateAsync(entity);
 
-            // Fire-and-forget email notifications to affected customers
-            await NotifyAffectedCustomersAsync(created);
+            // Process notifications and send emails asynchronously (fire-and-forget to improve response time)
+            _ = Task.Run(async () => await _notificationService.ProcessCampaignNotificationsAsync(created.CampaignId));
 
             return _mapper.Map<CampaignDto>(created);
         }
@@ -108,47 +108,6 @@ namespace OEMEVWarrantyManagement.Application.Services
             }
 
             return count;
-        }
-
-        private async Task NotifyAffectedCustomersAsync(Campaign campaign)
-        {
-            if (string.IsNullOrWhiteSpace(campaign.PartModel)) return;
-
-            try
-            {
-                var vehicles = await _vehicleRepository.GetAllAsync();
-
-                foreach (var v in vehicles)
-                {
-                    if (!await _vehiclePartRepository.ExistsByVinAndModelAsync(v.Vin, campaign.PartModel))
-                        continue;
-
-                    var customer = await _customerRepository.GetCustomerByIdAsync(v.CustomerId);
-                    if (customer == null || string.IsNullOrWhiteSpace(customer.Email))
-                        continue;
-
-                    try
-                    {
-                        await _emailService.SendCampaignPartIssueEmailAsync(
-                            to: customer.Email,
-                            customerName: customer.Name,
-                            vin: v.Vin,
-                            partModel: campaign.PartModel,
-                            campaignTitle: campaign.Title,
-                            note: campaign.Description,
-                            bookingUrl: null
-                        );
-                    }
-                    catch
-                    {
-                        // ignore send errors per recipient
-                    }
-                }
-            }
-            catch
-            {
-                // ignore global errors to not impact creation flow
-            }
         }
 
         public async Task<CampaignDto?> GetByIdAsync(Guid id)
@@ -253,6 +212,49 @@ namespace OEMEVWarrantyManagement.Application.Services
                 InProgress = entity.InProgressVehicles,
                 Pending = entity.PendingVehicles
             };
+        }
+
+        // New: Auto-close expired campaigns (EndDate + 1 day)
+        public async Task<int> AutoCloseExpiredCampaignsAsync()
+        {
+            try
+            {
+                var activeStatus = CampaignStatus.Active.GetCampaignStatus();
+                var query = _campaignRepository.Query();
+                
+                // Get all active campaigns
+                var activeCampaigns = query
+                    .Where(c => c.Status == activeStatus)
+                    .ToList();
+
+                if (!activeCampaigns.Any())
+                {
+                    return 0;
+                }
+
+                var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                var closedCount = 0;
+
+                foreach (var campaign in activeCampaigns)
+                {
+                    // Check if campaign has passed EndDate + 1 day
+                    var expiryDate = campaign.EndDate.AddDays(1);
+                    
+                    if (today >= expiryDate)
+                    {
+                        campaign.Status = CampaignStatus.Closed.GetCampaignStatus();
+                        await _campaignRepository.UpdateAsync(campaign);
+                        closedCount++;
+                    }
+                }
+
+                return closedCount;
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't throw to prevent background service from crashing
+                throw new Exception($"Error auto-closing expired campaigns: {ex.Message}", ex);
+            }
         }
     }
 }

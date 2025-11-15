@@ -87,5 +87,13 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                 .Where(a => a.Status == status)
                 .CountAsync();
         }
+
+        public async Task<List<Appointment>> GetAppointmentsByVinAsync(string vin)
+        {
+            return await _context.Appointments
+                .Where(a => a.Vin == vin)
+                .OrderByDescending(a => a.CreatedAt)
+                .ToListAsync();
+        }
     }
 }

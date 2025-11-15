@@ -200,6 +200,13 @@ namespace OEMEVWarrantyManagement.API
             // Campaign Vehicle
             builder.Services.AddScoped<ICampaignVehicleRepository, CampaignVehicleRepository>();
             builder.Services.AddScoped<ICampaignVehicleService, CampaignVehicleService>();
+            // Campaign Notification
+            builder.Services.AddScoped<ICampaignNotificationRepository, CampaignNotificationRepository>();
+            builder.Services.AddScoped<ICampaignNotificationService, CampaignNotificationService>();
+
+            // Background Services
+            builder.Services.AddHostedService<OEMEVWarrantyManagement.API.BackgroundServices.CampaignReminderBackgroundService>();
+            builder.Services.AddHostedService<OEMEVWarrantyManagement.API.BackgroundServices.CampaignAutoCloseBackgroundService>();
 
             builder.Services.AddCors(options =>
             {

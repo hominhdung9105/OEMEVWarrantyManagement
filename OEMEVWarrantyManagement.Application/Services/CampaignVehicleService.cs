@@ -21,8 +21,9 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IVehiclePartRepository _vehiclePartRepository;
         private readonly IMapper _mapper;
         private readonly IWorkOrderService _workOrderService;
+        private readonly ICampaignNotificationService _notificationService;
 
-        public CampaignVehicleService(ICampaignRepository campaignRepository, IVehicleRepository vehicleRepository, ICampaignVehicleRepository campaignVehicleRepository, IWorkOrderRepository workOrderRepository, IEmployeeRepository employeeRepository, IVehiclePartRepository vehiclePartRepository, IMapper mapper, IWorkOrderService workOrderService)
+        public CampaignVehicleService(ICampaignRepository campaignRepository, IVehicleRepository vehicleRepository, ICampaignVehicleRepository campaignVehicleRepository, IWorkOrderRepository workOrderRepository, IEmployeeRepository employeeRepository, IVehiclePartRepository vehiclePartRepository, IMapper mapper, IWorkOrderService workOrderService, ICampaignNotificationService notificationService)
         {
             _campaignRepository = campaignRepository;
             _vehicleRepository = vehicleRepository;
@@ -32,6 +33,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             _vehiclePartRepository = vehiclePartRepository;
             _mapper = mapper;
             _workOrderService = workOrderService;
+            _notificationService = notificationService;
         }
 
         public async Task<CampaignVehicleDto> AddVehicleAsync(RequestAddCampaignVehicleDto request)
@@ -61,6 +63,10 @@ namespace OEMEVWarrantyManagement.Application.Services
             };
 
             await _campaignVehicleRepository.AddRangeAsync(entity);
+
+            // Mark notification as completed so no more reminder emails are sent
+            // This happens when vehicle is added to campaign (not when Done)
+            await _notificationService.MarkVehicleAsCompletedAsync(entity.CampaignId, entity.Vin);
 
             // Assign technicians if provided using centralized service
             if (request.AssignedTo != null && request.AssignedTo.Any())
@@ -265,6 +271,9 @@ namespace OEMEVWarrantyManagement.Application.Services
                     campaign.CompletedVehicles += 1;
 
                     await _campaignRepository.UpdateAsync(campaign);
+                    
+                    // Note: IsCompleted was already set to true when vehicle was added to campaign
+                    // No need to call MarkVehicleAsCompletedAsync again here
                     break;
                 default:
                     throw new ApiException(ResponseError.InvalidCampaignVehicleStatus);
