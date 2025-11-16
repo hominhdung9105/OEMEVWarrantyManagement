@@ -18,7 +18,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         public async Task<IEnumerable<Employee>> GetAllTechInWorkspaceAsync(Guid orgId)
         {
-            return await _context.Employees.Where(e => e.Role == RoleIdEnum.Technician.GetRoleId() && e.OrgId == orgId).ToListAsync();
+            return await _context.Employees
+                .Where(e => e.Role == RoleIdEnum.Technician.GetRoleId() && e.OrgId == orgId && e.IsActive)
+                .ToListAsync();
         }
 
         public async Task<Employee> GetEmployeeByIdAsync(Guid userId)
@@ -29,7 +31,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         public async Task<IEnumerable<Employee>> GetAllTechAsync()
         {
             return await _context.Employees
-                .Where(e => e.Role == RoleIdEnum.Technician.GetRoleId())
+                .Where(e => e.Role == RoleIdEnum.Technician.GetRoleId() && e.IsActive)
                 .ToListAsync();
         }
 
@@ -38,25 +40,19 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return await _context.Employees.ToListAsync();
         }
 
-        public async Task<Employee> CreateAccountAsync(EmployeeDto request)
+        public async Task<Employee> CreateAccountAsync(Employee request)
         {
             if (await _context.Employees.AnyAsync(e => e.Email == request.Email))
                 return null;
 
-            var employee = new Employee();
 
-            var hashedPassword = new PasswordHasher<Employee>().HashPassword(employee, request.PasswordHash);
+            var hasher = new PasswordHasher<Employee>();
+            request.PasswordHash = hasher.HashPassword(request, request.PasswordHash);
 
-            employee.Email = request.Email;
-            employee.PasswordHash = hashedPassword;
-            employee.Role = request.Role;
-            employee.OrgId = request.OrgId;
-
-            _context.Employees.Add(employee);
-
+            _context.Employees.Add(request);
             await _context.SaveChangesAsync();
 
-            return employee;
+            return request;
         }
 
         public async Task<Employee> UpdateAccountAsync(Employee employee)
@@ -66,12 +62,15 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return employee;
         }
 
-        public async Task<bool> DeleteAccountAsync(Guid id)
+        public async Task<bool> SetAccountStatusAsync(Guid id, bool isActive)
         {
             var entity = await _context.Employees.FindAsync(id);
             if (entity == null) return false;
-            _context.Employees.Remove(entity);
+            
+            entity.IsActive = isActive;
+            _context.Employees.Update(entity);
             await _context.SaveChangesAsync();
+            
             return true;
         }
     }

@@ -46,28 +46,38 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpPost("createAccount")]
         [Authorize(policy: "RequireAdmin")]
-        public async Task<ActionResult> Create(EmployeeDto request)
+        public async Task<ActionResult> Create(CreateEmployeeDto request)
         {
             var employee = await _employeeService.CreateAccountAsync(request) ?? throw new ApiException(ResponseError.UsernameAlreadyExists);
-            return Ok(ApiResponse<object>.Ok(employee, "Create account suscessfull!"));
+            return Ok(ApiResponse<object>.Ok(employee, "Create account successfully!"));
         }
 
         [HttpPut("updateAccount/{id}")]
         [Authorize(policy: "RequireAdmin")]
-        public async Task<ActionResult> Update(string id, EmployeeDto request)
+        public async Task<ActionResult> Update(Guid id, UpdateEmployeeDto request)
         {
             var employee = await _employeeService.UpdateAccountAsync(id, request) ?? throw new ApiException(ResponseError.EmployeeNotFound);
-            return Ok(ApiResponse<object>.Ok(employee, "Update account suscessfull!"));
+            return Ok(ApiResponse<object>.Ok(employee, "Update account successfully!"));
         }
 
-        [HttpDelete("deleteAccount/{id:guid}")]
+        [HttpPatch("activateAccount/{id:guid}")]
         [Authorize(Policy = "RequireAdmin")]
-        public async Task<IActionResult> DeleteAccount(Guid id)
+        public async Task<IActionResult> ActivateAccount(Guid id)
         {
-            var deleted = await _employeeService.DeleteAccountAsync(id);
-            if (!deleted)
+            var result = await _employeeService.SetAccountStatusAsync(id, true);
+            if (!result)
                 return NotFound(ApiResponse<object>.Fail(ResponseError.EmployeeNotFound));
-            return Ok(ApiResponse<object>.Ok(null, "Delete account successfully"));
+            return Ok(ApiResponse<object>.Ok(null, "Activate account successfully"));
+        }
+
+        [HttpPatch("deactivateAccount/{id:guid}")]
+        [Authorize(Policy = "RequireAdmin")]
+        public async Task<IActionResult> DeactivateAccount(Guid id)
+        {
+            var result = await _employeeService.SetAccountStatusAsync(id, false);
+            if (!result)
+                return NotFound(ApiResponse<object>.Fail(ResponseError.EmployeeNotFound));
+            return Ok(ApiResponse<object>.Ok(null, "Deactivate account successfully"));
         }
     }
 }

@@ -10,7 +10,7 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<IEnumerable<Employee>> GetAllTechAsync();
         Task<IEnumerable<Employee>> GetAllAccountsAsync();
         Task<Employee> UpdateAccountAsync(Employee employee);
-        Task<Employee> CreateAccountAsync(EmployeeDto request);
-        Task<bool> DeleteAccountAsync(Guid id);
+        Task<Employee> CreateAccountAsync(Employee request);
+        Task<bool> SetAccountStatusAsync(Guid id, bool isActive);
     }
 }

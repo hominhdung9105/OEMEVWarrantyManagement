@@ -12,6 +12,9 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task SendEmailAsync(string to, string subject, string body);
         // Appointment specific email
         Task SendAppointmentConfirmationEmailAsync(string to, string customerName, string vin, DateOnly date, string slot, string time, string confirmUrl);
+        Task SendAppointmentCancelledEmailAsync(string to, string customerName, string vin);
+        Task SendAppointmentNoShowEmailAsync(string to, string customerName, string vin, DateOnly date, string slot, string time);
+        Task SendAppointmentRescheduledEmailAsync(string to, string customerName, string vin, DateOnly oldDate, string oldSlot, DateOnly newDate, string newSlot, string newTime, string confirmUrl);
         // Warranty claim approved email
         Task SendWarrantyClaimApprovedEmailAsync(string to, string customerName, string vin, Guid claimId, string? policyName);
         // Warranty claim denied email

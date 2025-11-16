@@ -18,6 +18,9 @@ using OEMEVWarrantyManagement.Share.Middlewares;
 using OEMEVWarrantyManagement.Share.Models.Response;
 using Scalar.AspNetCore;
 using System.Text;
+using Hangfire;
+using Hangfire.SqlServer;
+using Hangfire.Dashboard;
 
 namespace OEMEVWarrantyManagement.API
 {
@@ -48,6 +51,23 @@ namespace OEMEVWarrantyManagement.API
             // Add DbContext
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            // Add Hangfire services
+            builder.Services.AddHangfire(configuration => configuration
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection"), new SqlServerStorageOptions
+                {
+                    CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+                    SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+                    QueuePollInterval = TimeSpan.Zero,
+                    UseRecommendedIsolationLevel = true,
+                    DisableGlobalLocks = true
+                }));
+
+            // Add the processing server as IHostedService
+            builder.Services.AddHangfireServer();
 
             // Authentication: Use JWT as default (avoid redirect to Google on API unauthorized)
             builder.Services.AddAuthentication(options =>
@@ -189,6 +209,8 @@ namespace OEMEVWarrantyManagement.API
             // Appointment
             builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
             builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+            // Hangfire Jobs
+            builder.Services.AddScoped<OEMEVWarrantyManagement.Application.BackgroundJobs.AppointmentCancellationJob>();
             // Email
             builder.Services.AddScoped<IEmailService, EmailService>();
             // Dashboard
@@ -256,6 +278,11 @@ namespace OEMEVWarrantyManagement.API
                 app.MapScalarApiReference();
             }
 
+            // Configure Hangfire Dashboard (optional - for monitoring)
+            app.UseHangfireDashboard("/hangfire", new DashboardOptions
+            {
+                Authorization = new[] { new HangfireAuthorizationFilter() }
+            });
 
             app.UseMiddleware<GlobalResponseMiddleware>();
 
@@ -265,6 +292,16 @@ namespace OEMEVWarrantyManagement.API
             app.MapControllers();
 
             app.Run();
+        }
+    }
+
+    // Simple authorization filter for Hangfire Dashboard (allow all in dev, customize for prod)
+    public class HangfireAuthorizationFilter : IDashboardAuthorizationFilter
+    {
+        public bool Authorize(DashboardContext context)
+        {
+            // In production, add proper authentication
+            return true;
         }
     }
 }

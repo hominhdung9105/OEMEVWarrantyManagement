@@ -15,6 +15,6 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<WarrantyPolicyDto?> GetByIdAsync(Guid id);
         Task<WarrantyPolicyCreateDto> CreateAsync(WarrantyPolicyCreateDto request);
         Task<WarrantyPolicyUpdateDto> UpdateAsync(Guid id, WarrantyPolicyUpdateDto request);
-        Task<bool> DeleteAsync(Guid id);
+        Task<bool> SetPolicyStatusAsync(Guid id, bool isActive);
     }
 }

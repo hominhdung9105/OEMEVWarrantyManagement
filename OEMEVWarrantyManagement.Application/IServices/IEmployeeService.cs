@@ -7,9 +7,9 @@ namespace OEMEVWarrantyManagement.Application.IServices
     {
         Task<EmployeeDto> GetEmployeeByIdAsync(Guid userId);
         Task<IEnumerable<AllTech>> GetAllTechInWorkspaceAsync(Guid orgId);
-        Task<EmployeeDto> CreateAccountAsync(EmployeeDto request);
-        Task<EmployeeDto> UpdateAccountAsync(string id, EmployeeDto request);
+        Task<EmployeeDto> CreateAccountAsync(CreateEmployeeDto request);
+        Task<EmployeeDto> UpdateAccountAsync(Guid id, UpdateEmployeeDto request);
         Task<IEnumerable<EmployeeDto>> GetAllAccountsAsync();
-        Task<bool> DeleteAccountAsync(Guid id);
+        Task<bool> SetAccountStatusAsync(Guid id, bool isActive);
     }
 }

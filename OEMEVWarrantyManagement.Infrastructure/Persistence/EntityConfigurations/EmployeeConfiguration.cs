@@ -16,6 +16,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.Property(e => e.PasswordHash).IsRequired();
             builder.Property(e => e.Role).IsRequired();
             builder.Property(e => e.OrgId);
+            builder.Property(e => e.IsActive).HasDefaultValue(true);
 
             builder.HasOne(e => e.Organization)
                    .WithMany(o => o.Employees)
