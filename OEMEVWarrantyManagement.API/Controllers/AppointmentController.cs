@@ -68,9 +68,9 @@ namespace OEMEVWarrantyManagement.API.Controllers
         }
 
         // Public confirmation endpoint from email link
-        [HttpGet("confirm")]
+        [HttpPut("{appointmentId}/confirm")]
         [AllowAnonymous]
-        public async Task<IActionResult> Confirm([FromQuery] string appointmentId, [FromQuery] string token)
+        public async Task<IActionResult> Confirm(string appointmentId, string token)
         {
             if (!Guid.TryParse(appointmentId, out var appId))
                 return BadRequest("Invalid appointment ID.");
@@ -84,7 +84,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<object>.Ok(null, "Appointment confirmed successfully!"));
         }
 
-        // New: Check-in (SC Staff)
         [HttpPut("{appointmentId}/check-in")]
         [Authorize(policy: "RequireScStaff")]
         public async Task<IActionResult> CheckIn(string appointmentId)
@@ -96,7 +95,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<AppointmentDto>.Ok(result, "Check-in successfully!"));
         }
 
-        // New: Cancel (SC Staff)
         [HttpPut("{appointmentId}/cancel")]
         [Authorize(policy: "RequireScStaff")]
         public async Task<IActionResult> Cancel(string appointmentId)
@@ -119,7 +117,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<AppointmentDto>.Ok(result, "Reschedule appointment successfully!"));
         }
 
-        // New: Done (SC Staff)
         [HttpPut("{appointmentId}/done")]
         [Authorize(policy: "RequireScStaff")]
         public async Task<IActionResult> Done(string appointmentId)
@@ -131,7 +128,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<AppointmentDto>.Ok(result, "Complete appointment successfully!"));
         }
 
-        // New: No-Show (SC Staff)
         [HttpPut("{appointmentId}/no-show")]
         [Authorize(policy: "RequireScStaff")]
         public async Task<IActionResult> NoShow(string appointmentId)

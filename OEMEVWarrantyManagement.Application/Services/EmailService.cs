@@ -94,6 +94,69 @@ namespace OEMEVWarrantyManagement.Application.Services
             await SendEmailAsync(to, subject, body);
         }
 
+        public async Task SendAppointmentCancelledEmailAsync(string to, string customerName, string vin)
+        {
+            var subject = "Thông báo hủy lịch hẹn bảo hành";
+            var safeName = System.Net.WebUtility.HtmlEncode(customerName ?? string.Empty);
+            var safeVin = System.Net.WebUtility.HtmlEncode(vin ?? string.Empty);
+
+            var body = $@"
+                <div style='font-family: Arial, sans-serif;'>
+                    <h2>Xin chào {safeName},</h2>
+                    <p>Lịch hẹn bảo hành của bạn cho xe VIN <strong>{safeVin}</strong> đã được <strong>hủy</strong>.</p>
+                    <p>Nếu bạn muốn đặt lịch hẹn mới, vui lòng liên hệ với trung tâm dịch vụ hoặc đặt lịch qua hệ thống của chúng tôi.</p>
+                    <p>Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.</p>
+                </div>";
+
+            await SendEmailAsync(to, subject, body);
+        }
+
+        public async Task SendAppointmentNoShowEmailAsync(string to, string customerName, string vin, DateOnly date, string slot, string time)
+        {
+            var subject = "Thông báo vắng mặt lịch hẹn bảo hành";
+            var safeName = System.Net.WebUtility.HtmlEncode(customerName ?? string.Empty);
+            var safeVin = System.Net.WebUtility.HtmlEncode(vin ?? string.Empty);
+            var safeSlot = System.Net.WebUtility.HtmlEncode(slot ?? string.Empty);
+            var safeTime = System.Net.WebUtility.HtmlEncode(time ?? string.Empty);
+
+            var body = $@"
+                <div style='font-family: Arial, sans-serif;'>
+                    <h2>Xin chào {safeName},</h2>
+                    <p>Chúng tôi nhận thấy bạn đã không đến theo lịch hẹn bảo hành cho xe VIN <strong>{safeVin}</strong>.</p>
+                    <p>Thời gian hẹn: <strong>{date:dd/MM/yyyy}</strong> - Slot <strong>{safeSlot}</strong> ({safeTime}).</p>
+                    <p>Nếu bạn cần đặt lại lịch hẹn, vui lòng liên hệ với trung tâm dịch vụ hoặc đặt lịch mới qua hệ thống của chúng tôi.</p>
+                    <p>Cảm ơn bạn đã quan tâm đến dịch vụ của chúng tôi.</p>
+                </div>";
+
+            await SendEmailAsync(to, subject, body);
+        }
+
+        public async Task SendAppointmentRescheduledEmailAsync(string to, string customerName, string vin, DateOnly oldDate, string oldSlot, DateOnly newDate, string newSlot, string newTime, string confirmUrl)
+        {
+            var subject = "Thông báo thay đổi lịch hẹn bảo hành";
+            var safeName = System.Net.WebUtility.HtmlEncode(customerName ?? string.Empty);
+            var safeVin = System.Net.WebUtility.HtmlEncode(vin ?? string.Empty);
+            var safeOldSlot = System.Net.WebUtility.HtmlEncode(oldSlot ?? string.Empty);
+            var safeNewSlot = System.Net.WebUtility.HtmlEncode(newSlot ?? string.Empty);
+            var safeNewTime = System.Net.WebUtility.HtmlEncode(newTime ?? string.Empty);
+            var safeUrl = confirmUrl ?? string.Empty;
+
+            var body = $@"
+                <div style='font-family: Arial, sans-serif;'>
+                    <h2>Xin chào {safeName},</h2>
+                    <p>Lịch hẹn bảo hành của bạn cho xe VIN <strong>{safeVin}</strong> đã được <strong>thay đổi</strong>.</p>
+                    <p><strong>Lịch cũ:</strong> {oldDate:dd/MM/yyyy} - Slot {safeOldSlot}</p>
+                    <p><strong>Lịch mới:</strong> {newDate:dd/MM/yyyy} - Slot {safeNewSlot} ({safeNewTime})</p>
+                    <p>Vui lòng nhấn nút dưới đây để xác nhận lịch hẹn mới.</p>
+                    <p>
+                        <a href='{safeUrl}' style='display:inline-block;padding:12px 20px;background:#0d6efd;color:#fff;text-decoration:none;border-radius:6px;'>Xác nhận lịch hẹn mới</a>
+                    </p>
+                    <p>Nếu bạn có thắc mắc, vui lòng liên hệ với trung tâm dịch vụ.</p>
+                </div>";
+
+            await SendEmailAsync(to, subject, body);
+        }
+
         public async Task SendWarrantyClaimApprovedEmailAsync(string to, string customerName, string vin, Guid claimId, string? policyName)
         {
             var subject = "Chấp nhận yêu cầu bảo hành";

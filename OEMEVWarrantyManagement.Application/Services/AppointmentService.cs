@@ -182,16 +182,23 @@ namespace OEMEVWarrantyManagement.Application.Services
             var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
             var results = _mapper.Map<IEnumerable<AppointmentDto>>(entities);
             
-            // Populate customer information from Vehicle
+            // Populate customer information and vehicle information from Vehicle
             foreach (var appointment in results)
             {
                 var entity = entities.FirstOrDefault(e => e.AppointmentId == appointment.AppointmentId);
-                if (entity?.Vehicle?.Customer != null)
+                if (entity?.Vehicle != null)
                 {
-                    var customer = entity.Vehicle.Customer;
-                    appointment.CustomerName = customer.Name;
-                    appointment.CustomerPhoneNumber = customer.Phone;
-                    appointment.CustomerEmail = customer.Email;
+                    // Vehicle information
+                    appointment.Model = entity.Vehicle.Model;
+                    appointment.Year = entity.Vehicle.Year;
+                    
+                    // Customer information
+                    if (entity.Vehicle.Customer != null)
+                    {
+                        appointment.CustomerName = entity.Vehicle.Customer.Name;
+                        appointment.CustomerPhoneNumber = entity.Vehicle.Customer.Phone;
+                        appointment.CustomerEmail = entity.Vehicle.Customer.Email;
+                    }
                 }
             }
 
@@ -205,16 +212,24 @@ namespace OEMEVWarrantyManagement.Application.Services
             };
         }
 
-        // New: Generic status update
+        // New: Generic status update with email notification
         public async Task<AppointmentDto> UpdateStatusAsync(Guid appointmentId, string status)
         {
             var entity = await _appointmentRepository.GetAppointmentByIdAsync(appointmentId) ?? throw new ApiException(ResponseError.NotFoundAppointment);
+            
+            // Store old status for comparison
+            var oldStatus = entity.Status;
+            
             entity.Status = status;
             var updated = await _appointmentRepository.UpdateAsync(entity);
+            
+            // Send email notification for specific status changes
+            await TrySendStatusChangeEmailAsync(updated, oldStatus, status);
+            
             return _mapper.Map<AppointmentDto>(updated);
         }
 
-        // New: Reschedule with availability check
+        // New: Reschedule with availability check and email notification
         public async Task<AppointmentDto> RescheduleAsync(Guid appointmentId, DateOnly newDate, string newSlot)
         {
             var entity = await _appointmentRepository.GetAppointmentByIdAsync(appointmentId) ?? throw new ApiException(ResponseError.NotFoundAppointment);
@@ -232,10 +247,19 @@ namespace OEMEVWarrantyManagement.Application.Services
             if (!isAvailable)
                 throw new ApiException(ResponseError.InvalidJsonFormat);
 
+            // Store old date and slot for email
+            var oldDate = entity.AppointmentDate;
+            var oldSlot = entity.Slot;
+
             entity.AppointmentDate = newDate;
             entity.Slot = newSlot;
+            entity.Status = AppointmentStatus.Pending.GetAppointmentStatus(); // Change status back to Pending
 
             var updated = await _appointmentRepository.UpdateAsync(entity);
+            
+            // Send reschedule email with new confirmation link
+            await TrySendRescheduleEmailAsync(updated, oldDate, oldSlot);
+            
             return _mapper.Map<AppointmentDto>(updated);
         }
 
@@ -321,6 +345,85 @@ namespace OEMEVWarrantyManagement.Application.Services
             entity.Status = AppointmentStatus.Scheduled.GetAppointmentStatus();
             await _appointmentRepository.UpdateAsync(entity);
             return true;
+        }
+
+        // New: Send email notification when appointment status updated
+        private async Task TrySendStatusChangeEmailAsync(Appointment appointment, string oldStatus, string newStatus)
+        {
+            try
+            {
+                // Get customer information
+                var vehicle = await _vehicleRepository.GetVehicleByVinAsync(appointment.Vin);
+                if (vehicle == null) return;
+
+                var customer = await _customerRepository.GetCustomerByIdAsync(vehicle.CustomerId);
+                if (customer == null || string.IsNullOrWhiteSpace(customer.Email)) return;
+
+                var slotInfo = TimeSlotExtensions.GetSlotInfo(appointment.Slot);
+                var time = slotInfo?.Time ?? appointment.Slot;
+
+                // Send email based on new status
+                if (string.Equals(newStatus, AppointmentStatus.Cancelled.GetAppointmentStatus(), StringComparison.OrdinalIgnoreCase))
+                {
+                    await _emailService.SendAppointmentCancelledEmailAsync(
+                        to: customer.Email,
+                        customerName: customer.Name,
+                        vin: appointment.Vin
+                    );
+                }
+                else if (string.Equals(newStatus, AppointmentStatus.NoShow.GetAppointmentStatus(), StringComparison.OrdinalIgnoreCase))
+                {
+                    await _emailService.SendAppointmentNoShowEmailAsync(
+                        to: customer.Email,
+                        customerName: customer.Name,
+                        vin: appointment.Vin,
+                        date: appointment.AppointmentDate,
+                        slot: appointment.Slot,
+                        time: time
+                    );
+                }
+            }
+            catch
+            {
+                // log handled in EmailService; swallow to not block status update
+            }
+        }
+
+        // New: Send email notification when appointment is rescheduled
+        private async Task TrySendRescheduleEmailAsync(Appointment appointment, DateOnly oldDate, string oldSlot)
+        {
+            try
+            {
+                // Get customer information
+                var vehicle = await _vehicleRepository.GetVehicleByVinAsync(appointment.Vin);
+                if (vehicle == null) return;
+
+                var customer = await _customerRepository.GetCustomerByIdAsync(vehicle.CustomerId);
+                if (customer == null || string.IsNullOrWhiteSpace(customer.Email)) return;
+
+                // Generate new confirmation token
+                var token = GenerateConfirmationToken(appointment);
+                var confirmUrl = $"{_appSettings.Issuer?.TrimEnd('/')}?appointmentId={appointment.AppointmentId}&token={token}";
+
+                var slotInfo = TimeSlotExtensions.GetSlotInfo(appointment.Slot);
+                var time = slotInfo?.Time ?? appointment.Slot;
+
+                await _emailService.SendAppointmentRescheduledEmailAsync(
+                    to: customer.Email,
+                    customerName: customer.Name,
+                    vin: appointment.Vin,
+                    oldDate: oldDate,
+                    oldSlot: oldSlot,
+                    newDate: appointment.AppointmentDate,
+                    newSlot: appointment.Slot,
+                    newTime: time,
+                    confirmUrl: confirmUrl
+                );
+            }
+            catch
+            {
+                // log handled in EmailService; swallow to not block reschedule
+            }
         }
     }
 }
