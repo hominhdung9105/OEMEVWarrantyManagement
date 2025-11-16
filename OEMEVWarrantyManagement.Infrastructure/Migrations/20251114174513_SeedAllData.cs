@@ -102,7 +102,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CoveragePeriodMonths = table.Column<int>(type: "int", nullable: false),
                     Conditions = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    OrganizationOrgId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    OrganizationOrgId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {

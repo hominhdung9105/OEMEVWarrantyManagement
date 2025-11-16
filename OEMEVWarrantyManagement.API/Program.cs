@@ -120,6 +120,9 @@ namespace OEMEVWarrantyManagement.API
                 options.AddPolicy("RequireEvmStaff", policy =>
                     policy.RequireRole(RoleIdEnum.EvmStaff.GetRoleId()));
 
+                options.AddPolicy("RequireAddmin", policy =>
+                    policy.RequireRole(RoleIdEnum.Admin.GetRoleId()));
+
                 options.AddPolicy("RequireScTechOrScStaff", policy =>
                     policy.RequireRole(RoleIdEnum.Technician.GetRoleId(), RoleIdEnum.ScStaff.GetRoleId()));
 
@@ -197,6 +200,13 @@ namespace OEMEVWarrantyManagement.API
             // Campaign Vehicle
             builder.Services.AddScoped<ICampaignVehicleRepository, CampaignVehicleRepository>();
             builder.Services.AddScoped<ICampaignVehicleService, CampaignVehicleService>();
+            // Campaign Notification
+            builder.Services.AddScoped<ICampaignNotificationRepository, CampaignNotificationRepository>();
+            builder.Services.AddScoped<ICampaignNotificationService, CampaignNotificationService>();
+
+            // Background Services
+            builder.Services.AddHostedService<OEMEVWarrantyManagement.API.BackgroundServices.CampaignReminderBackgroundService>();
+            builder.Services.AddHostedService<OEMEVWarrantyManagement.API.BackgroundServices.CampaignAutoCloseBackgroundService>();
 
             builder.Services.AddCors(options =>
             {
@@ -207,15 +217,45 @@ namespace OEMEVWarrantyManagement.API
                         .AllowAnyMethod());
             });
 
-
             var app = builder.Build();
+
+            ////// =================================================================
+            ////// KHỐI MÃ SEEDING: Thêm khối này vào | chạy 1 lần nếu muốn lấy data mẫu
+            ////// =================================================================
+            //using (var scope = app.Services.CreateScope())
+            //{
+            //    var services = scope.ServiceProvider;
+            //    try
+            //    {
+            //        var dbContext = services.GetRequiredService<AppDbContext>();
+
+            //        // 1. Tự động chạy migration để tạo bảng
+            //        dbContext.Database.Migrate();
+
+            //        // 2. Gọi Seeder để thêm data (nó sẽ tự kiểm tra nếu DB trống)
+            //        DataSeeder.SeedDatabase(dbContext);
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        // Ghi log lỗi nếu có
+            //        var logger = services.GetRequiredService<ILogger<Program>>();
+            //        logger.LogError(ex, "Đã xảy ra lỗi khi seeding database.");
+            //    }
+            //}
+            ////// =================================================================
+            ////// KẾT THÚC KHỐI MÃ SEEDING
+            ////// =================================================================
+
+            // Dev
+
+            app.UseCors("AllowAll");
 
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
                 app.MapScalarApiReference();
             }
-            app.UseCors("AllowAll");
+
 
             app.UseMiddleware<GlobalResponseMiddleware>();
 

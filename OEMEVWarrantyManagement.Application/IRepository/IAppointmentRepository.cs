@@ -17,5 +17,6 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<int> CountByOrgIdAndStatusAsync(Guid orgId, string status);
         Task<int> CountByTypeAndStatusAsync(string appointmentType, string status);
         Task<int> CountByStatusAsync(string status);
+        Task<List<Appointment>> GetAppointmentsByVinAsync(string vin);
     }
 }

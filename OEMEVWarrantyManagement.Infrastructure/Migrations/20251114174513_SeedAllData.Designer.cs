@@ -12,7 +12,7 @@ using OEMEVWarrantyManagement.Infrastructure.Persistence;
 namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251112025644_SeedAllData")]
+    [Migration("20251114174513_SeedAllData")]
     partial class SeedAllData
     {
         /// <inheritdoc />
@@ -640,6 +640,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
                     b.Property<Guid>("OrganizationOrgId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("PolicyId");
 

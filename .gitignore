@@ -366,3 +366,5 @@ FodyWeavers.xsd
 appsettings.json
 appsettings.Development.json
 launchSettings.json
+/OEMEVWarrantyManagement.API/Properties/launchSettings.json
+/OEMEVWarrantyManagement.API/appsettings.Development.json

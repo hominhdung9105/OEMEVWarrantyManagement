@@ -5,7 +5,6 @@ namespace OEMEVWarrantyManagement.Application.IRepository
 {
     public interface IAuthRepository
     {
-        Task<Employee?> CreateAsync(EmployeeDto request);
 
         Task<bool> IsHaveEmployeeByUsername(string username);
         Task<bool> IsHaveEmployeeById(Guid id);

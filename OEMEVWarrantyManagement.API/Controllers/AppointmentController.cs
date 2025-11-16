@@ -20,7 +20,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         }
 
         [HttpGet]
-        [Authorize(policy: "RequireEvmStaff")]
+        [Authorize(policy: "RequireScStaff")]
         public async Task<IActionResult> GetAllAppointments([FromQuery] PaginationRequest request)
         {
             var result = await _appointmentService.GetPagedAsync(request);
@@ -47,7 +47,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         // Endpoint dành cho EVM Staff tạo appointment (gọi service riêng)
         [HttpPost("evm")]
-        [Authorize(policy: "RequireEvmStaff")]
+        [Authorize(policy: "RequireScStaff")]
         public async Task<IActionResult> CreateAppointmentByEvm(CreateAppointmentDto request)
         {
             var result = await _appointmentService.CreateAppointmentByEvmAsync(request);
@@ -56,7 +56,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         //TODO - Nên submit qua mail khi khách click nút submit trên email
         [HttpPut("{appointmentId}")]
-        [Authorize(policy: "RequireEvmStaff")]
+        [Authorize(policy: "RequireScStaff")]
         public async Task<IActionResult> SubmitAppointment(string appointmentId)
         {
             if(!Guid.TryParse(appointmentId, out var appId))

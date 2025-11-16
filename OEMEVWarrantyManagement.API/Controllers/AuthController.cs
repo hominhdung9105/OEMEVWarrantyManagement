@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.Dtos.Request;
 using OEMEVWarrantyManagement.Application.IServices;
+using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
 
 namespace OEMEVWarrantyManagement.API.Controllers
@@ -17,15 +18,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
         public AuthController(IAuthService authService)
         {
             _authService = authService;
-        }
-
-        [HttpPost("create")]
-        public async Task<ActionResult> Create(EmployeeDto request)
-        {
-            //var employee = await _authService.CreateAsync(request) ?? throw new ApiException(ResponseError.UsernameAlreadyExists);
-            //return Ok(employee);
-
-            throw new NotImplementedException();
         }
 
         [AllowAnonymous]
