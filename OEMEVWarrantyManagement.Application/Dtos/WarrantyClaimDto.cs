@@ -59,7 +59,7 @@
         public string Status { get; set; }
         public string FailureDesc { get; set; }
         public string Description { get; set; }
-        public Guid PolicyId { get; set; }
+        public Guid? VehicleWarrantyId { get; set; }
         public string? PolicyName { get; set; }
         public string? Notes { get; set; }
         public List<ShowClaimPartDto> ShowClaimParts { get; set; }

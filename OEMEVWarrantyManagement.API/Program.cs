@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +17,10 @@ using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Middlewares;
 using OEMEVWarrantyManagement.Share.Models.Response;
 using Scalar.AspNetCore;
+using System.Text;
+using Hangfire;
+using Hangfire.SqlServer;
+using Hangfire.Dashboard;
 
 namespace OEMEVWarrantyManagement.API
 {
@@ -33,22 +38,7 @@ namespace OEMEVWarrantyManagement.API
 
             // Add Controllers - ignore null value in response
 
-            builder.Services.AddControllers() // TODO - chay that thi tat cmt
-                //.ConfigureApiBehaviorOptions(options =>
-                //{
-                //    options.InvalidModelStateResponseFactory = context =>
-                //    {
-                //        var errors = context.ModelState
-                //            .Where(x => x.Value?.Errors.Count > 0)
-                //            .Select(x => new
-                //            {
-                //                field = x.Key,
-                //                messages = x.Value!.Errors.Select(e => e.ErrorMessage)
-                //            });
-
-                //        return new BadRequestObjectResult(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
-                //    };
-                //})
+            builder.Services.AddControllers()
                 .AddJsonOptions(options =>
                 {
                     options.AllowInputFormatterExceptionMessages = true;
@@ -62,33 +52,49 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // Authentication - JWT Bearer
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+            // Add Hangfire services
+            builder.Services.AddHangfire(configuration => configuration
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection"), new SqlServerStorageOptions
+                {
+                    CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+                    SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+                    QueuePollInterval = TimeSpan.Zero,
+                    UseRecommendedIsolationLevel = true,
+                    DisableGlobalLocks = true
+                }));
+
+            // Add the processing server as IHostedService
+            builder.Services.AddHangfireServer();
+
+            // Authentication: Use JWT as default (avoid redirect to Google on API unauthorized)
+            builder.Services.AddAuthentication(options =>
             {
-                options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.Events = new JwtBearerEvents
                 {
                     OnAuthenticationFailed = context =>
                     {
-                        context.NoResult(); // ngan asp .net xu ly mac dinh
+                        context.NoResult();
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                         context.Response.ContentType = "application/json";
-
                         var response = ApiResponse<object>.Fail(ResponseError.AuthenticationFailed);
-
                         return context.Response.WriteAsJsonAsync(response);
                     },
-
                     OnChallenge = context =>
                     {
-                        context.HandleResponse(); // chan challenge mac dinh
+                        context.HandleResponse();
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                         context.Response.ContentType = "application/json";
-
                         var response = ApiResponse<object>.Fail(ResponseError.AuthenticationFailed);
-
                         return context.Response.WriteAsJsonAsync(response);
                     },
-
                     OnForbidden = context =>
                     {
                         context.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -108,6 +114,15 @@ namespace OEMEVWarrantyManagement.API
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("AppSettings:Token")!))
                 };
+            })
+            // Optional Google external login (not default challenge to avoid redirect on API calls)
+            .AddCookie()
+            .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+            {
+                IConfigurationSection googleAuthNSection = builder.Configuration.GetSection("Authentication:Google");
+                options.ClientId = googleAuthNSection["ClientId"];
+                options.ClientSecret = googleAuthNSection["ClientSecret"];
+                options.CallbackPath = "/signin-google";
             });
 
             // Authorization
@@ -124,6 +139,9 @@ namespace OEMEVWarrantyManagement.API
 
                 options.AddPolicy("RequireEvmStaff", policy =>
                     policy.RequireRole(RoleIdEnum.EvmStaff.GetRoleId()));
+
+                options.AddPolicy("RequireAddmin", policy =>
+                    policy.RequireRole(RoleIdEnum.Admin.GetRoleId()));
 
                 options.AddPolicy("RequireScTechOrScStaff", policy =>
                     policy.RequireRole(RoleIdEnum.Technician.GetRoleId(), RoleIdEnum.ScStaff.GetRoleId()));
@@ -191,6 +209,8 @@ namespace OEMEVWarrantyManagement.API
             // Appointment
             builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
             builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+            // Hangfire Jobs
+            builder.Services.AddScoped<OEMEVWarrantyManagement.Application.BackgroundJobs.AppointmentCancellationJob>();
             // Email
             builder.Services.AddScoped<IEmailService, EmailService>();
             // Dashboard
@@ -202,6 +222,13 @@ namespace OEMEVWarrantyManagement.API
             // Campaign Vehicle
             builder.Services.AddScoped<ICampaignVehicleRepository, CampaignVehicleRepository>();
             builder.Services.AddScoped<ICampaignVehicleService, CampaignVehicleService>();
+            // Campaign Notification
+            builder.Services.AddScoped<ICampaignNotificationRepository, CampaignNotificationRepository>();
+            builder.Services.AddScoped<ICampaignNotificationService, CampaignNotificationService>();
+
+            // Background Services
+            builder.Services.AddHostedService<OEMEVWarrantyManagement.API.BackgroundServices.CampaignReminderBackgroundService>();
+            builder.Services.AddHostedService<OEMEVWarrantyManagement.API.BackgroundServices.CampaignAutoCloseBackgroundService>();
 
             builder.Services.AddCors(options =>
             {
@@ -211,7 +238,6 @@ namespace OEMEVWarrantyManagement.API
                         .AllowAnyHeader()
                         .AllowAnyMethod());
             });
-
 
             var app = builder.Build();
 
@@ -244,19 +270,21 @@ namespace OEMEVWarrantyManagement.API
 
             // Dev
 
+            app.UseCors("AllowAll");
 
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
                 app.MapScalarApiReference();
-
             }
-            app.UseCors("AllowAll");
 
-            // Thay tất cả exception middleware bằng global response
+            // Configure Hangfire Dashboard (optional - for monitoring)
+            app.UseHangfireDashboard("/hangfire", new DashboardOptions
+            {
+                Authorization = new[] { new HangfireAuthorizationFilter() }
+            });
+
             app.UseMiddleware<GlobalResponseMiddleware>();
-
-            //app.UseHttpsRedirection();
 
             app.UseAuthentication();
             app.UseAuthorization();
@@ -264,6 +292,16 @@ namespace OEMEVWarrantyManagement.API
             app.MapControllers();
 
             app.Run();
+        }
+    }
+
+    // Simple authorization filter for Hangfire Dashboard (allow all in dev, customize for prod)
+    public class HangfireAuthorizationFilter : IDashboardAuthorizationFilter
+    {
+        public bool Authorize(DashboardContext context)
+        {
+            // In production, add proper authentication
+            return true;
         }
     }
 }

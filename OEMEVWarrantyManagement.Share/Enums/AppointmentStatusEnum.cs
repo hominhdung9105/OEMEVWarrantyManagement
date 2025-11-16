@@ -15,7 +15,9 @@ namespace OEMEVWarrantyManagement.Share.Enums
         [Description("Done")]
         Done,
         [Description("No_show")]
-        NoShow
+        NoShow,
+        [Description("Not_Confirmed")]
+        NotConfirmed
     }
 
     public static class AppointmentStatusExtensions

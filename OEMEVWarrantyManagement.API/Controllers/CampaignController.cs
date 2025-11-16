@@ -14,10 +14,16 @@ namespace OEMEVWarrantyManagement.API.Controllers
     {
         private readonly ICampaignService _campaignService;
         private readonly ICurrentUserService _currentUserService;
-        public CampaignController(ICampaignService campaignService, ICurrentUserService userService)
+        private readonly ICampaignNotificationService _notificationService;
+        
+        public CampaignController(
+            ICampaignService campaignService, 
+            ICurrentUserService userService,
+            ICampaignNotificationService notificationService)
         {
             _campaignService = campaignService;
             _currentUserService = userService;
+            _notificationService = notificationService;
         }
 
         [HttpGet]
@@ -96,6 +102,21 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
             var result = await _campaignService.CloseAsync(guid);
             return Ok(ApiResponse<CampaignDto>.Ok(result, "Update campaign successfully!"));
+        }
+
+        // New: Get detailed status of all vehicles in campaign
+        [HttpGet("{id}/vehicle-statuses")]
+        [Authorize]
+        public async Task<IActionResult> GetVehicleStatuses(string id)
+        {
+            if (_currentUserService.GetRole() == RoleIdEnum.Technician.GetRoleId()) 
+                throw new UnauthorizedAccessException();
+
+            if (!Guid.TryParse(id, out var guid))
+                return BadRequest(ApiResponse<object>.Fail(Share.Models.Response.ResponseError.InvalidJsonFormat));
+
+            var result = await _notificationService.GetCampaignVehicleStatusesAsync(guid);
+            return Ok(ApiResponse<List<CampaignVehicleStatusDto>>.Ok(result, "Get vehicle statuses successfully!"));
         }
     }
 }

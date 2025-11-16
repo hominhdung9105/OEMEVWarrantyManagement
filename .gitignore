@@ -364,4 +364,7 @@ FodyWeavers.xsd
 
 #secret
 appsettings.json
-launchSetting.json
+appsettings.Development.json
+launchSettings.json
+/OEMEVWarrantyManagement.API/Properties/launchSettings.json
+/OEMEVWarrantyManagement.API/appsettings.Development.json

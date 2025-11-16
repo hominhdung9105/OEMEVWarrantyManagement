@@ -13,5 +13,6 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<int> CountByStatusAsync(CampaignStatus status);
         Task<(int participating, int affected)> GetParticipationAggregateAsync();
         Task<CampaignActiveSummaryDto> GetLatestActiveSummaryAsync();
+        Task<int> AutoCloseExpiredCampaignsAsync();
     }
 }

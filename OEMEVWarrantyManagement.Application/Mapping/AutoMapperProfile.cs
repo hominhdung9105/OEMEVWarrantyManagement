@@ -20,6 +20,8 @@ namespace OEMEVWarrantyManagement.Application.Mapping
 
             CreateMap<Employee, EmployeeDto>().ReverseMap();
             CreateMap<Employee, AllTech>().ReverseMap();
+            CreateMap<Employee, CreateEmployeeDto>().ReverseMap();
+            CreateMap<Employee, UpdateEmployeeDto>().ReverseMap();
 
             CreateMap<WorkOrder, WorkOrderDto>().ReverseMap();
             CreateMap<WorkOrder, WorkOrderDetailDto>().ReverseMap();
@@ -29,6 +31,8 @@ namespace OEMEVWarrantyManagement.Application.Mapping
 
             CreateMap<WarrantyPolicy, WarrantyPolicyDto>().ReverseMap();
             CreateMap<WarrantyPolicy, VehicleWarrantyPolicy>().ReverseMap();
+            CreateMap<WarrantyPolicy, WarrantyPolicyCreateDto>().ReverseMap();
+            CreateMap<WarrantyPolicy, WarrantyPolicyUpdateDto>().ReverseMap();
 
             CreateMap<Part, PartDto>().ReverseMap();
 
@@ -75,8 +79,8 @@ namespace OEMEVWarrantyManagement.Application.Mapping
                 .ForMember(d => d.Title, opt => opt.MapFrom(src => src.Campaign != null ? src.Campaign.Title : null))
                 .ForMember(d => d.Description, opt => opt.MapFrom(src => src.Campaign != null ? src.Campaign.Description : null))
                 .ForMember(d => d.Type, opt => opt.MapFrom(src => src.Campaign != null ? src.Campaign.Type : null))
-                .ForMember(d => d.StartDate, opt => opt.MapFrom(src => src.Campaign != null ? src.Campaign.StartDate : (DateTime?)null))
-                .ForMember(d => d.EndDate, opt => opt.MapFrom(src => src.Campaign != null ? src.Campaign.EndDate : (DateTime?)null))
+                .ForMember(d => d.StartDate, opt => opt.MapFrom(src => src.Campaign != null ? (DateOnly?)src.Campaign.StartDate : null))
+                .ForMember(d => d.EndDate, opt => opt.MapFrom(src => src.Campaign != null ? (DateOnly?)src.Campaign.EndDate : null))
                 .ReverseMap()
                 .ForMember(s => s.NewSerial, opt => opt.MapFrom(d => SerializeNewSerials(d.NewSerials)));
         }

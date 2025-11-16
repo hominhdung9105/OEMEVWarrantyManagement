@@ -1,4 +1,5 @@
 ﻿using OEMEVWarrantyManagement.Application.Dtos;
+using OEMEVWarrantyManagement.Domain.Entities;
 
 namespace OEMEVWarrantyManagement.Application.IServices
 {
@@ -6,5 +7,9 @@ namespace OEMEVWarrantyManagement.Application.IServices
     {
         Task<EmployeeDto> GetEmployeeByIdAsync(Guid userId);
         Task<IEnumerable<AllTech>> GetAllTechInWorkspaceAsync(Guid orgId);
+        Task<EmployeeDto> CreateAccountAsync(CreateEmployeeDto request);
+        Task<EmployeeDto> UpdateAccountAsync(Guid id, UpdateEmployeeDto request);
+        Task<IEnumerable<EmployeeDto>> GetAllAccountsAsync();
+        Task<bool> SetAccountStatusAsync(Guid id, bool isActive);
     }
 }

@@ -21,5 +21,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         {
             return await _context.VehicleWarrantyPolicies.Where(vwp => vwp.EndDate >= DateTime.Now && vwp.Vin == vin).ToListAsync();
         }
+
+        public async Task<VehicleWarrantyPolicy> GetByIdAsync(Guid vehicleWarrantyId)
+        {
+            return await _context.VehicleWarrantyPolicies
+                .FirstOrDefaultAsync(vwp => vwp.VehicleWarrantyId == vehicleWarrantyId);
+        }
     }
 }

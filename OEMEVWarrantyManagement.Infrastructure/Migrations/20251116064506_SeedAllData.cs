@@ -59,7 +59,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     Role = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     OrgId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     RefreshToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RefreshTokenExpiryTime = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    RefreshTokenExpiryTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true)
                 },
                 constraints: table =>
                 {
@@ -102,7 +103,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CoveragePeriodMonths = table.Column<int>(type: "int", nullable: false),
                     Conditions = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    OrganizationOrgId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    OrganizationOrgId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -111,8 +113,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         name: "FK_WarrantyPolicies_Organizations_OrganizationOrgId",
                         column: x => x.OrganizationOrgId,
                         principalTable: "Organizations",
-                        principalColumn: "OrgId",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "OrgId");
                 });
 
             migrationBuilder.CreateTable(
@@ -145,8 +146,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PartModel = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ReplacementPartModel = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    StartDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    EndDate = table.Column<DateOnly>(type: "date", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -300,6 +301,37 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                         column: x => x.PolicyId,
                         principalTable: "WarrantyPolicies",
                         principalColumn: "PolicyId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CampaignNotifications",
+                columns: table => new
+                {
+                    CampaignNotificationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CampaignId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Vin = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    EmailSentCount = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    LastEmailSentAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    FirstEmailSentAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsCompleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CampaignNotifications", x => x.CampaignNotificationId);
+                    table.ForeignKey(
+                        name: "FK_CampaignNotifications_Campaigns_CampaignId",
+                        column: x => x.CampaignId,
+                        principalTable: "Campaigns",
+                        principalColumn: "CampaignId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CampaignNotifications_Vehicles_Vin",
+                        column: x => x.Vin,
+                        principalTable: "Vehicles",
+                        principalColumn: "Vin",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -521,6 +553,27 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 column: "CreatedByEmployeeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CampaignNotifications_CampaignId_Vin",
+                table: "CampaignNotifications",
+                columns: new[] { "CampaignId", "Vin" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CampaignNotifications_IsCompleted",
+                table: "CampaignNotifications",
+                column: "IsCompleted");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CampaignNotifications_LastEmailSentAt",
+                table: "CampaignNotifications",
+                column: "LastEmailSentAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CampaignNotifications_Vin",
+                table: "CampaignNotifications",
+                column: "Vin");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Campaigns_CreatedBy",
                 table: "Campaigns",
                 column: "CreatedBy");
@@ -655,6 +708,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "BackWarrantyClaim");
+
+            migrationBuilder.DropTable(
+                name: "CampaignNotifications");
 
             migrationBuilder.DropTable(
                 name: "CampaignVehicleReplacements");

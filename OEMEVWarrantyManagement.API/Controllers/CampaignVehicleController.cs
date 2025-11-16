@@ -20,6 +20,22 @@ namespace OEMEVWarrantyManagement.API.Controllers
             _currentUserService = currentUserService;
         }
 
+        [HttpGet("statuses")]
+        public IActionResult GetCampaignVehicleStatuses()
+        {
+            var statuses = Enum.GetValues(typeof(CampaignVehicleStatus))
+                .Cast<CampaignVehicleStatus>()
+                .Select(status => new
+                {
+                    Value = (int)status,
+                    Name = status.ToString(),
+                    Description = status.GetCampaignVehicleStatus()
+                })
+                .ToList();
+
+            return Ok(ApiResponse<object>.Ok(statuses, "Get campaign vehicle statuses successfully!"));
+        }
+
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> GetAll([FromQuery] PaginationRequest request, [FromQuery] string? search, [FromQuery] string? type, [FromQuery] string? status)

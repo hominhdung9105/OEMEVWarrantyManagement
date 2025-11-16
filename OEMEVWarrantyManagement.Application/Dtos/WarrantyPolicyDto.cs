@@ -11,13 +11,29 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public Guid PolicyId { get; set; }
         public string Name { get; set; }
         public int CoveragePeriodMonths { get; set; }
+        public string Status { get; set; }
         public string Conditions { get; set; }
     }
-    //public class PolicyInformationDto
-    //{
-    //    public string PolicyName { get; set; }
-    //    public DateTime StartDate { get; set; }
-    //    public DateTime EndDate { get; set; }
-    //}
+    
+    public class WarrantyPolicyCreateDto
+    {
+        public Guid? PolicyId { get; set; }
+        public string Name { get; set; }
+        public int CoveragePeriodMonths { get; set; }
+        public Guid? OrgId { get; set; }
+        public string? Status { get; set; }
+        public string Conditions { get; set; }
+    }
+
+    public class WarrantyPolicyUpdateDto
+    {
+        public Guid? PolicyId { get; set; }
+        public string Name { get; set; }
+        public int CoveragePeriodMonths { get; set; } 
+        public Guid? OrgId { get; set; }
+        public string Status { get; set; } 
+        public string Conditions { get; set; }
+    }
+
 
 }

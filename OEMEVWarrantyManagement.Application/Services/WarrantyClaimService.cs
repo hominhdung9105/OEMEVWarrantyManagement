@@ -262,6 +262,23 @@ namespace OEMEVWarrantyManagement.Application.Services
             var customers = await _customerRepository.GetCustomersByIdsAsync(customerIds);
             var customerDict = customers.ToDictionary(c => c.CustomerId);
 
+            // Get all vehicle warranty policies for claims that have VehicleWarrantyId
+            var vehicleWarrantyIds = claimDtos
+                .Where(c => c.VehicleWarrantyId.HasValue)
+                .Select(c => c.VehicleWarrantyId.Value)
+                .Distinct()
+                .ToList();
+
+            var vehicleWarrantyPolicies = new Dictionary<Guid, VehicleWarrantyPolicy>();
+            foreach (var vwId in vehicleWarrantyIds)
+            {
+                var vwp = await _vehicleWarrantyPolicyRepository.GetByIdAsync(vwId);
+                if (vwp != null)
+                {
+                    vehicleWarrantyPolicies[vwId] = vwp;
+                }
+            }
+
             var allPolicies = await _warranty_policyRepository.GetAllAsync();
             var policyLookup = allPolicies.ToDictionary(p => p.PolicyId);
 
@@ -279,7 +296,10 @@ namespace OEMEVWarrantyManagement.Application.Services
                     }
                 }
 
-                if (claim.PolicyId != Guid.Empty && policyLookup.TryGetValue(claim.PolicyId, out var policy))
+                // Fix: Get policy name through VehicleWarrantyId
+                if (claim.VehicleWarrantyId.HasValue && 
+                    vehicleWarrantyPolicies.TryGetValue(claim.VehicleWarrantyId.Value, out var vwp) &&
+                    policyLookup.TryGetValue(vwp.PolicyId, out var policy))
                 {
                     claim.PolicyName = policy.Name;
                 }

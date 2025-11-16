@@ -87,5 +87,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                 .Include(cv => cv.Replacements)
                 .AsNoTracking();
         }
+
+        public async Task<bool> ExistsByCampaignAndVinAsync(Guid campaignId, string vin)
+        {
+            return await _context.CampaignVehicles
+                .AnyAsync(cv => cv.CampaignId == campaignId && cv.Vin == vin);
+        }
     }
 }

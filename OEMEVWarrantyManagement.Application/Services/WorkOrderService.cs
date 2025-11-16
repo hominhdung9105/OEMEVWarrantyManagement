@@ -173,19 +173,19 @@ namespace OEMEVWarrantyManagement.Application.Services
         }
 
         // Unified by-tech listing returning WorkOrderDto enriched like WorkOrderDetailDto
-        public async Task<PagedResult<WorkOrderDto>> GetWorkOrdersByTechUnifiedAsync(PaginationRequest request, string? vin = null, string? type = null, string? task = null)
+        public async Task<PagedResult<WorkOrderDto>> GetWorkOrdersByTechUnifiedAsync(PaginationRequest request, string? search = null, string? target = null, string? type = null)
         {
             var techId = _currentUserService.GetUserId();
             var workOrders = await _workOrderRepository.GetWorkOrderByTech(techId);
 
             // filters
+            if (!string.IsNullOrWhiteSpace(target))
+            {
+                workOrders = workOrders.Where(wo => string.Equals(wo.Target, target, StringComparison.OrdinalIgnoreCase));
+            }
             if (!string.IsNullOrWhiteSpace(type))
             {
                 workOrders = workOrders.Where(wo => string.Equals(wo.Type, type, StringComparison.OrdinalIgnoreCase));
-            }
-            if (!string.IsNullOrWhiteSpace(task))
-            {
-                workOrders = workOrders.Where(wo => string.Equals(wo.Status, task, StringComparison.OrdinalIgnoreCase));
             }
 
             // We'll need VIN for each WO
@@ -281,10 +281,10 @@ namespace OEMEVWarrantyManagement.Application.Services
                 enriched.Add(dto);
             }
 
-            // apply VIN filter after enrichment
-            if (!string.IsNullOrWhiteSpace(vin))
+            // apply VIN search filter after enrichment
+            if (!string.IsNullOrWhiteSpace(search))
             {
-                enriched = enriched.Where(e => string.Equals(e.Vin, vin, StringComparison.OrdinalIgnoreCase)).ToList();
+                enriched = enriched.Where(e => e.Vin != null && e.Vin.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
             }
 
             var totalRecords = enriched.Count;

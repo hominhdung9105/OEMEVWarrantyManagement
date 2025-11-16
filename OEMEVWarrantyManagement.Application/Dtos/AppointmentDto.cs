@@ -19,9 +19,15 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public string? Note { get; set; }
+        
+        // Customer information
         public string? CustomerName { get; set; }
         public string? CustomerPhoneNumber { get; set; }
         public string? CustomerEmail { get; set; }
+        
+        // Vehicle information
+        public string? Model { get; set; }
+        public int? Year { get; set; }
     }
 
     public class AvailableTimeslotDto
@@ -54,6 +60,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public string? Note { get; set; }
+        public string? Email { get; set; }
 
         public string Model { get; set; }
         public int Year { get; set; }
