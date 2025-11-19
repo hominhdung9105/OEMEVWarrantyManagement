@@ -414,6 +414,135 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
 
             context.SaveChanges();
 
+            // === Campaign Notifications - 200 records ===
+            var campaignNotifications = new List<CampaignNotification>();
+            var now = DateTime.UtcNow;
+
+            // For each active campaign, create notifications for vehicles with the affected part
+            var activeCampaigns = campaigns.Where(c => c.Status == "Active").Take(20).ToList();
+            
+            foreach (var campaign in activeCampaigns)
+            {
+                // Find vehicles with the affected part model
+                var affectedVins = vehicleParts
+                    .Where(vp => vp.Model == campaign.PartModel && 
+                                 vp.Status == VehiclePartStatus.Installed.GetVehiclePartStatus())
+                    .Select(vp => vp.Vin)
+                    .Distinct()
+                    .Take(10)
+                    .ToList();
+
+                foreach (var vin in affectedVins)
+                {
+                    // Check if this vehicle is already in CampaignVehicle (already being processed)
+                    var isInCampaignVehicle = campaignVehicles.Any(cv => 
+                        cv.CampaignId == campaign.CampaignId && cv.Vin == vin);
+
+                    var notificationScenario = rng.Next(0, 5);
+                    CampaignNotification notification;
+
+                    switch (notificationScenario)
+                    {
+                        case 0: // Never sent email yet
+                            notification = new CampaignNotification
+                            {
+                                CampaignNotificationId = Guid.NewGuid(),
+                                CampaignId = campaign.CampaignId,
+                                Vin = vin,
+                                EmailSentCount = 0,
+                                FirstEmailSentAt = null,
+                                LastEmailSentAt = null,
+                                IsCompleted = false,
+                                CreatedAt = now.AddDays(-rng.Next(1, 10)),
+                                UpdatedAt = null
+                            };
+                            break;
+
+                        case 1: // Sent 1 email recently
+                            notification = new CampaignNotification
+                            {
+                                CampaignNotificationId = Guid.NewGuid(),
+                                CampaignId = campaign.CampaignId,
+                                Vin = vin,
+                                EmailSentCount = 1,
+                                FirstEmailSentAt = now.AddDays(-rng.Next(1, 5)),
+                                LastEmailSentAt = now.AddDays(-rng.Next(1, 5)),
+                                IsCompleted = false,
+                                CreatedAt = now.AddDays(-rng.Next(5, 15)),
+                                UpdatedAt = now.AddDays(-rng.Next(1, 5))
+                            };
+                            break;
+
+                        case 2: // Sent 2 emails, needs reminder
+                            var firstSent = now.AddDays(-rng.Next(15, 30));
+                            notification = new CampaignNotification
+                            {
+                                CampaignNotificationId = Guid.NewGuid(),
+                                CampaignId = campaign.CampaignId,
+                                Vin = vin,
+                                EmailSentCount = 2,
+                                FirstEmailSentAt = firstSent,
+                                LastEmailSentAt = now.AddDays(-rng.Next(8, 14)),
+                                IsCompleted = false,
+                                CreatedAt = firstSent.AddDays(-rng.Next(1, 5)),
+                                UpdatedAt = now.AddDays(-rng.Next(8, 14))
+                            };
+                            break;
+
+                        case 3: // Completed (vehicle already repaired)
+                            var completedFirst = now.AddDays(-rng.Next(20, 40));
+                            notification = new CampaignNotification
+                            {
+                                CampaignNotificationId = Guid.NewGuid(),
+                                CampaignId = campaign.CampaignId,
+                                Vin = vin,
+                                EmailSentCount = rng.Next(1, 3),
+                                FirstEmailSentAt = completedFirst,
+                                LastEmailSentAt = completedFirst.AddDays(rng.Next(1, 7)),
+                                IsCompleted = true,
+                                CreatedAt = completedFirst.AddDays(-rng.Next(1, 5)),
+                                UpdatedAt = now.AddDays(-rng.Next(1, 5))
+                            };
+                            break;
+
+                        default: // Sent 3 emails (max limit reached)
+                            var maxFirst = now.AddDays(-rng.Next(30, 50));
+                            notification = new CampaignNotification
+                            {
+                                CampaignNotificationId = Guid.NewGuid(),
+                                CampaignId = campaign.CampaignId,
+                                Vin = vin,
+                                EmailSentCount = 3,
+                                FirstEmailSentAt = maxFirst,
+                                LastEmailSentAt = now.AddDays(-rng.Next(1, 7)),
+                                IsCompleted = false,
+                                CreatedAt = maxFirst.AddDays(-rng.Next(1, 5)),
+                                UpdatedAt = now.AddDays(-rng.Next(1, 7))
+                            };
+                            break;
+                    }
+
+                    campaignNotifications.Add(notification);
+                    
+                    // Stop when we reach 200 records
+                    if (campaignNotifications.Count >= recordCount)
+                        break;
+                }
+                
+                if (campaignNotifications.Count >= recordCount)
+                    break;
+            }
+
+            context.CampaignNotifications.AddRange(campaignNotifications);
+            context.SaveChanges();
+
+            reportLines.Add($"Campaign Notifications created: {campaignNotifications.Count}");
+            reportLines.Add($"  - Never sent: {campaignNotifications.Count(n => n.EmailSentCount == 0)}");
+            reportLines.Add($"  - Sent 1 time: {campaignNotifications.Count(n => n.EmailSentCount == 1)}");
+            reportLines.Add($"  - Sent 2 times: {campaignNotifications.Count(n => n.EmailSentCount == 2)}");
+            reportLines.Add($"  - Sent 3 times (max): {campaignNotifications.Count(n => n.EmailSentCount == 3)}");
+            reportLines.Add($"  - Completed: {campaignNotifications.Count(n => n.IsCompleted)}");
+
             // === LEVEL 4: Warranty Claims + related - 200 records ===
             // Create vehicle warranty policies - 200 records
             var vehicleWarrantyPolicies = new List<VehicleWarrantyPolicy>();
@@ -594,6 +723,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 Console.WriteLine($"Total Policies: {policies.Count}");
                 Console.WriteLine($"Total Campaigns: {campaigns.Count}");
                 Console.WriteLine($"Total Campaign Vehicles: {campaignVehicles.Count}");
+                Console.WriteLine($"Total Campaign Notifications: {campaignNotifications.Count}");
                 Console.WriteLine($"Total Part Orders: {partOrders.Count}");
                 Console.WriteLine($"Total Warranty Claims: {claims.Count}");
                 Console.WriteLine($"Total Appointments: {appointments.Count}");
