@@ -13,9 +13,7 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<PartOrder> UpdateAsync(PartOrder Request);
         Task<PartOrder> GetPendingPartOrderByOrgIdAsync(Guid orgId);
         Task<(IEnumerable<PartOrder> Data, int TotalRecords)> GetPagedPartOrderByOrdIdAsync(int pageNumber, int pageSize, Guid orgId);
-        // Count number of orders by status with optional org filter
         Task<int> CountByStatusAsync(PartOrderStatus status, Guid? orgId = null);
-        // New: top requested parts within date range
         Task<IEnumerable<(string Model, int Quantity)>> GetTopRequestedPartsAsync(DateTime fromDate, DateTime toDate, int take);
     }
 }

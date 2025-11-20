@@ -78,16 +78,13 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                 .CountAsync();
         }
 
-        // New: aggregate participation and total affected vehicles across all campaigns
         public async Task<(int ParticipatingVehicles, int TotalAffectedVehicles)> GetParticipationAggregateAsync()
         {
-            // Now interpret as CompletedVehicles / TotalAffectedVehicles
             var completed = await _context.Campaigns.Where(c => c.Status == CampaignStatus.Active.GetCampaignStatus()).SumAsync(c => c.CompletedVehicles);
             var totalAffected = await _context.Campaigns.Where(c => c.Status == CampaignStatus.Active.GetCampaignStatus()).SumAsync(c => c.TotalAffectedVehicles);
             return (completed, totalAffected);
         }
 
-        // New: latest active campaign
         public async Task<Campaign?> GetLatestActiveAsync()
         {
             var active = CampaignStatus.Active.GetCampaignStatus();

@@ -46,7 +46,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Unauthorized(ApiResponse<object>.Fail(ResponseError.Forbidden));
         }
 
-        // New flexible endpoint: count orders by status, optional org filter
         [HttpGet("count")]
         [Authorize]
         public async Task<IActionResult> GetOrderCount([FromQuery] PartOrderStatus status = PartOrderStatus.Pending, [FromQuery] Guid? orgId = null)
@@ -55,7 +54,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<int>.Ok(count, "Get order count successfully"));
         }
 
-        // New: count pending orders (all orgs)
         [HttpGet("pending/count")]
         [Authorize]
         public async Task<IActionResult> GetPendingOrderCount()
@@ -64,9 +62,8 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<int>.Ok(count, "Get pending order count successfully"));
         }
 
-        // New: top requested parts (month or year scope)
         [HttpGet("top-requested-parts")]
-        [Authorize(policy: "RequireEvmStaff")] // cross-org analytics
+        [Authorize(policy: "RequireEvmStaff")]
         public async Task<IActionResult> GetTopRequestedParts([FromQuery] int? month, [FromQuery] int? year, [FromQuery] int take = 5)
         {
             var data = await _partOrderService.GetTopRequestedPartsAsync(month, year, take);
@@ -81,7 +78,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<object>.Ok(update, "update expected date successfully"));
         }
 
-        //SC xác nhận đã nhận hàng
         [HttpPut("{orderID}/confirm-delivery")]
         [Authorize (policy: "RequireScStaff")]
         public async Task<IActionResult> UpdateStatusDeliverd(string orderID)
@@ -96,7 +92,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<object>.Ok(update, "update status successfully"));
         }
 
-        //EVM nhấn confirm
         [HttpPut("{orderID}/confirm")]
         [Authorize(policy: "RequireEvmStaff")]
         public async Task<IActionResult> UpdateStatusToConfirm(string orderID)

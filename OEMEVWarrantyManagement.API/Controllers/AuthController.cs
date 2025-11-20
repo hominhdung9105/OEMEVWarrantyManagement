@@ -47,7 +47,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
                 // Validate Google token
                 var payload = await GoogleJsonWebSignature.ValidateAsync(request.Credential);
                 
-                // Kiểm tra và tạo/lấy thông tin user
+                // Kiểm tra lấy thông tin user
                 var result = await _authService.GoogleLoginAsync(payload.Email, payload.Name);
                 
                 return Ok(ApiResponse<TokenResponseDto>.Ok(result, "Google login successfully"));

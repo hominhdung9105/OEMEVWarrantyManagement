@@ -52,16 +52,16 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<IEnumerable<AssignedTechDto>>.Ok(assignedTechs, "Get assigned technicians successfully"));
         }
 
-        // New: task counts for current tech (default: day). unit = d (day) | m (month)
+        // task counts for current tech
         [HttpGet("task-counts")]
         [Authorize(policy: "RequireScTech")]
-        public async Task<IActionResult> GetTaskCounts([FromQuery] char unit = 'd')
+        public async Task<IActionResult> GetTaskCounts()
         {
-            var counts = await _workOrderService.GetTaskCountsAsync(unit);
+            var counts = await _workOrderService.GetTaskCountsAsync();
             return Ok(ApiResponse<TaskCountDto>.Ok(counts, "Get task counts successfully"));
         }
 
-        // New: grouped counts by target and type for month/year for current tech. unit = m | y
+        // grouped counts by target and type for month/year for current tech. unit = m | y
         [HttpGet("task-group-counts")]
         [Authorize(policy: "RequireScTech")]
         public async Task<IActionResult> GetTaskGroupCounts([FromQuery] char unit)

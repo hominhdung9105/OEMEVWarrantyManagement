@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OEMEVWarrantyManagement.API.Policy.Role;
+using OEMEVWarrantyManagement.Application.BackgroundJobs;
+using OEMEVWarrantyManagement.Application.BackgroundServices;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Application.Mapping;
@@ -35,6 +37,8 @@ namespace OEMEVWarrantyManagement.API
                 builder.Configuration.GetSection("AppSettings"));
             builder.Services.Configure<EmailSettings>(
                 builder.Configuration.GetSection("EmailSettings"));
+            builder.Services.Configure<EmailUrlSettings>(
+                builder.Configuration.GetSection("EmailUrlSettings"));
 
             // Add Controllers - ignore null value in response
 
@@ -210,7 +214,7 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
             builder.Services.AddScoped<IAppointmentService, AppointmentService>();
             // Hangfire Jobs
-            builder.Services.AddScoped<OEMEVWarrantyManagement.Application.BackgroundJobs.AppointmentCancellationJob>();
+            builder.Services.AddScoped<AppointmentCancellationJob>();
             // Email
             builder.Services.AddScoped<IEmailService, EmailService>();
             // Dashboard
@@ -227,8 +231,8 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddScoped<ICampaignNotificationService, CampaignNotificationService>();
 
             // Background Services
-            builder.Services.AddHostedService<OEMEVWarrantyManagement.API.BackgroundServices.CampaignReminderBackgroundService>();
-            builder.Services.AddHostedService<OEMEVWarrantyManagement.API.BackgroundServices.CampaignAutoCloseBackgroundService>();
+            builder.Services.AddHostedService<CampaignReminderBackgroundService>();
+            builder.Services.AddHostedService<CampaignAutoCloseBackgroundService>();
 
             builder.Services.AddCors(options =>
             {

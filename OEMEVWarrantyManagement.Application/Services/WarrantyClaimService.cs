@@ -253,7 +253,6 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             var claimDtos = _mapper.Map<List<ResponseWarrantyClaimDto>>(claims);
 
-            // Enrich
             var vins = claimDtos.Select(c => c.Vin).Where(v => !string.IsNullOrEmpty(v)).Distinct().ToList();
             var vehicles = await _vehicleRepository.GetVehiclesByVinsAsync(vins);
             var vehicleDict = vehicles.ToDictionary(v => v.Vin);
@@ -296,7 +295,6 @@ namespace OEMEVWarrantyManagement.Application.Services
                     }
                 }
 
-                // Fix: Get policy name through VehicleWarrantyId
                 if (claim.VehicleWarrantyId.HasValue && 
                     vehicleWarrantyPolicies.TryGetValue(claim.VehicleWarrantyId.Value, out var vwp) &&
                     policyLookup.TryGetValue(vwp.PolicyId, out var policy))
@@ -352,55 +350,77 @@ namespace OEMEVWarrantyManagement.Application.Services
             };
         }
 
-        // New: count SentToManufacturer claims using enum, now across all orgs (no org restriction)
         public async Task<int> CountSentToManufacturerAsync()
         {
             return await _warrantyClaimRepository.CountByStatusAsync(WarrantyClaimStatus.SentToManufacturer, null);
         }
 
-        public async Task<IEnumerable<TimeCountDto>> GetWarrantyClaimCountsAsync(char unit, int take, Guid? orgId = null)
+        public async Task<IEnumerable<TimeCountDto>> GetWarrantyClaimCountsAsync(char? unit, int? takeTemp = 5, Guid? orgId = null)
         {
-            if (take <= 0) return Enumerable.Empty<TimeCountDto>();
+            takeTemp ??= 5;
 
-            unit = char.ToLowerInvariant(unit);
-            if (unit != 'd' && unit != 'm' && unit != 'y') throw new ApiException(ResponseError.InvalidJsonFormat);
+            if (takeTemp <= 0) return Enumerable.Empty<TimeCountDto>();
 
-            var now = DateTime.UtcNow;
-            var fromDate = unit switch
-            {
-                'd' => now.Date.AddDays(-(take - 1)),
-                'm' => new DateTime(now.Year, now.Month, 1).AddMonths(-(take - 1)),
-                'y' => new DateTime(now.Year, 1, 1).AddYears(-(take - 1)),
-                _ => now.Date
-            };
-
-            if (!orgId.HasValue)
-            {
-                var role = _currentUserService.GetRole();
-                if (role == RoleIdEnum.ScStaff.GetRoleId())
-                {
-                    orgId = await _currentUserService.GetOrgId();
-                }
-                else if (role == RoleIdEnum.Technician.GetRoleId())
-                {
-                    throw new ApiException(ResponseError.Forbidden);
-                }
-            }
-
-            var claims = await _warrantyClaimRepository.GetByCreatedDateAsync(fromDate, orgId);
+            int take = (int)takeTemp;
 
             var buckets = new List<TimeCountDto>();
-            if (unit == 'd')
+            var now = DateTime.UtcNow;
+
+            if (unit != null)
             {
-                for (int i = take - 1; i >= 0; i--)
+                unit = char.ToLowerInvariant((char)unit);
+                if (unit != 'd' && unit != 'm' && unit != 'y') throw new ApiException(ResponseError.InvalidJsonFormat);
+
+                
+                var fromDate = unit switch
                 {
-                    var day = now.Date.AddDays(-i);
-                    var count = claims.Count(c => c.CreatedDate.Date == day);
-                    buckets.Add(new TimeCountDto { Period = day.ToString("yyyy-MM-dd"), Count = count });
+                    'd' => now.Date.AddDays(-(take - 1)),
+                    'm' => new DateTime(now.Year, now.Month, 1).AddMonths(-(take - 1)),
+                    'y' => new DateTime(now.Year, 1, 1).AddYears(-(take - 1)),
+                    _ => now.Date
+                };
+
+                if (!orgId.HasValue)
+                {
+                    var role = _currentUserService.GetRole();
+                    if (role == RoleIdEnum.ScStaff.GetRoleId())
+                    {
+                        orgId = await _currentUserService.GetOrgId();
+                    }
+                    else if (role == RoleIdEnum.Technician.GetRoleId())
+                    {
+                        throw new ApiException(ResponseError.Forbidden);
+                    }
+                }
+
+                var claims = await _warrantyClaimRepository.GetByCreatedDateAsync(fromDate, orgId);
+
+                if (unit == 'd')
+                {
+                    for (int i = take - 1; i >= 0; i--)
+                    {
+                        var day = now.Date.AddDays(-i);
+                        var count = claims.Count(c => c.CreatedDate.Date == day);
+                        buckets.Add(new TimeCountDto { Period = day.ToString("yyyy-MM-dd"), Count = count });
+                    }
+                }
+                else if (unit == 'm')
+                {
+                    for (int i = take - 1; i >= 0; i--)
+                    {
+                        var monthStart = new DateTime(now.Year, now.Month, 1).AddMonths(-i);
+                        var monthEnd = monthStart.AddMonths(1);
+                        var count = claims.Count(c => c.CreatedDate >= monthStart && c.CreatedDate < monthEnd);
+                        buckets.Add(new TimeCountDto { Period = monthStart.ToString("yyyy-MM"), Count = count });
+                    }
                 }
             }
-            else if (unit == 'm')
+            else
             {
+                var fromDate = new DateTime(now.Year, now.Month, 1).AddMonths(-(take - 1));
+
+                var claims = await _warrantyClaimRepository.GetByCreatedDateAsync(fromDate, orgId);
+
                 for (int i = take - 1; i >= 0; i--)
                 {
                     var monthStart = new DateTime(now.Year, now.Month, 1).AddMonths(-i);
@@ -409,21 +429,10 @@ namespace OEMEVWarrantyManagement.Application.Services
                     buckets.Add(new TimeCountDto { Period = monthStart.ToString("yyyy-MM"), Count = count });
                 }
             }
-            else
-            {
-                for (int i = take - 1; i >= 0; i--)
-                {
-                    var yearStart = new DateTime(now.Year, 1, 1).AddYears(-i);
-                    var yearEnd = yearStart.AddYears(1);
-                    var count = claims.Count(c => c.CreatedDate >= yearStart && c.CreatedDate < yearEnd);
-                    buckets.Add(new TimeCountDto { Period = yearStart.ToString("yyyy"), Count = count });
-                }
-            }
 
             return buckets;
         }
 
-        // New: Top approved policies within month/year
         public async Task<IEnumerable<PolicyTopDto>> GetTopApprovedPoliciesAsync(int? month, int? year, int take = 5)
         {
             if (take <= 0) take = 5;
@@ -449,7 +458,6 @@ namespace OEMEVWarrantyManagement.Application.Services
             return results.Select(r => new PolicyTopDto { Name = r.PolicyName, Count = r.Count });
         }
 
-        // New: Top service centers by claim counts within month/year and specific statuses
         public async Task<IEnumerable<ServiceCenterTopDto>> GetTopServiceCentersAsync(int? month, int? year, int take = 3)
         {
             if (take <= 0) take = 3;

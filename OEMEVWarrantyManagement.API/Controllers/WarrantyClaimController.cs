@@ -57,7 +57,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpGet("counts")]
         [Authorize]
-        public async Task<IActionResult> GetCounts([FromQuery] char unit, [FromQuery] int take, [FromQuery] Guid? orgId)
+        public async Task<IActionResult> GetCounts([FromQuery] char? unit, [FromQuery] int? take, [FromQuery] Guid? orgId)
         {
             var counts = await _warrantyClaimService.GetWarrantyClaimCountsAsync(unit, take, orgId);
             return Ok(ApiResponse<IEnumerable<TimeCountDto>>.Ok(counts, "Get counts successfully"));

@@ -64,10 +64,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<WorkOrder>> GetWorkOrdersByTechAndRangeAsync(Guid techId, DateTime from, DateTime to)
+        public async Task<IEnumerable<WorkOrder>> GetWorkOrdersByTechAndRangeAsync(Guid techId)
         {
             return await _context.WorkOrders
-                .Where(wo => wo.AssignedTo == techId && wo.StartDate >= from && wo.StartDate < to)
+                .Where(wo => wo.AssignedTo == techId && (wo.Status == WorkOrderStatus.InProgress.GetWorkOrderStatus() || DateOnly.FromDateTime((DateTime)wo.EndDate) == DateOnly.FromDateTime(DateTime.Today)))
                 .ToListAsync();
         }
 

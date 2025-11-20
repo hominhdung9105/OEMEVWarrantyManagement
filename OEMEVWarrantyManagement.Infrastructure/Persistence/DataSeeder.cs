@@ -2,6 +2,7 @@
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Share.Enums;
 using System.Text.Json;
+using Microsoft.AspNetCore.Identity;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Persistence
 {
@@ -47,11 +48,19 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
 
             // Employees: 1 ADMIN, 2 EVM_STAFF, 6 SC_STAFF (2 per org), 15 SC_TECH (5 per org)
             var singleOem = oems.First();
+            
+            // Create PasswordHasher to properly hash passwords
+            var passwordHasher = new PasswordHasher<Employee>();
+            
             var baseEmployeeFaker = new Faker<Employee>("en")
                 .RuleFor(e => e.UserId, f => f.Database.Random.Guid())
                 .RuleFor(e => e.Email, (f, u) => f.Internet.Email(f.Name.FirstName(), f.Name.LastName()))
                 .RuleFor(e => e.Name, f => f.Name.FullName())
-                .RuleFor(e => e.PasswordHash, f => "pass123");
+                .RuleFor(e => e.PasswordHash, (f, emp) => 
+                {
+                    // Hash the password "pass123" for each employee
+                    return passwordHasher.HashPassword(emp, "P@ssW0rd");
+                });
 
             var employees = new List<Employee>();
 

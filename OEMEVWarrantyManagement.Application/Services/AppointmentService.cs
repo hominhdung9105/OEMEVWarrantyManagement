@@ -7,11 +7,7 @@ using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
 using OEMEVWarrantyManagement.Share.Models.Response;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using OEMEVWarrantyManagement.Share.Configs;
 using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
@@ -29,9 +25,19 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly ICustomerRepository _customerRepository;
         private readonly IEmailService _emailService;
         private readonly AppSettings _appSettings;
+        private readonly EmailUrlSettings _emailUrlSettings;
         private readonly IBackgroundJobClient _backgroundJobClient;
 
-        public AppointmentService(IAppointmentRepository appointmentRepository, IVehicleRepository vehicleRepository, IMapper mapper, ICurrentUserService currentUserService, ICustomerRepository customerRepository, IEmailService emailService, IOptions<AppSettings> appSettings, IBackgroundJobClient backgroundJobClient)
+        public AppointmentService(
+            IAppointmentRepository appointmentRepository, 
+            IVehicleRepository vehicleRepository, 
+            IMapper mapper, 
+            ICurrentUserService currentUserService, 
+            ICustomerRepository customerRepository, 
+            IEmailService emailService, 
+            IOptions<AppSettings> appSettings,
+            IOptions<EmailUrlSettings> emailUrlSettings,
+            IBackgroundJobClient backgroundJobClient)
         {
             _appointmentRepository = appointmentRepository;
             _vehicleRepository = vehicleRepository;
@@ -40,6 +46,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             _customerRepository = customerRepository;
             _emailService = emailService;
             _appSettings = appSettings.Value;
+            _emailUrlSettings = emailUrlSettings.Value;
             _backgroundJobClient = backgroundJobClient;
         }
 
@@ -353,7 +360,15 @@ namespace OEMEVWarrantyManagement.Application.Services
             if (customer == null || string.IsNullOrWhiteSpace(customer.Email)) return;
 
             var token = GenerateConfirmationToken(appointment);
-            var confirmUrl = $"{_appSettings.Issuer?.TrimEnd('/')}?appointmentId={appointment.AppointmentId}&token={token}";
+            
+            // Use EmailUrlSettings for appointment confirmation URL
+            var baseUrl = _emailUrlSettings.AppointmentConfirmationUrl?.TrimEnd('/');
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                return;
+            }
+            
+            var confirmUrl = $"{baseUrl}?appointmentId={appointment.AppointmentId}&token={token}";
 
             var slotInfo = TimeSlotExtensions.GetSlotInfo(appointment.Slot);
             var time = slotInfo?.Time ?? appointment.Slot;
@@ -455,7 +470,15 @@ namespace OEMEVWarrantyManagement.Application.Services
 
                 // Generate new confirmation token
                 var token = GenerateConfirmationToken(appointment);
-                var confirmUrl = $"{_appSettings.Issuer?.TrimEnd('/')}?appointmentId={appointment.AppointmentId}&token={token}";
+                
+                // Use EmailUrlSettings for appointment confirmation URL
+                var baseUrl = _emailUrlSettings.AppointmentConfirmationUrl?.TrimEnd('/');
+                if (string.IsNullOrWhiteSpace(baseUrl))
+                {
+                    return;
+                }
+                
+                var confirmUrl = $"{baseUrl}?appointmentId={appointment.AppointmentId}&token={token}";
 
                 var slotInfo = TimeSlotExtensions.GetSlotInfo(appointment.Slot);
                 var time = slotInfo?.Time ?? appointment.Slot;

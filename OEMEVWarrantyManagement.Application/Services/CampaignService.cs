@@ -182,21 +182,18 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<CampaignDto>(updated);
         }
 
-        // New: count campaigns by status (enum-based)
         public async Task<int> CountByStatusAsync(CampaignStatus status)
         {
             var statusStr = status.GetCampaignStatus();
             return await _campaignRepository.CountByStatusAsync(statusStr);
         }
 
-        // New: aggregate participating vehicles vs affected vehicles across all campaigns
         public async Task<(int participating, int affected)> GetParticipationAggregateAsync()
         {
             var (participatingVehicles, totalAffected) = await _campaignRepository.GetParticipationAggregateAsync();
             return (participatingVehicles, totalAffected);
         }
 
-        // New: latest active campaign summary
         public async Task<CampaignActiveSummaryDto> GetLatestActiveSummaryAsync()
         {
             var entity = await _campaignRepository.GetLatestActiveAsync();
