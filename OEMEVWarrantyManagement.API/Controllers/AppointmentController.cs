@@ -77,11 +77,11 @@ namespace OEMEVWarrantyManagement.API.Controllers
             if (string.IsNullOrWhiteSpace(token))
                 return BadRequest("Missing token.");
 
-            var ok = await _appointmentService.ConfirmAppointmentAsync(appId, token);
-            if (!ok)
+            var result = await _appointmentService.ConfirmAppointmentAsync(appId, token);
+            if (result == null)
                 return BadRequest(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
 
-            return Ok(ApiResponse<object>.Ok(null, "Appointment confirmed successfully!"));
+            return Ok(ApiResponse<ConfirmAppointmentResponseDto>.Ok(result, "Appointment confirmed successfully!"));
         }
 
         [HttpPut("{appointmentId}/check-in")]

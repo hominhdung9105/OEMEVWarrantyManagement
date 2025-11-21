@@ -30,7 +30,8 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IBackWarrantyClaimRepository _backWarrantyClaimRepository;
         private readonly IImageRepository _imageRepository;
         private readonly IWorkOrderService _workOrderService;
-        public WarrantyClaimService(IMapper mapper, IWarrantyClaimRepository warrantyClaimRepository, IVehicleRepository vehicleRepository, IWorkOrderRepository workOrderRepository, IEmployeeRepository employeeRepository, ICurrentUserService currentUserService, IClaimPartRepository claimPartRepository, IPartRepository partRepository, IWarrantyPolicyRepository warrantyPolicyRepository, IVehicleWarrantyPolicyRepository vehicleWarrantyPolicyRepository, ICustomerRepository customerRepository, IBackWarrantyClaimRepository backWarrantyClaimRepository, IImageRepository imageRepository, IWorkOrderService workOrderService)
+        private readonly IEmailService _emailService;
+        public WarrantyClaimService(IMapper mapper, IWarrantyClaimRepository warrantyClaimRepository, IVehicleRepository vehicleRepository, IWorkOrderRepository workOrderRepository, IEmployeeRepository employeeRepository, ICurrentUserService currentUserService, IClaimPartRepository claimPartRepository, IPartRepository partRepository, IWarrantyPolicyRepository warrantyPolicyRepository, IVehicleWarrantyPolicyRepository vehicleWarrantyPolicyRepository, ICustomerRepository customerRepository, IBackWarrantyClaimRepository backWarrantyClaimRepository, IImageRepository imageRepository, IWorkOrderService workOrderService, IEmailService emailService)
         {
             _mapper = mapper;
             _warrantyClaimRepository = warrantyClaimRepository;
@@ -46,6 +47,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             _imageRepository = imageRepository;
             _backWarrantyClaimRepository = backWarrantyClaimRepository;
             _workOrderService = workOrderService;
+            _emailService = emailService;
         }
 
         public async Task<ResponseWarrantyClaim> CreateAsync(RequestWarrantyClaim request)
@@ -123,7 +125,7 @@ namespace OEMEVWarrantyManagement.Application.Services
         public async Task<WarrantyClaimDto> UpdateStatusAsync(Guid claimId, WarrantyClaimStatus status, Guid? vehicleWarrantyId = null)
         {
             var entity = await _warrantyClaimRepository.GetWarrantyClaimByIdAsync(claimId) ?? throw new ApiException(ResponseError.NotFoundWarrantyClaim);
-
+            var oldStatus = entity.Status;
             entity.Status = status.GetWarrantyClaimStatus();
 
             if (status == WarrantyClaimStatus.Denied)
@@ -133,7 +135,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             }
             else if (status == WarrantyClaimStatus.Approved)
             {
-                if (entity.ConfirmBy == null) // Neu chua duoc phe duyet thi moi cap nhat
+                if (entity.ConfirmBy == null)
                 {
                     entity.ConfirmBy = _currentUserService.GetUserId();
                     entity.ConfirmDate = DateTime.Now;
@@ -153,7 +155,59 @@ namespace OEMEVWarrantyManagement.Application.Services
             }
 
             var update = await _warrantyClaimRepository.UpdateAsync(entity);
-            return _mapper.Map<WarrantyClaimDto>(update);
+            var dto = _mapper.Map<WarrantyClaimDto>(update);
+
+            await TrySendWarrantyClaimStatusEmailAsync(update, oldStatus, update.Status);
+            return dto;
+        }
+
+        private async Task TrySendWarrantyClaimStatusEmailAsync(WarrantyClaim claim, string oldStatus, string newStatus)
+        {
+            try
+            {
+                // get vehicle + customer
+                var vehicle = await _vehicleRepository.GetVehicleByVinAsync(claim.Vin);
+                if (vehicle == null) return;
+                var customer = await _customerRepository.GetCustomerByIdAsync(vehicle.CustomerId);
+                if (customer == null || string.IsNullOrWhiteSpace(customer.Email)) return;
+
+                // Approved -> dedicated template (includes policy name)
+                if (newStatus == WarrantyClaimStatus.Approved.GetWarrantyClaimStatus() || newStatus == WarrantyClaimStatus.WaitingForUnassignedRepair.GetWarrantyClaimStatus())
+                {
+                    string? policyName = null;
+                    if (claim.VehicleWarrantyId.HasValue)
+                    {
+                        var vwp = await _vehicleWarrantyPolicyRepository.GetByIdAsync(claim.VehicleWarrantyId.Value);
+                        if (vwp != null)
+                        {
+                            var policy = await _warranty_policyRepository.GetByIdAsync(vwp.PolicyId);
+                            policyName = policy?.Name;
+                        }
+                    }
+                    await _emailService.SendWarrantyClaimApprovedEmailAsync(customer.Email, customer.Name, claim.Vin, claim.ClaimId, policyName);
+                }
+                else if (newStatus == WarrantyClaimStatus.Denied.GetWarrantyClaimStatus())
+                {
+                    await _emailService.SendWarrantyClaimDeniedEmailAsync(customer.Email, customer.Name, claim.Vin, claim.ClaimId);
+                }
+                else if (newStatus == WarrantyClaimStatus.Repaired.GetWarrantyClaimStatus())
+                {
+                    await _emailService.SendWarrantyRepairCompletedEmailAsync(customer.Email, customer.Name, claim.Vin, claim.ClaimId, DateTime.UtcNow);
+                }
+                else if (newStatus == WarrantyClaimStatus.DoneWarranty.GetWarrantyClaimStatus())
+                {
+                    await _emailService.SendWarrantyClaimStatusChangedEmailAsync(customer.Email, customer.Name, claim.Vin, claim.ClaimId, newStatus, "Vehicle delivered back to customer.");
+                }
+                else
+                {
+                    // generic for other states: UnderInspection, PendingConfirmation, SentToManufacturer, UnderRepair, CarBackHome, WaitingForUnassigned, etc
+                    await _emailService.SendWarrantyClaimStatusChangedEmailAsync(customer.Email, customer.Name, claim.Vin, claim.ClaimId, newStatus);
+                }
+            }
+            catch
+            {
+                // swallow exceptions to not block workflow
+            }
         }
 
         public async Task<bool> UpdateStatusClaimPartAsync(Guid claimId)

@@ -246,7 +246,7 @@ namespace OEMEVWarrantyManagement.API
             var app = builder.Build();
 
             ////// =================================================================
-            ////// KHỐI MÃ SEEDING: Thêm khối này vào | chạy 1 lần nếu muốn lấy data mẫu
+            ////// KH?I M? SEEDING: Thêm kh?i này vào | ch?y 1 l?n n?u mu?n l?y data m?u
             ////// =================================================================
             //using (var scope = app.Services.CreateScope())
             //{
@@ -255,21 +255,21 @@ namespace OEMEVWarrantyManagement.API
             //    {
             //        var dbContext = services.GetRequiredService<AppDbContext>();
 
-            //        // 1. Tự động chạy migration để tạo bảng
+            //        // 1. T? đ?ng ch?y migration đ? t?o b?ng
             //        dbContext.Database.Migrate();
 
-            //        // 2. Gọi Seeder để thêm data (nó sẽ tự kiểm tra nếu DB trống)
+            //        // 2. G?i Seeder đ? thêm data (nó s? t? ki?m tra n?u DB tr?ng)
             //        DataSeeder.SeedDatabase(dbContext);
             //    }
             //    catch (Exception ex)
             //    {
-            //        // Ghi log lỗi nếu có
+            //        // Ghi log l?i n?u có
             //        var logger = services.GetRequiredService<ILogger<Program>>();
-            //        logger.LogError(ex, "Đã xảy ra lỗi khi seeding database.");
+            //        logger.LogError(ex, "Đ? x?y ra l?i khi seeding database.");
             //    }
             //}
             ////// =================================================================
-            ////// KẾT THÚC KHỐI MÃ SEEDING
+            ////// K?T THÚC KH?I M? SEEDING
             ////// =================================================================
 
             // Dev

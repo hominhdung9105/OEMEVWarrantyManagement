@@ -4,72 +4,50 @@ namespace OEMEVWarrantyManagement.Share.Enums
 {
     public enum PartCategory
     {
-        [Description("Battery Pack")]
-        BatteryPack,
+        // 1. BODY & EXTERIOR
+        [Description("Body & Exterior")]
+        BodyExterior,
 
-        [Description("Battery Management System (BMS)")]
-        BMS,
-
-        [Description("Electric Motor")]
-        ElectricMotor,
-
-        [Description("Inverter / Controller")]
-        Inverter,
-
-        [Description("On-board Charger")]
-        OnboardCharger,
-
-        [Description("Charging Port / Connector")]
-        ChargingPort,
-
-        [Description("DC-DC Converter")]
-        DCDCConverter,
-
-        [Description("Cooling System")]
-        CoolingSystem,
-
-        [Description("Thermal Management")]
-        ThermalManagement,
-
-        [Description("High Voltage Cable / Harness")]
-        HighVoltageCable,
-
-        [Description("Low Voltage Electrical System")]
-        LowVoltageElectrical,
-
-        [Description("Brake System (Regenerative / Hydraulic)")]
-        BrakeSystem,
-
-        [Description("Suspension System")]
-        Suspension,
-
-        [Description("Steering System")]
-        Steering,
-
-        [Description("Body & Frame Components")]
-        BodyFrame,
-
-        [Description("Interior / Cabin Parts")]
-        Interior,
-
-        [Description("Lighting System")]
+        // 2. AUTOMOTIVE LIGHTING SYSTEMS
+        [Description("Lighting")]
         Lighting,
 
-        [Description("Sensor / ECU / Control Unit")]
-        ControlUnit,
+        // 3. CHASSIS, SUSPENSION & STEERING
+        [Description("Suspension")]
+        Suspension,
 
-        [Description("Software / Firmware Module")]
-        SoftwareModule,
+        [Description("Steering")]
+        Steering,
 
-        [Description("Tire / Wheel")]
-        TireWheel,
+        [Description("Wheels")]
+        Wheels,
 
-        [Description("Charging Cable / Accessory")]
-        ChargingAccessory,
+        // 4. POWERTRAIN – EV (giữ lại)
+        [Description("EV Powertrain")]
+        EVPowertrain,
 
-        [Description("Other / Miscellaneous")]
-        Other
+        // 6. BRAKING SYSTEMS
+        [Description("Brakes")]
+        Brakes,
+
+        // 7. ELECTRICAL & ELECTRONICS
+        [Description("ADAS")]
+        ADAS,
+
+        [Description("Safety Electronics")]
+        SafetyElectronics,
+
+        // 8. INTERIOR & HMI
+        [Description("Infotainment")]
+        Infotainment,
+
+        [Description("Seating")]
+        Seating,
+
+        [Description("HVAC")]
+        HVAC
     }
+
 
 
     public static class PartCategoryExtensions
@@ -100,149 +78,195 @@ namespace OEMEVWarrantyManagement.Share.Enums
 
     public static class PartModel
     {
-        // Tạo mapping giữa category và danh sách model
+        // Mapping giữa PartCategory và danh sách Parts (mẫu / model)
         public static readonly Dictionary<string, List<string>> ModelsByCategory =
-    new Dictionary<string, List<string>>
+            new Dictionary<string, List<string>>
+        {
+    // 1. BODY & EXTERIOR
     {
+        PartCategory.BodyExterior.GetPartCategory(), new List<string>
         {
-            PartCategory.BatteryPack.GetPartCategory(), new List<string>
-            {
-                "EV-LFP-72V-40Ah",
-                "EV-NCM-350V-60Ah",
-                "EV-NCA-400V-80Ah"
-            }
-        },
-        {
-            PartCategory.BMS.GetPartCategory(), new List<string>
-            {
-                "BMS Smart V1",
-                "BMS Smart V2",
-                "BMS Lite 48V"
-            }
-        },
-        {
-            PartCategory.ElectricMotor.GetPartCategory(), new List<string>
-            {
-                "Motor 3kW Hub",
-                "Motor 5kW Mid Drive",
-                "Motor 10kW PMSM"
-            }
-        },
-        {
-            PartCategory.Inverter.GetPartCategory(), new List<string>
-            {
-                "Inverter 48V-3kW",
-                "Inverter 350V-10kW"
-            }
-        },
-        {
-            PartCategory.OnboardCharger.GetPartCategory(), new List<string>
-            {
-                "OBC 1.5kW",
-                "OBC 3.3kW",
-                "OBC 6.6kW"
-            }
-        },
-        {
-            PartCategory.ChargingPort.GetPartCategory(), new List<string>
-            {
-                "Type 2 Connector",
-                "GB/T Port",
-                "CCS Combo"
-            }
-        },
-        {
-            PartCategory.DCDCConverter.GetPartCategory(), new List<string>
-            {
-                "DC-DC 48V/12V-500W",
-                "DC-DC 400V/12V-1kW"
-            }
-        },
-        {
-            PartCategory.CoolingSystem.GetPartCategory(), new List<string>
-            {
-                "Liquid Cooling Pump",
-                "Radiator Assembly",
-                "Coolant Reservoir"
-            }
-        },
-        {
-            PartCategory.BrakeSystem.GetPartCategory(), new List<string>
-            {
-                "Disc Brake Set",
-                "Regenerative Brake Controller"
-            }
-        },
-        {
-            PartCategory.Suspension.GetPartCategory(), new List<string>
-            {
-                "Front Fork Assembly",
-                "Rear Shock Absorber"
-            }
-        },
-        {
-            PartCategory.Steering.GetPartCategory(), new List<string>
-            {
-                "Handlebar Assembly",
-                "Steering Column"
-            }
-        },
-        {
-            PartCategory.BodyFrame.GetPartCategory(), new List<string>
-            {
-                "Aluminum Frame",
-                "Plastic Body Cover Set"
-            }
-        },
-        {
-            PartCategory.Lighting.GetPartCategory(), new List<string>
-            {
-                "LED Headlight",
-                "LED Taillight",
-                "Turn Signal Set"
-            }
-        },
-        {
-            PartCategory.ControlUnit.GetPartCategory(), new List<string>
-            {
-                "Main ECU V1",
-                "Motor Controller MCU",
-                "Display Unit"
-            }
-        },
-        {
-            PartCategory.SoftwareModule.GetPartCategory(), new List<string>
-            {
-                "Firmware v1.0",
-                "Battery Calibration Tool",
-                "Diagnostics App"
-            }
-        },
-        {
-            PartCategory.TireWheel.GetPartCategory(), new List<string>
-            {
-                "Tire 16 inch",
-                "Tire 18 inch",
-                "All-terrain Tire"
-            }
-        },
-        {
-            PartCategory.ChargingAccessory.GetPartCategory(), new List<string>
-            {
-                "Portable Charger",
-                "Charging Cable 5m",
-                "Wallbox Charger"
-            }
-        },
-        {
-            PartCategory.Other.GetPartCategory(), new List<string>
-            {
-                "Seat Cushion",
-                "Footrest",
-                "Mirror Set"
-            }
+            "Front Bumper",
+            "Rear Bumper",
+            "Hood / Bonnet",
+            "Front Fenders",
+            "Rear Fenders",
+            "Roof Panel",
+            "Doors",
+            "Door Handles",
+            "Side Mirrors",
+            "Windows / Glass",
+            "Panoramic Sunroof",
+            "Exterior Trim / Moldings"
         }
-    };
+    },
+
+    // 2. LIGHTING
+    {
+        PartCategory.Lighting.GetPartCategory(), new List<string>
+        {
+            "LED Headlamps",
+            "LED Tail Lamps",
+            "Fog Lights",
+            "Daytime Running Lights (DRL)",
+            "Turn Signal Lights",
+            "License Plate Lights",
+            "Interior Lighting"
+        }
+    },
+
+    // 3. SUSPENSION
+    {
+        PartCategory.Suspension.GetPartCategory(), new List<string>
+        {
+            "Front Suspension (MacPherson / Double Wishbone)",
+            "Rear Suspension (Multi-link / Torsion Beam)",
+            "Shock Absorbers / Dampers",
+            "Coil Springs / Air Springs",
+            "Control Arms",
+            "Stabilizer Bars / Sway Bars",
+            "Suspension Bushings / Mounts"
+        }
+    },
+
+    // 3. STEERING
+    {
+        PartCategory.Steering.GetPartCategory(), new List<string>
+        {
+            "Electric Power Steering (EPS) Motor",
+            "Steering Column",
+            "Steering Rack / Gear",
+            "Tie Rods / Ends",
+            "Steering Knuckles",
+            "Steering Wheel Controls"
+        }
+    },
+
+    // 3. WHEELS
+    {
+        PartCategory.Wheels.GetPartCategory(), new List<string>
+        {
+            "Front Wheels / Rims",
+            "Rear Wheels / Rims",
+            "Tires (All-season / Performance)",
+            "Wheel Nuts / Bolts",
+            "TPMS Sensors"
+        }
+    },
+
+    // 4. EV POWERTRAIN
+    {
+        PartCategory.EVPowertrain.GetPartCategory(), new List<string>
+        {
+            "Single Motor (FWD)",
+            "Dual Motor (AWD)",
+            "Motor Controller / Inverter",
+            "Reduction Gear / Gearbox",
+            "Driveshafts / Half-shafts",
+            "AWD Coupling / Differential",
+            "High-Voltage Battery Pack",
+            "Battery Management System (BMS)",
+            "Battery Cooling System",
+            "HV Fuses / Disconnects",
+            "Battery Mounting Brackets",
+            "Onboard Charger (OBC)",
+            "CCS Fast Charge Port",
+            "AC Level 2 Charge Port",
+            "Charge Cable / Plug",
+            "Charge Controller / EVSE Interface"
+        }
+    },
+
+    // 6. BRAKES
+    {
+        PartCategory.Brakes.GetPartCategory(), new List<string>
+        {
+            "Brake Calipers",
+            "Brake Discs / Rotors",
+            "Brake Pads / Shoes",
+            "Brake Lines / Hoses",
+            "Brake Master Cylinder",
+            "Brake Booster / Servo",
+            "Regenerative Braking System",
+            "Parking Brake / Electronic Handbrake"
+        }
+    },
+
+    // 7. ADAS
+    {
+        PartCategory.ADAS.GetPartCategory(), new List<string>
+        {
+            "Adaptive Cruise Control",
+            "Lane Keeping Camera",
+            "Surround / 360º Cameras",
+            "Parking Sensors",
+            "Highway Assist Module",
+            "Summon / Autonomous Parking Module"
+        }
+    },
+
+    // 7. SAFETY ELECTRONICS
+    {
+        PartCategory.SafetyElectronics.GetPartCategory(), new List<string>
+        {
+            "Airbags (Front / Side / Curtain)",
+            "Seatbelt Pre-tensioners",
+            "12V Battery",
+            "DC-DC Converter",
+            "Fuses / Relays / Circuit Breakers",
+            "Control Modules (ECU / BCM)",
+            "LV Sensors (Temperature / Pressure)",
+            "HV Harness & Wiring",
+            "LV Harness & Wiring"
+        }
+    },
+
+    // 8. INFOTAINMENT
+    {
+        PartCategory.Infotainment.GetPartCategory(), new List<string>
+        {
+            "Central Touchscreen",
+            "Head-Up Display (HUD)",
+            "Audio System (Speakers / Amplifier)",
+            "GPS / Navigation Module",
+            "Wi-Fi / LTE Modem",
+            "USB Ports / Wireless Charging",
+            "Smartphone Integration (CarPlay / Android Auto)",
+            "Voice Assistant Microphone",
+            "Karaoke System"
+        }
+    },
+
+    // 8. SEATING
+    {
+        PartCategory.Seating.GetPartCategory(), new List<string>
+        {
+            "Front Seats",
+            "Rear Seats",
+            "Seat Belts",
+            "Headrests",
+            "Floor Mats / Carpeting",
+            "Storage Compartments",
+            "Cup Holders"
+        }
+    },
+
+    // 8. HVAC
+    {
+        PartCategory.HVAC.GetPartCategory(), new List<string>
+        {
+            "HVAC Vents",
+            "HVAC Blower Motor",
+            "Heater Core",
+            "Thermal Sensors / Thermostats",
+            "Battery Coolant Pump",
+            "Radiator / Heat Exchanger",
+            "HVAC Compressor",
+            "Cooling Hoses & Piping"
+        }
+    }
+        };
+
 
 
         public static List<string> GetModels(string category)

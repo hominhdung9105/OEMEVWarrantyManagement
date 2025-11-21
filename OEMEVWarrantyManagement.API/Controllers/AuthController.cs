@@ -38,7 +38,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<TokenResponseDto>.Ok(result, "Refresh Token successfully"));
         }
 
-        [AllowAnonymous]
         [HttpPost("google-login")]
         public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequestDto request)
         {

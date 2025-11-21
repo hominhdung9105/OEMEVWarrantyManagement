@@ -23,5 +23,7 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task SendWarrantyRepairCompletedEmailAsync(string to, string customerName, string vin, Guid claimId, DateTime? completedAt = null, string? note = null);
         // Campaign part issue / recall notification email
         Task SendCampaignPartIssueEmailAsync(string to, string customerName, string vin, string partModel, string? campaignTitle = null, string? note = null, string? bookingUrl = null);
+        // New: Generic warranty claim status changed email (for statuses without dedicated template)
+        Task SendWarrantyClaimStatusChangedEmailAsync(string to, string customerName, string vin, Guid claimId, string newStatus, string? notes = null);
     }
 }

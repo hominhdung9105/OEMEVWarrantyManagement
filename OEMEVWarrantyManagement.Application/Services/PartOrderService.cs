@@ -102,12 +102,19 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<PartOrderDto>(update);
         }
 
-        public async Task<PagedResult<ResponsePartOrderDto>> GetPagedPartOrderForEvmStaffAsync(PaginationRequest request, string? search = null)
+        public async Task<PagedResult<ResponsePartOrderDto>> GetPagedPartOrderForEvmStaffAsync(PaginationRequest request, string? search = null, PartOrderStatus? status = null)
         {
             var orgId = await _currentUserService.GetOrgId();
 
             // Load all non-done part orders, then filter and paginate once to avoid double filtering
             var allEntities = (await _partOrderRepository.GetAll()).OrderBy(po => po.RequestDate).ToList();
+
+            // Apply status filter if provided
+            if (status.HasValue)
+            {
+                var st = status.Value.GetPartOrderStatus();
+                allEntities = allEntities.Where(e => e.Status == st).ToList();
+            }
 
             // Build org name cache for search
             var orgNameById = new Dictionary<Guid, string>();

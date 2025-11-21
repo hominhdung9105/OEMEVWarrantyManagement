@@ -28,7 +28,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get([FromQuery] PaginationRequest request, [FromQuery] string? search)
+        public async Task<IActionResult> Get([FromQuery] PaginationRequest request, [FromQuery] string? search, [FromQuery] PartOrderStatus? status)
         {
             var role = _currentUserService.GetRole();
 
@@ -39,7 +39,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
             }
             else if (role == RoleIdEnum.EvmStaff.GetRoleId() || role == RoleIdEnum.Admin.GetRoleId())
             {
-                var result = await _partOrderService.GetPagedPartOrderForEvmStaffAsync(request, search);
+                var result = await _partOrderService.GetPagedPartOrderForEvmStaffAsync(request, search, status);
                 return Ok(ApiResponse<object>.Ok(result, "Get all Successfully"));
             }
 

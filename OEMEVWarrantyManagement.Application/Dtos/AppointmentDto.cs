@@ -70,4 +70,15 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public DateOnly AppointmentDate { get; set; }
         public string Slot { get; set; }
     }
+
+    // Updated: Slot now returns formatted "Slot - Time"
+    public class ConfirmAppointmentResponseDto
+    {
+        public string Vin { get; set; }
+        public string AppointmentType { get; set; }
+        public DateOnly AppointmentDate { get; set; }
+        public string Slot { get; set; } // e.g. "Slot3 - 10:00"
+        public string Time { get; set; } // keep separate time if needed by client
+        public string? Email { get; set; }
+    }
 }

@@ -341,7 +341,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             uint diff = (uint)aBytes.Length ^ (uint)bBytes.Length;
             for (int i = 0; i < aBytes.Length && i < bBytes.Length; i++)
             {
-                diff |= (uint)(aBytes[i] ^ bBytes[i]);
+                diff |= (uint)(aBytes[i] ^ (uint)bBytes[i]);
             }
             return diff == 0;
         }
@@ -391,16 +391,16 @@ namespace OEMEVWarrantyManagement.Application.Services
             }
         }
 
-        public async Task<bool> ConfirmAppointmentAsync(Guid appointmentId, string token)
+        public async Task<ConfirmAppointmentResponseDto?> ConfirmAppointmentAsync(Guid appointmentId, string token)
         {
             var entity = await _appointmentRepository.GetAppointmentByIdAsync(appointmentId) ?? throw new ApiException(ResponseError.NotFoundAppointment);
 
             // Only allow confirmation from Pending -> Scheduled
             if (!string.Equals(entity.Status, AppointmentStatus.Pending.GetAppointmentStatus(), StringComparison.OrdinalIgnoreCase))
-                return false;
+                return null;
 
             if (!ValidateConfirmationToken(entity, token))
-                return false;
+                return null;
 
             // Cancel the scheduled Hangfire job since appointment is confirmed
             var jobId = ExtractJobIdFromNote(entity.Note);
@@ -411,7 +411,25 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             entity.Status = AppointmentStatus.Scheduled.GetAppointmentStatus();
             await _appointmentRepository.UpdateAsync(entity);
-            return true;
+
+            // Build confirmation response
+            var vehicle = await _vehicleRepository.GetVehicleByVinAsync(entity.Vin);
+            var customer = vehicle != null ? await _customerRepository.GetCustomerByIdAsync(vehicle.CustomerId) : null;
+            var email = customer?.Email;
+
+            var slotInfo = TimeSlotExtensions.GetSlotInfo(entity.Slot);
+            var time = slotInfo?.Time ?? entity.Slot;
+            var combinedSlot = slotInfo != null ? $"{slotInfo.Slot} - {slotInfo.Time}" : entity.Slot;
+
+            return new ConfirmAppointmentResponseDto
+            {
+                Vin = entity.Vin,
+                AppointmentType = entity.AppointmentType,
+                AppointmentDate = entity.AppointmentDate,
+                Slot = combinedSlot,
+                Time = time,
+                Email = email
+            };
         }
 
         // New: Send email notification when appointment status updated

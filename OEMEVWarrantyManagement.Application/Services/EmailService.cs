@@ -296,6 +296,36 @@ namespace OEMEVWarrantyManagement.Application.Services
             await SendEmailAsync(to, subject, body);
         }
 
+        public async Task SendWarrantyClaimStatusChangedEmailAsync(string to, string customerName, string vin, Guid claimId, string newStatus, string? notes = null)
+        {
+            var subject = "Warranty Claim Status Update";
+            var details = new Dictionary<string, string>
+            {
+                { "Claim ID", claimId.ToString() },
+                { "VIN", vin },
+                { "Status", newStatus }
+            };
+            if (!string.IsNullOrWhiteSpace(notes))
+            {
+                details.Add("Notes", notes);
+            }
+            var mainMessage = $"Your warranty claim status has been updated to <strong>{WebUtility.HtmlEncode(newStatus)}</strong>.";
+            var body = GenerateEmailTemplate(
+                title: "Warranty Claim Update",
+                customerName: customerName,
+                message: mainMessage,
+                details: details
+            );
+            try
+            {
+                await SendEmailAsync(to, subject, body);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed sending generic warranty claim status email to {Recipient}", to);
+            }
+        }
+
         private string GenerateEmailTemplate(string title, string customerName, string message, Dictionary<string, string> details, string? ctaUrl = null, string? ctaText = null)
         {
             var brandName = WebUtility.HtmlEncode(_settings?.SenderName ?? "OEM EV Warranty");

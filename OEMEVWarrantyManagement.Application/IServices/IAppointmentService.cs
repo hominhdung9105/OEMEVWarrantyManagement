@@ -19,7 +19,7 @@ namespace OEMEVWarrantyManagement.Application.IServices
         // New
         Task<AppointmentDto> UpdateStatusAsync(Guid appointmentId, string status);
         Task<AppointmentDto> RescheduleAsync(Guid appointmentId, DateOnly newDate, string newSlot);
-        // New: Customer confirmation via email token
-        Task<bool> ConfirmAppointmentAsync(Guid appointmentId, string token);
+        // Updated: Customer confirmation returns detailed info
+        Task<ConfirmAppointmentResponseDto?> ConfirmAppointmentAsync(Guid appointmentId, string token);
     }
 }
