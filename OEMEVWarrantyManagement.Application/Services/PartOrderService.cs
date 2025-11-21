@@ -2,7 +2,6 @@
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
-using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
 
@@ -176,19 +175,16 @@ namespace OEMEVWarrantyManagement.Application.Services
             };
         }
 
-        // Flexible: count orders by status with optional org
         public async Task<int> CountByStatusAsync(PartOrderStatus status, Guid? orgId = null)
         {
             return await _partOrderRepository.CountByStatusAsync(status, orgId);
         }
 
-        // Convenience: count pending orders across all orgs
         public async Task<int> CountPendingAsync()
         {
             return await _partOrderRepository.CountByStatusAsync(PartOrderStatus.Pending, null);
         }
 
-        // New: top requested parts within month/year scope
         public async Task<IEnumerable<PartRequestedTopDto>> GetTopRequestedPartsAsync(int? month, int? year, int take = 5)
         {
             if (take <= 0) take = 5;

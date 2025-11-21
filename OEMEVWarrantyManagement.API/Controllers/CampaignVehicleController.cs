@@ -88,7 +88,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<CampaignVehicleDto>.Ok(result, "Marked vehicle done successfully!"));
         }
 
-        // New endpoint to assign technicians if initially unassigned -> change status from waiting for unassigned repair to under repair
         [HttpPost("{id}/assign-techs")]
         [Authorize(policy: "RequireScStaff")]
         public async Task<IActionResult> AssignTechnicians(string id, [FromBody] AssignTechsRequest request)

@@ -99,7 +99,8 @@ namespace OEMEVWarrantyManagement.Application.Services
                 }
 
                 // Send initial emails asynchronously (fire-and-forget)
-                _ = Task.Run(async () => await SendInitialEmailsAsync(campaignId, campaign));
+                //_ = Task.Run(async () => await SendInitialEmailsAsync(campaignId, campaign));
+                await SendInitialEmailsAsync(campaignId, campaign);
             }
             catch (Exception ex)
             {

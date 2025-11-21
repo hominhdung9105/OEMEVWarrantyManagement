@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.Google;
+﻿using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OEMEVWarrantyManagement.API.Policy.Role;
@@ -245,32 +243,32 @@ namespace OEMEVWarrantyManagement.API
 
             var app = builder.Build();
 
-            ////// =================================================================
-            ////// KH?I M? SEEDING: Thêm kh?i này vào | ch?y 1 l?n n?u mu?n l?y data m?u
-            ////// =================================================================
-            //using (var scope = app.Services.CreateScope())
-            //{
-            //    var services = scope.ServiceProvider;
-            //    try
-            //    {
-            //        var dbContext = services.GetRequiredService<AppDbContext>();
+            //// =================================================================
+            //// KH?I M? SEEDING: Thêm kh?i này vào | ch?y 1 l?n n?u mu?n l?y data m?u
+            //// =================================================================
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var dbContext = services.GetRequiredService<AppDbContext>();
 
-            //        // 1. T? đ?ng ch?y migration đ? t?o b?ng
-            //        dbContext.Database.Migrate();
+                    // 1. T? đ?ng ch?y migration đ? t?o b?ng
+                    dbContext.Database.Migrate();
 
-            //        // 2. G?i Seeder đ? thêm data (nó s? t? ki?m tra n?u DB tr?ng)
-            //        DataSeeder.SeedDatabase(dbContext);
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        // Ghi log l?i n?u có
-            //        var logger = services.GetRequiredService<ILogger<Program>>();
-            //        logger.LogError(ex, "Đ? x?y ra l?i khi seeding database.");
-            //    }
-            //}
-            ////// =================================================================
-            ////// K?T THÚC KH?I M? SEEDING
-            ////// =================================================================
+                    // 2. G?i Seeder đ? thêm data (nó s? t? ki?m tra n?u DB tr?ng)
+                    DataSeeder.SeedDatabase(dbContext);
+                }
+                catch (Exception ex)
+                {
+                    // Ghi log l?i n?u có
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "Đ? x?y ra l?i khi seeding database.");
+                }
+            }
+            //// =================================================================
+            //// K?T THÚC KH?I M? SEEDING
+            //// =================================================================
 
             // Dev
 

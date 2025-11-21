@@ -86,7 +86,8 @@ namespace OEMEVWarrantyManagement.Application.Services
             var created = await _campaignRepository.CreateAsync(entity);
 
             // Process notifications and send emails asynchronously (fire-and-forget to improve response time)
-            _ = Task.Run(async () => await _notificationService.ProcessCampaignNotificationsAsync(created.CampaignId));
+            //_ = Task.Run(async () => await _notificationService.ProcessCampaignNotificationsAsync(created.CampaignId));
+            await _notificationService.ProcessCampaignNotificationsAsync(created.CampaignId);
 
             return _mapper.Map<CampaignDto>(created);
         }

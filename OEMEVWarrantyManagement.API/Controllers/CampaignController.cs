@@ -101,7 +101,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<CampaignDto>.Ok(result, "Update campaign successfully!"));
         }
 
-        // New: Get detailed status of all vehicles in campaign
         [HttpGet("{id}/vehicle-statuses")]
         [Authorize]
         public async Task<IActionResult> GetVehicleStatuses(string id)

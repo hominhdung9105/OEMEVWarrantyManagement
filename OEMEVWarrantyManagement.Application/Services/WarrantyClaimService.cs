@@ -7,10 +7,6 @@ using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
 using OEMEVWarrantyManagement.Share.Models.Response;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.Application.Services
 {

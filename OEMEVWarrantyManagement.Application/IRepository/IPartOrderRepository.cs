@@ -1,7 +1,5 @@
 ﻿using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Share.Enums;
-using System.Collections.Generic;
-using System;
 
 namespace OEMEVWarrantyManagement.Application.IRepository
 {

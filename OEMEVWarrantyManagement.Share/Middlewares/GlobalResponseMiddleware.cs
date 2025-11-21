@@ -69,7 +69,7 @@ namespace OEMEVWarrantyManagement.Share.Middlewares
                 {
                     Success = false,
                     Code = attr.Code,
-                    Message = ex.Message, // TODO - ra san pham doi thanh attr.Message
+                    Message = attr.Message, 
                     Data = null
                 };
 

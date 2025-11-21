@@ -2,12 +2,9 @@
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
-using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
-using OEMEVWarrantyManagement.Share.Models.Response;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OEMEVWarrantyManagement.Application.Services
 {

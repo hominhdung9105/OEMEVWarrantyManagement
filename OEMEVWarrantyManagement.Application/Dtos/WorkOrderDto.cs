@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace OEMEVWarrantyManagement.Application.Dtos
+﻿namespace OEMEVWarrantyManagement.Application.Dtos
 {
     public class WorkOrderDto
     {
@@ -14,7 +12,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public DateTime? EndDate { get; set; }
         public string? Notes { get; set; }
 
-        // Vehicle information - added so inspection/repair responses include vehicle + customer info
+        // Vehicle information
         public string? Vin { get; set; }
         public string? Model { get; set; }
         public int? Year { get; set; }

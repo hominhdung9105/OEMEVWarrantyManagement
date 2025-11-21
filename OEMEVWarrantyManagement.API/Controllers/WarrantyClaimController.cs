@@ -6,8 +6,6 @@ using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
 using OEMEVWarrantyManagement.Share.Models.Response;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.API.Controllers
 {
@@ -29,7 +27,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             _vehicleWarrantyPolicyService = vehicleWarrantyPolicyService;
         }
 
-        //create : VIN
         [HttpPost]
         [Authorize(policy: "RequireScStaff")]
         public async Task<IActionResult> Create([FromBody] RequestWarrantyClaim request)
@@ -38,7 +35,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<object>.Ok(result, "Create Warranty Claim Successfully!"));
         }
 
-        // Unified GET with filters: search (VIN, customer), status. Role-aware: evm, admin -> all; sc staff -> only their org; tech -> forbidden
+      
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> Get([FromQuery] PaginationRequest request, [FromQuery] string? search, [FromQuery] string? status)
@@ -71,7 +68,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<IEnumerable<PolicyTopDto>>.Ok(data, "Get top policies successfully"));
         }
 
-        // New: Top service centers by warranty claims (month or year). Default take=3
+ 
         [HttpGet("top-service-centers")]
         [Authorize(policy: "RequireEvmStaff")] // only EVM/Admin should see cross-center ranking
         public async Task<IActionResult> GetTopServiceCenters([FromQuery] int? month, [FromQuery] int? year, [FromQuery] int take = 3)

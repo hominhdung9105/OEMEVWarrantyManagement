@@ -15,6 +15,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             const int recordCount = 200;          // keep other entities at 200
             const int customerCount = 50;         // requested change
             const int vehicleCount = 150;          // updated per request
+            const int campaignCount = 100;         // requested: campaigns = 100
+            const int claimCount = 100;            // requested: warranty claims = 100
             Randomizer.Seed = new Random(12345);
 
             if (context.Organizations.Any())
@@ -157,7 +159,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var policies = policyFaker.Generate(recordCount);
             context.WarrantyPolicies.AddRange(policies);
 
-            // Campaigns - keep 200
+            // Campaigns - 100 (per request)
             var scTechs = employees.Where(e => e.Role == "SC_TECH").ToList();
             var campaignFaker = new Faker<Campaign>("en")
                 .RuleFor(c => c.CampaignId, f => f.Database.Random.Guid())
@@ -175,7 +177,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                     var candidates = allModels.Where(m => !string.Equals(m, c.PartModel, StringComparison.OrdinalIgnoreCase)).ToList();
                     return f.PickRandom(candidates);
                 });
-            var campaigns = campaignFaker.Generate(recordCount);
+            var campaigns = campaignFaker.Generate(campaignCount);
             context.Campaigns.AddRange(campaigns);
 
             context.SaveChanges();
@@ -574,7 +576,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             reportLines.Add($"  - Sent 3 times (max): {campaignNotifications.Count(n => n.EmailSentCount == 3)}");
             reportLines.Add($"  - Completed: {campaignNotifications.Count(n => n.IsCompleted)}");
 
-            // === LEVEL 4: Warranty Claims + related - keep at 200 ===
+            // === LEVEL 4: Warranty Claims + related - 100 (per request for claims)
             var vehicleWarrantyPolicies = new List<VehicleWarrantyPolicy>();
             for (int i = 0; i < recordCount; i++)
             {
@@ -611,13 +613,16 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 WarrantyClaimStatus.Repaired.GetWarrantyClaimStatus()
             };
 
-            int claimsPerSc = recordCount / scOrgs.Count;
-            foreach (var sc in scOrgs)
+            int basePerSc = Math.Max(0, claimCount / scOrgs.Count);
+            int remainder = claimCount % scOrgs.Count;
+            for (int scIdx = 0; scIdx < scOrgs.Count; scIdx++)
             {
+                var sc = scOrgs[scIdx];
                 var scStaff = employees.Where(e => e.Role == "SC_STAFF" && e.OrgId == sc.OrgId).ToList();
                 var scTech = employees.Where(e => e.Role == "SC_TECH" && e.OrgId == sc.OrgId).ToList();
-                
-                for (int i = 0; i < claimsPerSc; i++)
+
+                int claimsForThisSc = basePerSc + (scIdx < remainder ? 1 : 0);
+                for (int i = 0; i < claimsForThisSc; i++)
                 {
                     var veh = vehicles[rng.Next(vehicles.Count)];
                     var status = claimStatuses[rng.Next(claimStatuses.Length)];

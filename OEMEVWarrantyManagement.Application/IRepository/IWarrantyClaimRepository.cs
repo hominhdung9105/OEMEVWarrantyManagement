@@ -1,8 +1,6 @@
 ﻿using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
 using OEMEVWarrantyManagement.Share.Enums; // added
-using System.Collections.Generic; // ensure namespace
-using System;
 
 namespace OEMEVWarrantyManagement.Application.IRepository
 {

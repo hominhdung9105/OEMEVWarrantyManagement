@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.Dtos.Request;
 using OEMEVWarrantyManagement.Application.IServices;
-using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
 
 namespace OEMEVWarrantyManagement.API.Controllers

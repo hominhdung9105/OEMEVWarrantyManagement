@@ -91,7 +91,6 @@ namespace OEMEVWarrantyManagement.Application.Services
                 throw new ApiException(ResponseError.InvalidJsonFormat);
             }
 
-            // Validate vehicle exists by VIN
             var vehicle = await _vehicleRepository.GetVehicleByVinAsync(request.Vin);
             if (vehicle == null)
             {
@@ -253,7 +252,6 @@ namespace OEMEVWarrantyManagement.Application.Services
             };
         }
 
-        // New: Generic status update with email notification
         public async Task<AppointmentDto> UpdateStatusAsync(Guid appointmentId, string status)
         {
             var entity = await _appointmentRepository.GetAppointmentByIdAsync(appointmentId) ?? throw new ApiException(ResponseError.NotFoundAppointment);
@@ -270,7 +268,6 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<AppointmentDto>(updated);
         }
 
-        // New: Reschedule with availability check and email notification
         public async Task<AppointmentDto> RescheduleAsync(Guid appointmentId, DateOnly newDate, string newSlot)
         {
             var entity = await _appointmentRepository.GetAppointmentByIdAsync(appointmentId) ?? throw new ApiException(ResponseError.NotFoundAppointment);
@@ -432,7 +429,6 @@ namespace OEMEVWarrantyManagement.Application.Services
             };
         }
 
-        // New: Send email notification when appointment status updated
         private async Task TrySendStatusChangeEmailAsync(Appointment appointment, string oldStatus, string newStatus)
         {
             try
@@ -474,7 +470,6 @@ namespace OEMEVWarrantyManagement.Application.Services
             }
         }
 
-        // New: Send email notification when appointment is rescheduled
         private async Task TrySendRescheduleEmailAsync(Appointment appointment, DateOnly oldDate, string oldSlot)
         {
             try

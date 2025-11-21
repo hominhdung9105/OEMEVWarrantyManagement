@@ -6,9 +6,6 @@ using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
 using OEMEVWarrantyManagement.Share.Models.Response;
-using System.Security.Claims;
-using System.Collections.Generic;
-using System;
 
 namespace OEMEVWarrantyManagement.API.Controllers
 {
