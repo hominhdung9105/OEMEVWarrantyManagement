@@ -202,6 +202,8 @@ namespace OEMEVWarrantyManagement.API
             //Vehicle Part
             builder.Services.AddScoped<IVehiclePartRepository, VehiclePartRepository>();
             builder.Services.AddScoped<IVehiclePartService, VehiclePartService>();
+            builder.Services.AddScoped<IVehiclePartHistoryRepository, VehiclePartHistoryRepository>(); // added
+            builder.Services.AddScoped<IVehiclePartHistoryService, VehiclePartHistoryService>(); // added
             // Attechment
             builder.Services.AddScoped<IImageRepository, ImageRepository>();
             builder.Services.AddScoped<IImageService, ImageService>();

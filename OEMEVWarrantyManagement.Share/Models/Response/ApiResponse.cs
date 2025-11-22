@@ -163,7 +163,10 @@
 
         // Warranty policy errors
         [ResponseErrorAttr("Warranty policy not found.", 404, 53)]
-        NotFoundWarrantyPolicy
+        NotFoundWarrantyPolicy,
+
+        [ResponseErrorAttr("Not Found that part.", 404, 54)]
+        NotFoundThatPart
     }
 
     public class ApiResponse<T>

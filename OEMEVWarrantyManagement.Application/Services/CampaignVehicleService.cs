@@ -19,11 +19,12 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IWorkOrderRepository _workOrderRepository;
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IVehiclePartRepository _vehiclePartRepository;
+        private readonly IVehiclePartHistoryRepository _vehiclePartHistoryRepository; // added
         private readonly IMapper _mapper;
         private readonly IWorkOrderService _workOrderService;
         private readonly ICampaignNotificationService _notificationService;
 
-        public CampaignVehicleService(ICampaignRepository campaignRepository, IVehicleRepository vehicleRepository, ICampaignVehicleRepository campaignVehicleRepository, IWorkOrderRepository workOrderRepository, IEmployeeRepository employeeRepository, IVehiclePartRepository vehiclePartRepository, IMapper mapper, IWorkOrderService workOrderService, ICampaignNotificationService notificationService)
+        public CampaignVehicleService(ICampaignRepository campaignRepository, IVehicleRepository vehicleRepository, ICampaignVehicleRepository campaignVehicleRepository, IWorkOrderRepository workOrderRepository, IEmployeeRepository employeeRepository, IVehiclePartRepository vehiclePartRepository, IVehiclePartHistoryRepository vehiclePartHistoryRepository, IMapper mapper, IWorkOrderService workOrderService, ICampaignNotificationService notificationService)
         {
             _campaignRepository = campaignRepository;
             _vehicleRepository = vehicleRepository;
@@ -31,6 +32,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             _workOrderRepository = workOrderRepository;
             _employeeRepository = employeeRepository;
             _vehiclePartRepository = vehiclePartRepository;
+            _vehiclePartHistoryRepository = vehiclePartHistoryRepository; // added
             _mapper = mapper;
             _workOrderService = workOrderService;
             _notificationService = notificationService;
@@ -211,6 +213,17 @@ namespace OEMEVWarrantyManagement.Application.Services
                         vp.UninstalledDate = now;
                         await _vehiclePartRepository.UpdateVehiclePartAsync(vp);
 
+                        // update history uninstall (use enums)
+                        var histOld = await _vehiclePartHistoryRepository.GetByVinAndSerialAsync(entity.Vin, vp.SerialNumber);
+                        if (histOld != null)
+                        {
+                            histOld.UninstalledAt = vp.UninstalledDate;
+                            histOld.Status = VehiclePartCurrentStatus.Returned.GetCurrentStatus();
+                            histOld.Condition = VehiclePartCondition.Defective.GetCondition();
+                            histOld.Note = "Updated due to campaign replacement (uninstall)";//TODO
+                            await _vehiclePartHistoryRepository.UpdateAsync(histOld);
+                        }
+
                         // Add new installed part entry with replacement model
                         var newVp = new VehiclePart
                         {
@@ -223,6 +236,17 @@ namespace OEMEVWarrantyManagement.Application.Services
                             Status = VehiclePartStatus.Installed.GetVehiclePartStatus()
                         };
                         await _vehiclePartRepository.AddVehiclePartAsync(newVp);
+
+                        // update history for installed replacement (use enums)
+                        var histNew = await _vehiclePartHistoryRepository.GetByModelAndSerialAsync(newVp.Model, newVp.SerialNumber, VehiclePartCondition.New.GetCondition());//loi~ ma cua campgain bat buoc phai chon hang la new
+                        if (histNew != null)
+                        {
+                            histNew.InstalledAt = newVp.InstalledDate;
+                            histNew.Status = VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus();
+                            histNew.WarrantyEndDate = DateTime.UtcNow.AddMonths(histNew.WarrantyPeriodMonths);
+                            histNew.Note = "Updated after campaign replacement (install)";//TODO
+                            await _vehiclePartHistoryRepository.UpdateAsync(histNew);
+                        }
 
                         // add weak entity record
                         replacementEntities.Add(new CampaignVehicleReplacement

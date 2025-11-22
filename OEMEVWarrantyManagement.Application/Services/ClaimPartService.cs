@@ -17,8 +17,9 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IWarrantyClaimRepository _warrantyClaimRepository;
         private readonly IVehiclePartRepository _vehiclePartRepository;
         private readonly IWorkOrderRepository _workOrderRepository;
+        private readonly IVehiclePartHistoryRepository _vehiclePartHistoryRepository; // added
 
-        public ClaimPartService(IClaimPartRepository claimPartRepository, IMapper mapper, IPartRepository partRepository, IWarrantyClaimRepository warrantyClaimRepository, IVehiclePartRepository vehiclePartRepository, IWorkOrderRepository workOrderRepository)
+        public ClaimPartService(IClaimPartRepository claimPartRepository, IMapper mapper, IPartRepository partRepository, IWarrantyClaimRepository warrantyClaimRepository, IVehiclePartRepository vehiclePartRepository, IWorkOrderRepository workOrderRepository, IVehiclePartHistoryRepository vehiclePartHistoryRepository)
         {
             _claimPartRepository = claimPartRepository;
             _mapper = mapper;
@@ -26,6 +27,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             _warrantyClaimRepository = warrantyClaimRepository;
             _vehiclePartRepository = vehiclePartRepository;
             _workOrderRepository = workOrderRepository;
+            _vehiclePartHistoryRepository = vehiclePartHistoryRepository; // added
         }
 
         public async Task<List<RequestClaimPart>> CreateManyClaimPartsAsync(Guid claimId, List<PartsInClaimPartDto> dto)
@@ -91,6 +93,17 @@ namespace OEMEVWarrantyManagement.Application.Services
                         vehiclePart.UninstalledDate = DateTime.UtcNow;
                         await _vehiclePartRepository.UpdateVehiclePartAsync(vehiclePart);
 
+                        // update history for uninstall
+                        var existingHistoryOld = await _vehiclePartHistoryRepository.GetByVinAndSerialAsync(claim.Vin, vehiclePart.SerialNumber);
+                        if (existingHistoryOld != null)
+                        {
+                            existingHistoryOld.UninstalledAt = vehiclePart.UninstalledDate;
+                            existingHistoryOld.Status = VehiclePartCurrentStatus.InStock.GetCurrentStatus();//TODO: BAo hanh ve thi la return hay instock
+                            existingHistoryOld.Condition = VehiclePartCondition.Used.GetCondition();//TODO: Chua xu ly viec bao hanh chon condition cho part(hard code = used)
+                            existingHistoryOld.Note = "Updated due to warranty replacement (uninstall)";//TODO
+                            await _vehiclePartHistoryRepository.UpdateAsync(existingHistoryOld);
+                        }
+
                         var newvehiclePart = new VehiclePart
                         {
                             Vin = claim.Vin,
@@ -101,6 +114,18 @@ namespace OEMEVWarrantyManagement.Application.Services
                         };
 
                         await _vehiclePartRepository.AddVehiclePartAsync(newvehiclePart);
+
+                        // update history for install new (use enums)
+                        var existingHistoryNew = await _vehiclePartHistoryRepository.GetByModelAndSerialAsync(newvehiclePart.Model, newvehiclePart.SerialNumber, VehiclePartCondition.New.GetCondition()) ?? throw new ApiException(ResponseError.NotFoundThatPart);
+                        //TODO: Chua xu ly viec bao hanh chon condition cho part(hard code = new)
+                        if (existingHistoryNew != null)
+                        {
+                            existingHistoryNew.InstalledAt = newvehiclePart.InstalledDate;
+                            existingHistoryNew.Status = VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus();
+                            existingHistoryNew.WarrantyEndDate = DateTime.UtcNow.AddMonths(existingHistoryNew.WarrantyPeriodMonths);
+                            existingHistoryNew.Note = "Updated as replacement part installed";//TODO
+                            await _vehiclePartHistoryRepository.UpdateAsync(existingHistoryNew);
+                        }
                     }
                     else
                     {

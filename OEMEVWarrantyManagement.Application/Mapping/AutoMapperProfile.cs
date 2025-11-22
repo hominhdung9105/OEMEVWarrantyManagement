@@ -83,6 +83,12 @@ namespace OEMEVWarrantyManagement.Application.Mapping
                 .ForMember(d => d.EndDate, opt => opt.MapFrom(src => src.Campaign != null ? (DateOnly?)src.Campaign.EndDate : null))
                 .ReverseMap()
                 .ForMember(s => s.NewSerial, opt => opt.MapFrom(d => SerializeNewSerials(d.NewSerials)));
+
+            // map history
+            CreateMap<VehiclePartHistory, VehiclePartHistoryDto>().ReverseMap();
+
+            // vehicle with history composite
+            CreateMap<Vehicle, VehicleWithHistoryDto>();
         }
 
         private static List<string>? ParseNewSerials(string? newSerialField)
