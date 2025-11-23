@@ -200,8 +200,8 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddScoped<IBackWarrantyClaimRepository, BackWarrantyClaimRepository>();
             builder.Services.AddScoped<IBackWarrantyClaimService, BackWarrantyClaimService>();
             //Vehicle Part
-            builder.Services.AddScoped<IVehiclePartRepository, VehiclePartRepository>();
-            builder.Services.AddScoped<IVehiclePartService, VehiclePartService>();
+            //builder.Services.AddScoped<IVehiclePartRepository, VehiclePartRepository>();
+            //builder.Services.AddScoped<IVehiclePartService, VehiclePartService>();
             builder.Services.AddScoped<IVehiclePartHistoryRepository, VehiclePartHistoryRepository>(); // added
             builder.Services.AddScoped<IVehiclePartHistoryService, VehiclePartHistoryService>(); // added
             // Attechment
@@ -245,32 +245,32 @@ namespace OEMEVWarrantyManagement.API
 
             var app = builder.Build();
 
-            //// =================================================================
-            //// KH?I M? SEEDING: Thêm kh?i này vào | ch?y 1 l?n n?u mu?n l?y data m?u
-            //// =================================================================
-            using (var scope = app.Services.CreateScope())
-            {
-                var services = scope.ServiceProvider;
-                try
-                {
-                    var dbContext = services.GetRequiredService<AppDbContext>();
+            ////// =================================================================
+            ////// KH?I M? SEEDING: Thêm kh?i này vào | ch?y 1 l?n n?u mu?n l?y data m?u
+            ////// =================================================================
+            //using (var scope = app.Services.CreateScope())
+            //{
+            //    var services = scope.ServiceProvider;
+            //    try
+            //    {
+            //        var dbContext = services.GetRequiredService<AppDbContext>();
 
-                    // 1. T? đ?ng ch?y migration đ? t?o b?ng
-                    dbContext.Database.Migrate();
+            //        // 1. T? đ?ng ch?y migration đ? t?o b?ng
+            //        dbContext.Database.Migrate();
 
-                    // 2. G?i Seeder đ? thêm data (nó s? t? ki?m tra n?u DB tr?ng)
-                    DataSeeder.SeedDatabase(dbContext);
-                }
-                catch (Exception ex)
-                {
-                    // Ghi log l?i n?u có
-                    var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "Đ? x?y ra l?i khi seeding database.");
-                }
-            }
-            //// =================================================================
-            //// K?T THÚC KH?I M? SEEDING
-            //// =================================================================
+            //        // 2. G?i Seeder đ? thêm data (nó s? t? ki?m tra n?u DB tr?ng)
+            //        DataSeeder.SeedDatabase(dbContext);
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        // Ghi log l?i n?u có
+            //        var logger = services.GetRequiredService<ILogger<Program>>();
+            //        logger.LogError(ex, "Đ? x?y ra l?i khi seeding database.");
+            //    }
+            //}
+            ////// =================================================================
+            ////// K?T THÚC KH?I M? SEEDING
+            ////// =================================================================
 
             // Dev
 

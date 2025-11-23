@@ -545,39 +545,62 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.ToTable("Vehicles", (string)null);
                 });
 
-            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.VehiclePart", b =>
+            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.VehiclePartHistory", b =>
                 {
-                    b.Property<Guid>("VehiclePartId")
+                    b.Property<Guid>("VehiclePartHistoryId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("InstalledDate")
+                    b.Property<string>("Condition")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("InstalledAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Model")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("SerialNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UninstalledDate")
+                    b.Property<DateTime>("ProductionDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Vin")
+                    b.Property<string>("SerialNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("VehiclePartId");
+                    b.Property<Guid>("ServiceCenterId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.HasIndex("Vin");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.ToTable("VehicleParts", (string)null);
+                    b.Property<DateTime>("UninstalledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Vin")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("WarrantyEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("WarrantyPeriodMonths")
+                        .HasColumnType("int");
+
+                    b.HasKey("VehiclePartHistoryId");
+
+                    b.HasIndex("ServiceCenterId");
+
+                    b.HasIndex("Vin", "SerialNumber");
+
+                    b.ToTable("VehiclePartHistories", (string)null);
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.VehicleWarrantyPolicy", b =>
@@ -942,13 +965,20 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Navigation("Customer");
                 });
 
-            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.VehiclePart", b =>
+            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.VehiclePartHistory", b =>
                 {
-                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Vehicle", "Vehicle")
-                        .WithMany("VehicleParts")
-                        .HasForeignKey("Vin")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Organization", "ServiceCenter")
+                        .WithMany()
+                        .HasForeignKey("ServiceCenterId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Vehicle", "Vehicle")
+                        .WithMany("VehiclePartHistories")
+                        .HasForeignKey("Vin")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("ServiceCenter");
 
                     b.Navigation("Vehicle");
                 });
@@ -1091,7 +1121,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 {
                     b.Navigation("CampaignVehicles");
 
-                    b.Navigation("VehicleParts");
+                    b.Navigation("VehiclePartHistories");
 
                     b.Navigation("VehicleWarrantyPolicies");
 

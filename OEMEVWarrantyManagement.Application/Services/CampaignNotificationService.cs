@@ -12,7 +12,8 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly ICampaignNotificationRepository _notificationRepository;
         private readonly ICampaignRepository _campaignRepository;
         private readonly IVehicleRepository _vehicleRepository;
-        private readonly IVehiclePartRepository _vehiclePartRepository;
+        //private readonly IVehiclePartRepository _vehiclePartRepository;
+        private readonly IVehiclePartHistoryRepository _vehiclePartHistoryRepository;
         private readonly ICustomerRepository _customerRepository;
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly ICampaignVehicleRepository _campaignVehicleRepository;
@@ -23,20 +24,22 @@ namespace OEMEVWarrantyManagement.Application.Services
             ICampaignNotificationRepository notificationRepository,
             ICampaignRepository campaignRepository,
             IVehicleRepository vehicleRepository,
-            IVehiclePartRepository vehiclePartRepository,
+            //IVehiclePartRepository vehiclePartRepository,
             ICustomerRepository customerRepository,
             IAppointmentRepository appointmentRepository,
             ICampaignVehicleRepository campaignVehicleRepository,
             IEmailService emailService,
+            IVehiclePartHistoryRepository vehiclePartHistoryRepository,
             ILogger<CampaignNotificationService> logger)
         {
             _notificationRepository = notificationRepository;
             _campaignRepository = campaignRepository;
             _vehicleRepository = vehicleRepository;
-            _vehiclePartRepository = vehiclePartRepository;
+            //_vehiclePartRepository = vehiclePartRepository;
             _customerRepository = customerRepository;
             _appointmentRepository = appointmentRepository;
             _campaignVehicleRepository = campaignVehicleRepository;
+            _vehiclePartHistoryRepository = vehiclePartHistoryRepository;
             _emailService = emailService;
             _logger = logger;
         }
@@ -57,7 +60,7 @@ namespace OEMEVWarrantyManagement.Application.Services
 
                 foreach (var vehicle in vehicles)
                 {
-                    if (await _vehiclePartRepository.ExistsByVinAndModelAsync(vehicle.Vin, campaign.PartModel))
+                    if (await _vehiclePartHistoryRepository.ExistsByVinAndModelAsync(vehicle.Vin, campaign.PartModel))
                     {
                         affectedVehicles.Add(vehicle.Vin);
                     }

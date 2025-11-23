@@ -11,7 +11,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.ToTable("VehiclePartHistories");
             builder.HasKey(h => h.VehiclePartHistoryId);
             builder.Property(h => h.VehiclePartHistoryId).ValueGeneratedOnAdd();
-            builder.Property(h => h.Vin);
+            builder.Property(h => h.Vin).IsRequired(false); // allow null
             builder.Property(h => h.Model).IsRequired();
             builder.Property(h => h.SerialNumber).IsRequired();
             builder.Property(h => h.InstalledAt);

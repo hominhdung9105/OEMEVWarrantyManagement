@@ -14,7 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Vehicle> Vehicles { get; set; }
     public DbSet<Part> Parts { get; set; }
-    public DbSet<VehiclePart> VehicleParts { get; set; }
+    //public DbSet<VehiclePart> VehicleParts { get; set; }
     public DbSet<VehiclePartHistory> VehiclePartHistories { get; set; }
     public DbSet<WarrantyPolicy> WarrantyPolicies { get; set; }
     public DbSet<VehicleWarrantyPolicy> VehicleWarrantyPolicies { get; set; }

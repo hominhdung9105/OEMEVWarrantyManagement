@@ -1,28 +1,90 @@
+using AutoMapper; // still can be kept if injected elsewhere
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Application.Dtos;
+using OEMEVWarrantyManagement.Application.IServices;
+using OEMEVWarrantyManagement.Share.Enums;
+using OEMEVWarrantyManagement.Share.Models.Pagination;
 using OEMEVWarrantyManagement.Share.Models.Response;
-using AutoMapper; // still can be kept if injected elsewhere
 
 namespace OEMEVWarrantyManagement.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Policy = "RequireAdmin")]
+
     public class VehiclePartHistoryController : ControllerBase
     {
-        private readonly IVehiclePartHistoryService _historyService;
+        private readonly IVehiclePartHistoryService _vehiclePartHistoryService;
         public VehiclePartHistoryController(IVehiclePartHistoryService historyService)
         {
-            _historyService = historyService;
+            _vehiclePartHistoryService = historyService;
         }
 
+        //[HttpGet("Find")]
+        //[Authorize(Policy = "RequireAdmin")]
+        //public async Task<IActionResult> Get([FromQuery] string? vin, [FromQuery] string? model)
+        //{
+        //    var dto = await _vehiclePartHistoryService.GetVehicleWithHistoryAsync(vin!, model);
+        //    return Ok(ApiResponse<VehicleWithHistoryDto>.Ok(dto, "Get vehicle part histories successfully"));
+        //}
+
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery] string? vin, [FromQuery] string? model)
+        [Authorize(Policy = "RequireAdmin")]
+        public async Task<IActionResult> GetPaged(
+            [FromQuery] int page = 0,
+            [FromQuery] int size = 20,
+            [FromQuery] string? vin = null,
+            [FromQuery] string? model = null,
+            [FromQuery] string? condition = null,
+            [FromQuery] string? status = null)
         {
-            var dto = await _historyService.GetVehicleWithHistoryAsync(vin!, model);
-            return Ok(ApiResponse<VehicleWithHistoryDto>.Ok(dto, "Get vehicle part histories successfully"));
+            var request = new PaginationRequest { Page = page, Size = size };
+            var result = await _vehiclePartHistoryService.GetPagedAsync(request, vin, model, condition, status);
+            return Ok(ApiResponse<PagedResult<VehiclePartHistoryDto>>.Ok(result, "Get paged vehicle part histories successfully"));
+        }
+
+        [HttpGet("serials")]
+        public async Task<IActionResult> GetSerials([FromQuery] string vin, [FromQuery] string model)
+        {
+            if (string.IsNullOrWhiteSpace(vin) || string.IsNullOrWhiteSpace(model))
+            {
+                return BadRequest(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
+            }
+
+            var serials = await _vehiclePartHistoryService.GetSerialsByVinAndPartModelAsync(vin, model);
+
+            return Ok(ApiResponse<object>.Ok(serials, "Get serials successfully"));
+        }
+
+        [HttpGet("statuses")]
+        public IActionResult GetVehiclePartHistoryStatuses()
+        {
+            var statuses = Enum.GetValues(typeof(VehiclePartCurrentStatus))
+                .Cast<VehiclePartCurrentStatus>()
+                .Select(s => new
+                {
+                    Value = (int)s,
+                    Name = s.ToString(),
+                    Description = s.GetCurrentStatus()
+                })
+                .ToList();
+            return Ok(ApiResponse<object>.Ok(statuses, "Get vehicle part current statuses successfully"));
+        }
+
+        // New: list all part conditions
+        [HttpGet("conditions")]
+        public IActionResult GetVehiclePartConditions()
+        {
+            var conditions = Enum.GetValues(typeof(VehiclePartCondition))
+                .Cast<VehiclePartCondition>()
+                .Select(c => new
+                {
+                    Value = (int)c,
+                    Name = c.ToString(),
+                    Description = c.GetCondition()
+                })
+                .ToList();
+            return Ok(ApiResponse<object>.Ok(conditions, "Get vehicle part conditions successfully"));
         }
     }
 }

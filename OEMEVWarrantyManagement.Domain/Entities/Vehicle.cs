@@ -14,8 +14,6 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         [JsonIgnore]
         public Customer Customer { get; set; }
         [JsonIgnore]
-        public ICollection<VehiclePart> VehicleParts { get; set; } = new List<VehiclePart>();
-        [JsonIgnore]
         public ICollection<VehiclePartHistory> VehiclePartHistories { get; set; } = new List<VehiclePartHistory>();
         [JsonIgnore]
         public ICollection<VehicleWarrantyPolicy> VehicleWarrantyPolicies { get; set; } = new List<VehicleWarrantyPolicy>();

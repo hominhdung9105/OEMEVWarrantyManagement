@@ -16,7 +16,8 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly ICurrentUserService _currentUserService;
         private readonly IMapper _mapper;
         private readonly IVehicleRepository _vehicleRepository;
-        private readonly IVehiclePartRepository _vehiclePartRepository;
+        //private readonly IVehiclePartRepository _vehiclePartRepository;
+        private readonly IVehiclePartHistoryRepository _vehiclePartHistoryRepository;
         private readonly ICampaignNotificationService _notificationService;
         private readonly ICustomerRepository _customerRepository;
 
@@ -25,17 +26,19 @@ namespace OEMEVWarrantyManagement.Application.Services
             ICurrentUserService currentUserService,
             IMapper mapper,
             IVehicleRepository vehicleRepository,
-            IVehiclePartRepository vehiclePartRepository,
+            //IVehiclePartRepository vehiclePartRepository,
             ICampaignNotificationService notificationService,
-            ICustomerRepository customerRepository)
+            ICustomerRepository customerRepository,
+            IVehiclePartHistoryRepository vehiclePartHistoryRepository)
         {
             _campaignRepository = campaignRepository;
             _currentUserService = currentUserService;
             _mapper = mapper;
             _vehicleRepository = vehicleRepository;
-            _vehiclePartRepository = vehiclePartRepository;
+            //_vehiclePartRepository = vehiclePartRepository;
             _notificationService = notificationService;
             _customerRepository = customerRepository;
+            _vehiclePartHistoryRepository = vehiclePartHistoryRepository;
         }
 
         public async Task<CampaignDto> CreateAsync(RequestCampaignDto request)
@@ -102,7 +105,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             foreach (var v in vehicles)
             {
                 // existence check instead of loading list
-                if (await _vehiclePartRepository.ExistsByVinAndModelAsync(v.Vin, partModel))
+                if (await _vehiclePartHistoryRepository.ExistsByVinAndModelAsync(v.Vin, partModel))
                 {
                     count++;
                 }

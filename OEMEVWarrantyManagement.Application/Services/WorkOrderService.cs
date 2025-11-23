@@ -23,7 +23,8 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IBackWarrantyClaimRepository _backWarrantyClaimRepository;
         private readonly ICampaignVehicleRepository _campaignVehicleRepository;
         private readonly ICampaignRepository _campaignRepository;
-        private readonly IVehiclePartRepository _vehiclePartRepository;
+        //private readonly IVehiclePartRepository _vehiclePartRepository;
+        private readonly IVehiclePartHistoryRepository _vehiclePartHistoryRepository;
 
         public WorkOrderService(
             IWorkOrderRepository workOrderRepository,
@@ -37,7 +38,8 @@ namespace OEMEVWarrantyManagement.Application.Services
             IBackWarrantyClaimRepository backWarrantyClaimRepository,
             ICampaignVehicleRepository campaignVehicleRepository,
             ICampaignRepository campaignRepository,
-            IVehiclePartRepository vehiclePartRepository)
+            //IVehiclePartRepository vehiclePartRepository,
+            IVehiclePartHistoryRepository vehiclePartHistoryRepository)
         {
             _workOrderRepository = workOrderRepository;
             _mapper = mapper;
@@ -50,7 +52,8 @@ namespace OEMEVWarrantyManagement.Application.Services
             _backWarrantyClaimRepository = backWarrantyClaimRepository;
             _campaignVehicleRepository = campaignVehicleRepository;
             _campaignRepository = campaignRepository;
-            _vehiclePartRepository = vehiclePartRepository;
+            //_vehiclePartRepository = vehiclePartRepository;
+            _vehiclePartHistoryRepository = vehiclePartHistoryRepository;
         }
 
         public async Task<IEnumerable<WorkOrderDto>> CreateForWarrantyAsync(Guid claimId, IEnumerable<Guid> techIds)
@@ -263,10 +266,10 @@ namespace OEMEVWarrantyManagement.Application.Services
                         // Only provide old serials for the campaign part model so tech can replace later
                         if (!string.IsNullOrWhiteSpace(campDto.PartModel) && !string.IsNullOrWhiteSpace(cv.Vin))
                         {
-                            var vehicleParts = await _vehiclePartRepository.GetVehiclePartByVinAndModelAsync(cv.Vin, campDto.PartModel);
+                            var vehicleParts = await _vehiclePartHistoryRepository.GetByVinAndModelAsync(cv.Vin, campDto.PartModel);
 
                             var oldSerials = vehicleParts
-                                .Where(vp => string.Equals(vp.Status, VehiclePartStatus.Installed.GetVehiclePartStatus(), StringComparison.OrdinalIgnoreCase))
+                                .Where(vp => string.Equals(vp.Status, VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus(), StringComparison.OrdinalIgnoreCase))
                                 .Select(vp => vp.SerialNumber)
                                 .Distinct()
                                 .ToList();

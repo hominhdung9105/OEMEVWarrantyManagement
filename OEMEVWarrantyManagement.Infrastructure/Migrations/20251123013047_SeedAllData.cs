@@ -254,22 +254,34 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "VehicleParts",
+                name: "VehiclePartHistories",
                 columns: table => new
                 {
-                    VehiclePartId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Vin = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    VehiclePartHistoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Vin = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     Model = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SerialNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    InstalledDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UninstalledDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    SerialNumber = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    InstalledAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UninstalledAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ProductionDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    WarrantyPeriodMonths = table.Column<int>(type: "int", nullable: false),
+                    WarrantyEndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ServiceCenterId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Condition = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Note = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_VehicleParts", x => x.VehiclePartId);
+                    table.PrimaryKey("PK_VehiclePartHistories", x => x.VehiclePartHistoryId);
                     table.ForeignKey(
-                        name: "FK_VehicleParts_Vehicles_Vin",
+                        name: "FK_VehiclePartHistories_Organizations_ServiceCenterId",
+                        column: x => x.ServiceCenterId,
+                        principalTable: "Organizations",
+                        principalColumn: "OrgId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_VehiclePartHistories_Vehicles_Vin",
                         column: x => x.Vin,
                         principalTable: "Vehicles",
                         principalColumn: "Vin",
@@ -640,9 +652,14 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_VehicleParts_Vin",
-                table: "VehicleParts",
-                column: "Vin");
+                name: "IX_VehiclePartHistories_ServiceCenterId",
+                table: "VehiclePartHistories",
+                column: "ServiceCenterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VehiclePartHistories_Vin_SerialNumber",
+                table: "VehiclePartHistories",
+                columns: new[] { "Vin", "SerialNumber" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Vehicles_CustomerId",
@@ -728,7 +745,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 name: "Parts");
 
             migrationBuilder.DropTable(
-                name: "VehicleParts");
+                name: "VehiclePartHistories");
 
             migrationBuilder.DropTable(
                 name: "WorkOrders");

@@ -6,21 +6,21 @@ namespace OEMEVWarrantyManagement.Domain.Entities
     public class VehiclePartHistory
     {
         public Guid VehiclePartHistoryId { get; set; }
-        public string Vin { get; set; }
+        public string? Vin { get; set; } // nullable: inventory items without vehicle
         public string Model { get; set; }
         public string SerialNumber { get; set; }
-        public DateTime InstalledAt { get; set; } // thời điểm gắn hoặc sự kiện ghi nhận
-        public DateTime UninstalledAt { get; set; } // thời điểm tháo gỡ (nếu có)
-        public DateTime ProductionDate { get; set; } // ngày xuất xưởng
-        public int WarrantyPeriodMonths { get; set; } // thời gian bảo hành (tháng)
-        public DateTime WarrantyEndDate { get; set; } // ngày hết hạn bảo hành
-        public Guid ServiceCenterId { get; set; } // trung tâm hiện tại
-        public string Condition { get; set; } // New | Used | Defective | Refurbished
-        public string Status { get; set; } // InStock | OnVehicle | UnderRepair | Returned
+        public DateTime InstalledAt { get; set; }
+        public DateTime UninstalledAt { get; set; }
+        public DateTime ProductionDate { get; set; }
+        public int WarrantyPeriodMonths { get; set; }
+        public DateTime WarrantyEndDate { get; set; }
+        public Guid ServiceCenterId { get; set; }
+        public string Condition { get; set; }
+        public string Status { get; set; }
         public string? Note { get; set; }
 
         [JsonIgnore]
-        public Vehicle Vehicle { get; set; }
+        public Vehicle? Vehicle { get; set; } // optional navigation
         [JsonIgnore]
         public Organization ServiceCenter { get; set; }
     }

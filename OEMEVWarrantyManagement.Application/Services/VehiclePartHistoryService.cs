@@ -1,8 +1,10 @@
 using AutoMapper;
+using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
-using OEMEVWarrantyManagement.Application.Dtos;
+using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
+using OEMEVWarrantyManagement.Share.Models.Pagination;
 using OEMEVWarrantyManagement.Share.Models.Response;
 
 namespace OEMEVWarrantyManagement.Application.Services
@@ -51,6 +53,33 @@ namespace OEMEVWarrantyManagement.Application.Services
                 dto.CustomerPhone = customer.Phone;
             }
             return dto;
+        }
+        public async Task<IEnumerable<string>> GetSerialsByVinAndPartModelAsync(string vin, string partModel)
+        {
+            var vehicle = await _vehicleRepository.GetVehicleByVinAsync(vin) ?? throw new ApiException(ResponseError.NotfoundVin);
+
+            // Validate part model using PartModel.IsValidModel
+            if (!PartModel.IsValidModel(partModel))
+                throw new ApiException(ResponseError.InvalidPartModel);
+
+            var parts = await _repository.GetByVinAndModelAsync(vin, partModel);
+            return parts.Select(p => p.SerialNumber);
+        }
+
+        // Updated: pass through condition & status filters
+        public async Task<PagedResult<VehiclePartHistoryDto>> GetPagedAsync(PaginationRequest request, string? vin = null, string? model = null, string? condition = null, string? status = null)
+        {
+            var (data, totalRecords) = await _repository.GetPagedAsync(request.Page, request.Size, vin, model, condition, status);
+            var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
+            var items = _mapper.Map<IEnumerable<VehiclePartHistoryDto>>(data);
+            return new PagedResult<VehiclePartHistoryDto>
+            {
+                PageNumber = request.Page,
+                PageSize = request.Size,
+                TotalRecords = totalRecords,
+                TotalPages = totalPages,
+                Items = items
+            };
         }
     }
 }
