@@ -29,18 +29,17 @@ namespace OEMEVWarrantyManagement.API.Controllers
         //}
 
         [HttpGet]
-        [Authorize(Policy = "RequireAdmin")]
-        public async Task<IActionResult> GetPaged(
-            [FromQuery] int page = 0,
-            [FromQuery] int size = 20,
+        //[Authorize(Policy = "RequireAdmin")]
+        [Authorize(Policy = "RequireEvmStaff")]
+        public async Task<IActionResult> Get(
+            [FromQuery] PaginationRequest request,
             [FromQuery] string? vin = null,
             [FromQuery] string? model = null,
             [FromQuery] string? condition = null,
             [FromQuery] string? status = null)
         {
-            var request = new PaginationRequest { Page = page, Size = size };
             var result = await _vehiclePartHistoryService.GetPagedAsync(request, vin, model, condition, status);
-            return Ok(ApiResponse<PagedResult<VehiclePartHistoryDto>>.Ok(result, "Get paged vehicle part histories successfully"));
+            return Ok(ApiResponse<PagedResult<ResponseVehiclePartHistoryDto>>.Ok(result, "Get paged vehicle part histories successfully"));
         }
 
         [HttpGet("serials")]

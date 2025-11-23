@@ -67,12 +67,35 @@ namespace OEMEVWarrantyManagement.Application.Services
         }
 
         // Updated: pass through condition & status filters
-        public async Task<PagedResult<VehiclePartHistoryDto>> GetPagedAsync(PaginationRequest request, string? vin = null, string? model = null, string? condition = null, string? status = null)
+        public async Task<PagedResult<ResponseVehiclePartHistoryDto>> GetPagedAsync(PaginationRequest request, string? vin = null, string? model = null, string? condition = null, string? status = null)
         {
             var (data, totalRecords) = await _repository.GetPagedAsync(request.Page, request.Size, vin, model, condition, status);
+
             var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
-            var items = _mapper.Map<IEnumerable<VehiclePartHistoryDto>>(data);
-            return new PagedResult<VehiclePartHistoryDto>
+            var items = new List<ResponseVehiclePartHistoryDto>();
+
+            foreach (var item in data)
+            {
+                var vehicle = await _vehicleRepository.GetVehicleByVinAsync(item.Vin);
+                var customer = vehicle != null ? await _customerRepository.GetCustomerByIdAsync(vehicle.CustomerId) : null;
+
+                var dto = _mapper.Map<ResponseVehiclePartHistoryDto>(item);
+                
+                if (vehicle != null)
+                {
+                    dto.CarModel = vehicle.Model;
+                    dto.CarYear = vehicle.Year.ToString();
+
+                    dto.CustomerName = customer.Name;
+                    dto.CustomerPhone = customer.Phone;
+                    dto.CustomerEmail = customer.Email;
+                }
+
+
+                items.Add(dto);
+            }
+
+            return new PagedResult<ResponseVehiclePartHistoryDto>
             {
                 PageNumber = request.Page,
                 PageSize = request.Size,

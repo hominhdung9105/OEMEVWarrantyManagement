@@ -86,6 +86,7 @@ namespace OEMEVWarrantyManagement.Application.Mapping
 
             // map history
             CreateMap<VehiclePartHistory, VehiclePartHistoryDto>().ReverseMap();
+            CreateMap<VehiclePartHistory, ResponseVehiclePartHistoryDto>().ReverseMap();
 
             // vehicle with history composite
             CreateMap<Vehicle, VehicleWithHistoryDto>();
