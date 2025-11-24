@@ -33,10 +33,10 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         
         [Required(ErrorMessage = "Password is required")]
         [Password(MinimumLength = 8, RequireUppercase = true, RequireLowercase = true, RequireDigit = true, RequireSpecialCharacter = true)]
-        public string Password { get; set; }
+        public string PasswordHash { get; set; }
         
         [Required(ErrorMessage = "Confirm Password is required")]
-        [ComparePassword("Password", ErrorMessage = "Password and Confirm Password do not match")]
+        [ComparePassword("PasswordHash", ErrorMessage = "Password and Confirm Password do not match")]
         public string ConfirmPassword { get; set; }
         
         [Required(ErrorMessage = "Role is required")]
