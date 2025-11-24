@@ -16,7 +16,23 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IPartOrderItemRepository _partOrderItemRepository;
         private readonly IPartRepository _partRepository;
         private readonly IOrganizationRepository _organizationRepository;
-        public PartOrderService(IPartOrderRepository partOrderRepository, IMapper mapper, ICurrentUserService currentUserService, IEmployeeRepository employeeRepository, IPartOrderItemRepository partOrderItemRepository, IPartRepository partRepository, IOrganizationRepository organizationRepository)
+        private readonly IPartOrderShipmentRepository _shipmentRepository;
+        private readonly IPartOrderReceiptRepository _receiptRepository;
+        private readonly IPartOrderIssueRepository _issueRepository;
+        private readonly IPartOrderDiscrepancyResolutionRepository _resolutionRepository;
+
+        public PartOrderService(
+            IPartOrderRepository partOrderRepository,
+            IMapper mapper,
+            ICurrentUserService currentUserService,
+            IEmployeeRepository employeeRepository,
+            IPartOrderItemRepository partOrderItemRepository,
+            IPartRepository partRepository,
+            IOrganizationRepository organizationRepository,
+            IPartOrderShipmentRepository shipmentRepository,
+            IPartOrderReceiptRepository receiptRepository,
+            IPartOrderIssueRepository issueRepository,
+            IPartOrderDiscrepancyResolutionRepository resolutionRepository)
         {
             _partOrderRepository = partOrderRepository;
             _mapper = mapper;
@@ -25,6 +41,10 @@ namespace OEMEVWarrantyManagement.Application.Services
             _partOrderItemRepository = partOrderItemRepository;
             _partRepository = partRepository;
             _organizationRepository = organizationRepository;
+            _shipmentRepository = shipmentRepository;
+            _receiptRepository = receiptRepository;
+            _issueRepository = issueRepository;
+            _resolutionRepository = resolutionRepository;
         }
 
         public async Task<PartOrderDto> GetByIdAsync(Guid id)
@@ -207,6 +227,155 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             var data = await _partOrderRepository.GetTopRequestedPartsAsync(from, to, take);
             return data.Select(d => new PartRequestedTopDto { Model = d.Model, Quantity = d.Quantity });
+        }
+
+        public async Task<ResponsePartOrderDetailDto> GetDetailAsync(Guid id)
+        {
+            var entity = await _partOrderRepository.GetPartOrderByIdAsync(id);
+            if (entity == null)
+                return null;
+
+            var role = _currentUserService.GetRole();
+            var currentOrgId = await _currentUserService.GetOrgId();
+
+            // Map basic order info
+            var result = _mapper.Map<ResponsePartOrderDetailDto>(entity);
+            
+            // Get service center name
+            var organization = await _organizationRepository.GetOrganizationById(entity.ServiceCenterId);
+            result.ServiceCenterName = organization?.Name;
+
+            // Get creator name
+            var creator = await _employeeRepository.GetEmployeeByIdAsync(entity.CreatedBy);
+            result.CreatedByName = creator?.Name;
+
+            // Get order items with detailed information
+            var partOrderItems = await _partOrderItemRepository.GetAllByOrderIdAsync(id);
+            result.TotalItems = partOrderItems.Count();
+
+            // Get shipments, receipts for calculating quantities
+            var shipments = (await _shipmentRepository.GetByOrderIdAsync(id)).ToList();
+            var receipts = (await _receiptRepository.GetByOrderIdAsync(id)).ToList();
+
+            // Build detailed order items
+            result.PartOrderItems = new List<ResponsePartOrderItemDetailDto>();
+            foreach (var item in partOrderItems)
+            {
+                var detailItem = new ResponsePartOrderItemDetailDto
+                {
+                    OrderItemId = item.OrderItemId,
+                    OrderId = item.OrderId,
+                    Model = item.Model,
+                    RequestedQuantity = item.Quantity,
+                    Remarks = item.Remarks
+                };
+
+                // Get part info
+                var scPart = await _partRepository.GetPartsAsync(item.Model, entity.ServiceCenterId);
+                if (scPart != null)
+                {
+                    detailItem.Name = scPart.Name;
+                    detailItem.ScStock = scPart.StockQuantity;
+                }
+
+                // Get OEM stock if user is EVM/Admin
+                if (role == RoleIdEnum.EvmStaff.GetRoleId() || role == RoleIdEnum.Admin.GetRoleId())
+                {
+                    var oemPart = await _partRepository.GetPartsAsync(item.Model, currentOrgId);
+                    if (oemPart != null)
+                    {
+                        detailItem.OemStock = oemPart.StockQuantity;
+                    }
+                }
+
+                // Calculate shipped quantity for this model
+                detailItem.ShippedQuantity = shipments.Count(s => s.Model == item.Model);
+
+                // Calculate received and damaged quantities
+                var receivedForModel = receipts.Where(r => r.Model == item.Model).ToList();
+                detailItem.ReceivedQuantity = receivedForModel.Count(r => r.Status == PartOrderReceiptStatus.Received.GetStatus());
+                detailItem.DamagedQuantity = receivedForModel.Count(r => r.Status == PartOrderReceiptStatus.Damaged.GetStatus());
+
+                result.PartOrderItems.Add(detailItem);
+            }
+
+            // Add shipment information (for EVM/Admin)
+            if (role == RoleIdEnum.EvmStaff.GetRoleId() || role == RoleIdEnum.Admin.GetRoleId())
+            {
+                result.Shipments = shipments.Select(s => new PartOrderShipmentDto
+                {
+                    ShipmentId = s.ShipmentId,
+                    OrderId = s.OrderId,
+                    Model = s.Model,
+                    SerialNumber = s.SerialNumber,
+                    ShippedAt = s.ShippedAt,
+                    Status = s.Status
+                }).ToList();
+            }
+
+            // Add receipt information (for SC/Admin)
+            if (role == RoleIdEnum.ScStaff.GetRoleId() || role == RoleIdEnum.Admin.GetRoleId())
+            {
+                result.Receipts = receipts.Select(r => new PartOrderReceiptDto
+                {
+                    ReceiptId = r.ReceiptId,
+                    OrderId = r.OrderId,
+                    Model = r.Model,
+                    SerialNumber = r.SerialNumber,
+                    ReceivedAt = r.ReceivedAt,
+                    Status = r.Status,
+                    Note = r.Note,
+                    ImageUrl = r.ImageUrl
+                }).ToList();
+            }
+
+            // Get issues (cancellation, return)
+            var issues = await _issueRepository.GetByOrderIdAsync(id);
+            result.Issues = new List<PartOrderIssueDto>();
+            foreach (var issue in issues)
+            {
+                var issueDto = _mapper.Map<PartOrderIssueDto>(issue);
+                var issueCreator = await _employeeRepository.GetEmployeeByIdAsync(issue.CreatedBy);
+                issueDto.CreatedByName = issueCreator?.Name;
+                result.Issues.Add(issueDto);
+            }
+
+            // Get discrepancy resolution (for Admin)
+            if (role == RoleIdEnum.Admin.GetRoleId())
+            {
+                var resolution = await _resolutionRepository.GetByOrderIdAsync(id);
+                if (resolution != null)
+                {
+                    result.DiscrepancyResolution = _mapper.Map<DiscrepancyResolutionDto>(resolution);
+                    if (resolution.ResolvedBy.HasValue)
+                    {
+                        var resolver = await _employeeRepository.GetEmployeeByIdAsync(resolution.ResolvedBy.Value);
+                        result.DiscrepancyResolution.ResolvedByName = resolver?.Name;
+                    }
+                }
+            }
+
+            // Calculate statistics
+            result.Statistics = new PartOrderStatisticsDto
+            {
+                TotalRequested = result.PartOrderItems.Sum(i => i.RequestedQuantity),
+                TotalShipped = shipments.Count,
+                TotalReceived = receipts.Count(r => r.Status == PartOrderReceiptStatus.Received.GetStatus()),
+                TotalDamaged = receipts.Count(r => r.Status == PartOrderReceiptStatus.Damaged.GetStatus()),
+                TotalMissing = 0 // Will be calculated below
+            };
+
+            // Calculate missing items (shipped but not received)
+            var shippedSerials = shipments.Select(s => s.SerialNumber).ToHashSet();
+            var receivedSerials = receipts.Select(r => r.SerialNumber).ToHashSet();
+            result.Statistics.TotalMissing = shippedSerials.Except(receivedSerials).Count();
+
+            // Check if there's any discrepancy
+            result.Statistics.HasDiscrepancy = result.Statistics.TotalShipped != result.Statistics.TotalRequested ||
+                                              result.Statistics.TotalShipped != (result.Statistics.TotalReceived + result.Statistics.TotalDamaged + result.Statistics.TotalMissing) ||
+                                              result.DiscrepancyResolution != null;
+
+            return result;
         }
     }
 }

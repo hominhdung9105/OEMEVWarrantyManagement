@@ -237,7 +237,10 @@
         OrderNotInReturnInspection,
 
         [ResponseErrorAttr("Cannot create order item. Order must be in Pending status.", 400, 77)]
-        CannotCreateOrderItemInvalidStatus
+        CannotCreateOrderItemInvalidStatus,
+
+        [ResponseErrorAttr("Invalid status value.", 400, 78)]
+        InvalidStatus
     }
 
     public class ApiResponse<T>
@@ -266,6 +269,18 @@
                 Success = false,
                 Code = attr.Code,
                 Message = attr.Message,
+                Data = default
+            };
+        }
+
+        public static ApiResponse<T> Fail(ResponseError error, string customMessage)
+        {
+            var attr = error.GetAttr();
+            return new ApiResponse<T>
+            {
+                Success = false,
+                Code = attr.Code,
+                Message = customMessage,
                 Data = default
             };
         }

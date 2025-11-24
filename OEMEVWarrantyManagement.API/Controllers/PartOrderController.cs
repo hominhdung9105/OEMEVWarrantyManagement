@@ -35,7 +35,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get([FromQuery] PaginationRequest request, [FromQuery] string? search, [FromQuery] PartOrderStatus? status)
+        public async Task<IActionResult> Get([FromQuery] PaginationRequest request, [FromQuery] string? search, [FromQuery] string? status)
         {
             var role = _currentUserService.GetRole();
 
@@ -46,7 +46,17 @@ namespace OEMEVWarrantyManagement.API.Controllers
             }
             else if (role == RoleIdEnum.EvmStaff.GetRoleId() || role == RoleIdEnum.Admin.GetRoleId())
             {
-                var result = await _partOrderService.GetPagedPartOrderForEvmStaffAsync(request, search, status);
+                PartOrderStatus? partOrderStatus = null;
+                if (!string.IsNullOrWhiteSpace(status))
+                {
+                    partOrderStatus = PartOrderStatusExtensions.FromDescription(status);
+                    if (partOrderStatus == null)
+                    {
+                        return BadRequest(ApiResponse<object>.Fail(ResponseError.InvalidStatus, $"Invalid status: {status}"));
+                    }
+                }
+                
+                var result = await _partOrderService.GetPagedPartOrderForEvmStaffAsync(request, search, partOrderStatus);
                 return Ok(ApiResponse<object>.Ok(result, "Get all Successfully"));
             }
 
@@ -55,9 +65,15 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpGet("count")]
         [Authorize]
-        public async Task<IActionResult> GetOrderCount([FromQuery] PartOrderStatus status = PartOrderStatus.Pending, [FromQuery] Guid? orgId = null)
+        public async Task<IActionResult> GetOrderCount([FromQuery] string status = "Pending", [FromQuery] Guid? orgId = null)
         {
-            var count = await _partOrderService.CountByStatusAsync(status, orgId);
+            var partOrderStatus = PartOrderStatusExtensions.FromDescription(status);
+            if (partOrderStatus == null)
+            {
+                return BadRequest(ApiResponse<object>.Fail(ResponseError.InvalidStatus, $"Invalid status: {status}"));
+            }
+            
+            var count = await _partOrderService.CountByStatusAsync(partOrderStatus.Value, orgId);
             return Ok(ApiResponse<int>.Ok(count, "Get order count successfully"));
         }
 

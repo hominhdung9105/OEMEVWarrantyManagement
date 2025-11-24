@@ -496,6 +496,95 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.ToTable("PartOrders", (string)null);
                 });
 
+            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.PartOrderDiscrepancyResolution", b =>
+                {
+                    b.Property<Guid>("ResolutionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Decision")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ResolvedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ResponsibleParty")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("ResolutionId");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
+
+                    b.HasIndex("ResolvedBy");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("PartOrderDiscrepancyResolutions", (string)null);
+                });
+
+            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.PartOrderIssue", b =>
+                {
+                    b.Property<Guid>("IssueId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("IssueType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ReasonDetail")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("IssueId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("PartOrderIssues", (string)null);
+                });
+
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.PartOrderItem", b =>
                 {
                     b.Property<Guid>("OrderItemId")
@@ -521,6 +610,82 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.HasIndex("OrderId");
 
                     b.ToTable("PartOrderItems", (string)null);
+                });
+
+            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.PartOrderReceipt", b =>
+                {
+                    b.Property<Guid>("ReceiptId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ReceivedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SerialNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("ReceiptId");
+
+                    b.HasIndex("OrderId", "SerialNumber");
+
+                    b.ToTable("PartOrderReceipts", (string)null);
+                });
+
+            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.PartOrderShipment", b =>
+                {
+                    b.Property<Guid>("ShipmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SerialNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("ShippedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("ShipmentId");
+
+                    b.HasIndex("OrderId", "SerialNumber");
+
+                    b.ToTable("PartOrderShipments", (string)null);
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.Vehicle", b =>
@@ -943,10 +1108,69 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Navigation("ServiceCenter");
                 });
 
+            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.PartOrderDiscrepancyResolution", b =>
+                {
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.PartOrder", "PartOrder")
+                        .WithOne("DiscrepancyResolution")
+                        .HasForeignKey("OEMEVWarrantyManagement.Domain.Entities.PartOrderDiscrepancyResolution", "OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Employee", "ResolvedByEmployee")
+                        .WithMany()
+                        .HasForeignKey("ResolvedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("PartOrder");
+
+                    b.Navigation("ResolvedByEmployee");
+                });
+
+            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.PartOrderIssue", b =>
+                {
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.Employee", "CreatedByEmployee")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.PartOrder", "PartOrder")
+                        .WithMany("Issues")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByEmployee");
+
+                    b.Navigation("PartOrder");
+                });
+
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.PartOrderItem", b =>
                 {
                     b.HasOne("OEMEVWarrantyManagement.Domain.Entities.PartOrder", "PartOrder")
                         .WithMany("PartOrderItems")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PartOrder");
+                });
+
+            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.PartOrderReceipt", b =>
+                {
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.PartOrder", "PartOrder")
+                        .WithMany("Receipts")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PartOrder");
+                });
+
+            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.PartOrderShipment", b =>
+                {
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.PartOrder", "PartOrder")
+                        .WithMany("Shipments")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1114,7 +1338,15 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.PartOrder", b =>
                 {
+                    b.Navigation("DiscrepancyResolution");
+
+                    b.Navigation("Issues");
+
                     b.Navigation("PartOrderItems");
+
+                    b.Navigation("Receipts");
+
+                    b.Navigation("Shipments");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.Vehicle", b =>

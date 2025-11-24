@@ -29,8 +29,8 @@ namespace OEMEVWarrantyManagement.API.Controllers
         //}
 
         [HttpGet]
-        //[Authorize(Policy = "RequireAdmin")]
-        [Authorize(Policy = "RequireEvmStaff")]
+        [Authorize(Policy = "RequireAdmin")]
+        //[Authorize(Policy = "RequireEvmStaff")]
         public async Task<IActionResult> Get(
             [FromQuery] PaginationRequest request,
             [FromQuery] string? vin = null,
@@ -43,6 +43,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         }
 
         [HttpGet("serials")]
+        [Authorize]
         public async Task<IActionResult> GetSerials([FromQuery] string vin, [FromQuery] string model)
         {
             if (string.IsNullOrWhiteSpace(vin) || string.IsNullOrWhiteSpace(model))
@@ -70,7 +71,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<object>.Ok(statuses, "Get vehicle part current statuses successfully"));
         }
 
-        // New: list all part conditions
         [HttpGet("conditions")]
         public IActionResult GetVehiclePartConditions()
         {

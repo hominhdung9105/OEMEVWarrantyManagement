@@ -29,17 +29,17 @@ namespace OEMEVWarrantyManagement.API.Controllers
         }
 
         [HttpGet("categories")]
-        public IActionResult GetCategory()
+        public IActionResult GetCategory([FromQuery] string? vin)
         {
-            var entities = _partService.GetPartCategories();
+            var entities = _partService.GetPartCategories(vin);
             return Ok(ApiResponse<object>.Ok(entities, "Get part categories successfully!"));
         }
 
         [HttpGet("models")]
-        public IActionResult GetModelsByCategory([FromQuery] string category)
+        public IActionResult GetModelsByCategory([FromQuery] string category, [FromQuery] string? vin)
         {
-            var entities = _partService.GetPartModels(category);
-            return Ok(ApiResponse<object>.Ok(entities, "Get part categories successfully!"));
+            var entities = _partService.GetPartModels(category, vin);
+            return Ok(ApiResponse<object>.Ok(entities, "Get part models successfully!"));
         }
 
         [HttpGet("category-by-model")]

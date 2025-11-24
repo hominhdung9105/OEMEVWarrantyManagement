@@ -19,7 +19,19 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IWarrantyClaimRepository _claimRepository;
         private readonly IClaimPartRepository _claimPartRepository;
         private readonly ICurrentUserService _currentUserService;
-        public PartService(IPartRepository partRepository, IMapper mapper, IPartOrderItemRepository orderItemRepository, IPartOrderRepository orderRepository, IClaimPartRepository claimPartRepository, IWarrantyClaimRepository warrantyClaimRepository, ICurrentUserService currentUserService)
+        private readonly IVehicleRepository _vehicleRepository;
+        private readonly IVehiclePartHistoryRepository _vehiclePartHistoryRepository;
+        
+        public PartService(
+            IPartRepository partRepository, 
+            IMapper mapper, 
+            IPartOrderItemRepository orderItemRepository, 
+            IPartOrderRepository orderRepository, 
+            IClaimPartRepository claimPartRepository, 
+            IWarrantyClaimRepository warrantyClaimRepository, 
+            ICurrentUserService currentUserService,
+            IVehicleRepository vehicleRepository,
+            IVehiclePartHistoryRepository vehiclePartHistoryRepository)
         {
             _partRepository = partRepository;
             _mapper = mapper;
@@ -28,6 +40,8 @@ namespace OEMEVWarrantyManagement.Application.Services
             _claimPartRepository = claimPartRepository;
             _claimRepository = warrantyClaimRepository;
             _currentUserService = currentUserService;
+            _vehicleRepository = vehicleRepository;
+            _vehiclePartHistoryRepository = vehiclePartHistoryRepository;
         }
 
         public async Task<PagedResult<PartDto>> GetPagedAsync(PaginationRequest request, string? search = null, string? status = null)
@@ -217,17 +231,100 @@ namespace OEMEVWarrantyManagement.Application.Services
             return true;
         }
 
-        public IEnumerable<string> GetPartCategories()
+        public IEnumerable<string> GetPartCategories(string? vin = null)
         {
-            return PartCategoryExtensions.GetAllCategories();
+            // If VIN is not provided, return all categories
+            if (string.IsNullOrWhiteSpace(vin))
+            {
+                return PartCategoryExtensions.GetAllCategories();
+            }
+
+            // Validate VIN format (should be 17 characters)
+            var trimmedVin = vin.Trim();
+            if (trimmedVin.Length != 17)
+            {
+                throw new ApiException(ResponseError.NotfoundVin);
+            }
+
+            // Validate VIN exists in database
+            var vehicle = _vehicleRepository.GetVehicleByVinAsync(trimmedVin).GetAwaiter().GetResult();
+            if (vehicle == null)
+            {
+                throw new ApiException(ResponseError.NotfoundVin);
+            }
+
+            // Get all parts installed on this vehicle
+            var vehicleParts = _vehiclePartHistoryRepository
+                .GetByVinAsync(trimmedVin)
+                .GetAwaiter()
+                .GetResult()
+                .Where(p => p.Status == VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus())
+                .ToList();
+
+            if (!vehicleParts.Any())
+            {
+                return new List<string>();
+            }
+
+            // Extract unique categories from the models
+            var categories = vehicleParts
+                .Select(p => PartModel.GetCategoryByModel(p.Model))
+                .Where(c => !string.IsNullOrWhiteSpace(c))
+                .Distinct()
+                .ToList();
+
+            return categories;
         }
 
-        public IEnumerable<string> GetPartModels(string category)
+        public IEnumerable<string> GetPartModels(string category, string? vin = null)
         {
-            if(string.IsNullOrWhiteSpace(category) || !PartCategoryExtensions.IsValidCategory(category))
+            if (string.IsNullOrWhiteSpace(category) || !PartCategoryExtensions.IsValidCategory(category))
                 throw new ApiException(ResponseError.InvalidPartCategory);
 
-            return PartModel.GetModels(category);
+            // If VIN is not provided, return all models for the category
+            if (string.IsNullOrWhiteSpace(vin))
+            {
+                return PartModel.GetModels(category);
+            }
+
+            // Validate VIN format (should be 17 characters)
+            var trimmedVin = vin.Trim();
+            if (trimmedVin.Length != 17)
+            {
+                throw new ApiException(ResponseError.NotfoundVin);
+            }
+
+            // Validate VIN exists in database
+            var vehicle = _vehicleRepository.GetVehicleByVinAsync(trimmedVin).GetAwaiter().GetResult();
+            if (vehicle == null)
+            {
+                throw new ApiException(ResponseError.NotfoundVin);
+            }
+
+            // Get all parts installed on this vehicle
+            var vehicleParts = _vehiclePartHistoryRepository
+                .GetByVinAsync(trimmedVin)
+                .GetAwaiter()
+                .GetResult()
+                .Where(p => p.Status == VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus())
+                .ToList();
+
+            if (!vehicleParts.Any())
+            {
+                return new List<string>();
+            }
+
+            // Get all models for the category
+            var allModelsInCategory = PartModel.GetModels(category);
+
+            // Filter to only models that are installed on this vehicle
+            var filteredModels = vehicleParts
+                .Select(p => p.Model)
+                .Where(m => allModelsInCategory.Contains(m, StringComparer.OrdinalIgnoreCase))
+                .Distinct()
+                .ToList();
+
+            return filteredModels;
         }
 
         public string? GetCategoryByModel(string model)

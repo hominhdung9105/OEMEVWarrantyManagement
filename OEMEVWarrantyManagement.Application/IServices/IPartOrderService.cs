@@ -7,6 +7,7 @@ namespace OEMEVWarrantyManagement.Application.IServices
     public interface IPartOrderService
     {
         Task<PartOrderDto> GetByIdAsync(Guid id);
+        Task<ResponsePartOrderDetailDto> GetDetailAsync(Guid id);
         Task<PartOrderDto> UpdateStatusAsync(Guid id, PartOrderStatus status);
         Task<PagedResult<ResponsePartOrderDto>> GetPagedPartOrderForEvmStaffAsync(PaginationRequest request, string? search = null, PartOrderStatus? status = null);
         Task<PagedResult<ResponsePartOrderForScStaffDto>> GetPagedPartOrderForScStaffAsync(PaginationRequest request);

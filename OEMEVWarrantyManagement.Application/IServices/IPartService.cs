@@ -10,8 +10,8 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<PagedResult<PartDto>> GetPagedAsync(PaginationRequest request, string? search = null, string? status = null);
 
         // Metadata helpers
-        IEnumerable<string> GetPartCategories();
-        IEnumerable<string> GetPartModels(string category);
+        IEnumerable<string> GetPartCategories(string? vin = null);
+        IEnumerable<string> GetPartModels(string category, string? vin = null);
         string? GetCategoryByModel(string model);
 
         // Stock updates triggered by order workflows

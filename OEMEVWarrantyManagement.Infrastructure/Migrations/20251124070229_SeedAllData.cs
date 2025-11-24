@@ -375,6 +375,67 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "PartOrderDiscrepancyResolutions",
+                columns: table => new
+                {
+                    ResolutionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ResponsibleParty = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Decision = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    Note = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    ResolvedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    ResolvedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PartOrderDiscrepancyResolutions", x => x.ResolutionId);
+                    table.ForeignKey(
+                        name: "FK_PartOrderDiscrepancyResolutions_Employee_ResolvedBy",
+                        column: x => x.ResolvedBy,
+                        principalTable: "Employee",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_PartOrderDiscrepancyResolutions_PartOrders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "PartOrders",
+                        principalColumn: "OrderId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PartOrderIssues",
+                columns: table => new
+                {
+                    IssueId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IssueType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    ReasonDetail = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Note = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PartOrderIssues", x => x.IssueId);
+                    table.ForeignKey(
+                        name: "FK_PartOrderIssues_Employee_CreatedBy",
+                        column: x => x.CreatedBy,
+                        principalTable: "Employee",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_PartOrderIssues_PartOrders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "PartOrders",
+                        principalColumn: "OrderId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "PartOrderItems",
                 columns: table => new
                 {
@@ -389,6 +450,52 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     table.PrimaryKey("PK_PartOrderItems", x => x.OrderItemId);
                     table.ForeignKey(
                         name: "FK_PartOrderItems_PartOrders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "PartOrders",
+                        principalColumn: "OrderId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PartOrderReceipts",
+                columns: table => new
+                {
+                    ReceiptId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Model = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    SerialNumber = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    ReceivedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Note = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    ImageUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PartOrderReceipts", x => x.ReceiptId);
+                    table.ForeignKey(
+                        name: "FK_PartOrderReceipts_PartOrders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "PartOrders",
+                        principalColumn: "OrderId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PartOrderShipments",
+                columns: table => new
+                {
+                    ShipmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Model = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    SerialNumber = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    ShippedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PartOrderShipments", x => x.ShipmentId);
+                    table.ForeignKey(
+                        name: "FK_PartOrderShipments_PartOrders_OrderId",
                         column: x => x.OrderId,
                         principalTable: "PartOrders",
                         principalColumn: "OrderId",
@@ -631,9 +738,40 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 column: "OrgId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_PartOrderDiscrepancyResolutions_OrderId",
+                table: "PartOrderDiscrepancyResolutions",
+                column: "OrderId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PartOrderDiscrepancyResolutions_ResolvedBy",
+                table: "PartOrderDiscrepancyResolutions",
+                column: "ResolvedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PartOrderDiscrepancyResolutions_Status",
+                table: "PartOrderDiscrepancyResolutions",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PartOrderIssues_CreatedBy",
+                table: "PartOrderIssues",
+                column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PartOrderIssues_OrderId",
+                table: "PartOrderIssues",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_PartOrderItems_OrderId",
                 table: "PartOrderItems",
                 column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PartOrderReceipts_OrderId_SerialNumber",
+                table: "PartOrderReceipts",
+                columns: new[] { "OrderId", "SerialNumber" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_PartOrders_CreatedBy",
@@ -644,6 +782,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 name: "IX_PartOrders_ServiceCenterId",
                 table: "PartOrders",
                 column: "ServiceCenterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PartOrderShipments_OrderId_SerialNumber",
+                table: "PartOrderShipments",
+                columns: new[] { "OrderId", "SerialNumber" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Parts_OrgId_Model",
@@ -739,7 +882,19 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 name: "ClaimParts");
 
             migrationBuilder.DropTable(
+                name: "PartOrderDiscrepancyResolutions");
+
+            migrationBuilder.DropTable(
+                name: "PartOrderIssues");
+
+            migrationBuilder.DropTable(
                 name: "PartOrderItems");
+
+            migrationBuilder.DropTable(
+                name: "PartOrderReceipts");
+
+            migrationBuilder.DropTable(
+                name: "PartOrderShipments");
 
             migrationBuilder.DropTable(
                 name: "Parts");
