@@ -12,7 +12,7 @@ using OEMEVWarrantyManagement.Infrastructure.Persistence;
 namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251124070229_SeedAllData")]
+    [Migration("20251124163725_SeedAllData")]
     partial class SeedAllData
     {
         /// <inheritdoc />
@@ -820,6 +820,12 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("DenialReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DenialReasonDetail")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");

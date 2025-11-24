@@ -51,4 +51,11 @@
         public string? Status { get; set; }
         public DateTime? StartDate { get; set; }
     }
+
+    public class ReassignTechnicianDto
+    {
+        public required string Target { get; set; } // "Warranty" or "Campaign"
+        public required Guid TargetId { get; set; } // ClaimId or CampaignVehicleId
+        public required List<Guid> TechnicianIds { get; set; } // New technician IDs to assign
+    }
 }

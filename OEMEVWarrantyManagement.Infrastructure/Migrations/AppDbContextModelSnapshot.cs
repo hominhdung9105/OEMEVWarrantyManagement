@@ -818,6 +818,12 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("DenialReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DenialReasonDetail")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 

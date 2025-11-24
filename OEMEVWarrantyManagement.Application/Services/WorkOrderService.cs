@@ -365,5 +365,106 @@ namespace OEMEVWarrantyManagement.Application.Services
                 Items = items
             };
         }
+
+        public async Task<IEnumerable<WorkOrderDto>> ReassignTechniciansAsync(ReassignTechnicianDto request)
+        {
+            // Parse and validate target
+            WorkOrderTarget targetEnum;
+            if (request.Target.Equals(WorkOrderTarget.Warranty.GetWorkOrderTarget(), StringComparison.OrdinalIgnoreCase))
+                targetEnum = WorkOrderTarget.Warranty;
+            else if (request.Target.Equals(WorkOrderTarget.Campaign.GetWorkOrderTarget(), StringComparison.OrdinalIgnoreCase))
+                targetEnum = WorkOrderTarget.Campaign;
+            else
+                throw new ApiException(ResponseError.InvalidWorkOrderTarget);
+
+            // Validate technician list
+            if (request.TechnicianIds == null || !request.TechnicianIds.Any())
+                throw new ApiException(ResponseError.InvalidTechnicianList);
+
+            // Get current user's organization (only SC staff can reassign)
+            var currentUserId = _currentUserService.GetUserId();
+            var currentEmployee = await _employeeRepository.GetEmployeeByIdAsync(currentUserId)
+                ?? throw new ApiException(ResponseError.NotFoundEmployee);
+
+            // Get existing work orders for this target
+            IEnumerable<WorkOrder> existingWorkOrders;
+            if (targetEnum == WorkOrderTarget.Warranty)
+            {
+                // Verify claim exists
+                var claim = await _claimRepository.GetWarrantyClaimByIdAsync(request.TargetId)
+                    ?? throw new ApiException(ResponseError.NotFoundWarrantyClaim);
+
+                // Get all in-progress work orders for this claim (both inspection and repair)
+                var inspection = await _workOrderRepository.GetWorkOrders(request.TargetId, WorkOrderType.Inspection.GetWorkOrderType(), WorkOrderTarget.Warranty.GetWorkOrderTarget());
+                var repair = await _workOrderRepository.GetWorkOrders(request.TargetId, WorkOrderType.Repair.GetWorkOrderType(), WorkOrderTarget.Warranty.GetWorkOrderTarget());
+                existingWorkOrders = inspection.Concat(repair).ToList();
+            }
+            else // Campaign
+            {
+                // Verify campaign vehicle exists
+                var cv = await _campaignVehicleRepository.GetByIdAsync(request.TargetId)
+                    ?? throw new ApiException(ResponseError.NotFoundCampaignVehicle);
+
+                // Get all in-progress work orders for this campaign vehicle
+                existingWorkOrders = await _workOrderRepository.GetWorkOrders(request.TargetId, WorkOrderType.Repair.GetWorkOrderType(), WorkOrderTarget.Campaign.GetWorkOrderTarget());
+            }
+
+            var activeWorkOrders = existingWorkOrders.Where(wo => wo.Status == WorkOrderStatus.InProgress.GetWorkOrderStatus()).ToList();
+
+            // Validate: must have existing active work orders
+            if (!activeWorkOrders.Any())
+                throw new ApiException(ResponseError.NotFoundWorkOrder);
+
+            // Validate: new technician count must match current count
+            if (request.TechnicianIds.Count != activeWorkOrders.Count)
+                throw new ApiException(ResponseError.TechnicianCountMismatch);
+
+            // Validate: all new technicians must be from the same service center
+            var newTechnicians = new List<Employee>();
+            foreach (var techId in request.TechnicianIds)
+            {
+                var tech = await _employeeRepository.GetEmployeeByIdAsync(techId)
+                    ?? throw new ApiException(ResponseError.NotFoundEmployee);
+
+                // Check if technician is from the same service center
+                if (tech.OrgId != currentEmployee.OrgId)
+                    throw new ApiException(ResponseError.TechnicianNotInSameServiceCenter);
+
+                newTechnicians.Add(tech);
+            }
+
+            // Complete old work orders (mark as completed with current time)
+            var now = DateTime.UtcNow;
+            foreach (var oldWo in activeWorkOrders)
+            {
+                oldWo.Status = WorkOrderStatus.Cancelled.GetWorkOrderStatus();
+                oldWo.EndDate = now;
+                await _workOrderRepository.UpdateAsync(oldWo);
+            }
+
+            // Create new work orders with the same type as the first active work order
+            var workOrderType = activeWorkOrders.First().Type;
+            var newWorkOrders = new List<WorkOrder>();
+
+            foreach (var tech in newTechnicians)
+            {
+                newWorkOrders.Add(new WorkOrder
+                {
+                    AssignedTo = tech.UserId,
+                    Type = workOrderType,
+                    Target = request.Target,
+                    TargetId = request.TargetId,
+                    Status = WorkOrderStatus.InProgress.GetWorkOrderStatus(),
+                    StartDate = now
+                });
+            }
+
+            var created = await _workOrderRepository.CreateRangeAsync(newWorkOrders);
+
+            // No status change needed for warranty claim or campaign vehicle
+            // as they should remain in their current state (UnderInspection, UnderRepair, etc.)
+
+            return _mapper.Map<IEnumerable<WorkOrderDto>>(created);
+        }
     }
 }

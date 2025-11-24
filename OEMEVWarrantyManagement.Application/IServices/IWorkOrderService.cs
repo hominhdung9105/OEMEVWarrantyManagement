@@ -16,5 +16,7 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<TaskCountDto> GetTaskCountsAsync();
 
         Task<TaskGroupCountDto> GetTaskGroupCountsAsync(char unit);
+
+        Task<IEnumerable<WorkOrderDto>> ReassignTechniciansAsync(ReassignTechnicianDto request);
     }
 }

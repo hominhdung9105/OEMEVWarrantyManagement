@@ -28,4 +28,8 @@
     <ProjectReference Include="..\OEMEVWarrantyManagement.Share\OEMEVWarrantyManagement.Share.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Utilities\" />
+  </ItemGroup>
+
 </Project>

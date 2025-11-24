@@ -46,7 +46,10 @@ namespace OEMEVWarrantyManagement.Share.Enums
         InProgress,
 
         [Description("completed")]
-        Completed
+        Completed,
+
+        [Description("cancelled")]
+        Cancelled
     }
 
     public static class WorkOrderStatusExtensions

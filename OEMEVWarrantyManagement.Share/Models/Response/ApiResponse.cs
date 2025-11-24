@@ -240,7 +240,21 @@
         CannotCreateOrderItemInvalidStatus,
 
         [ResponseErrorAttr("Invalid status value.", 400, 78)]
-        InvalidStatus
+        InvalidStatus,
+
+        // Warranty Claim Denial errors
+        [ResponseErrorAttr("Invalid denial reason.", 400, 79)]
+        InvalidDenialReason,
+
+        [ResponseErrorAttr("Reason detail is required when reason is 'Other'.", 400, 80)]
+        DenialReasonDetailRequired,
+
+        // Technician Reassignment errors
+        [ResponseErrorAttr("Technician count must match the current assigned count.", 400, 81)]
+        TechnicianCountMismatch,
+
+        [ResponseErrorAttr("Technician must be from the same service center.", 403, 82)]
+        TechnicianNotInSameServiceCenter
     }
 
     public class ApiResponse<T>

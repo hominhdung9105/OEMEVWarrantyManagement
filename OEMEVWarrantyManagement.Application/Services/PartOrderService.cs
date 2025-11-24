@@ -377,5 +377,23 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             return result;
         }
+
+        public async Task<string> GetStatusAsync(Guid id)
+        {
+            var entity = await _partOrderRepository.GetPartOrderByIdAsync(id);
+            return entity?.Status;
+        }
+
+        public async Task<IEnumerable<string>> GetAllStatusesAsync()
+        {
+            var statuses = new List<string>();
+            
+            foreach (PartOrderStatus status in Enum.GetValues(typeof(PartOrderStatus)))
+            {
+                statuses.Add(status.GetPartOrderStatus());
+            }
+            
+            return await Task.FromResult(statuses);
+        }
     }
 }

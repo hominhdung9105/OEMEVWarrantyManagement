@@ -201,7 +201,7 @@ namespace OEMEVWarrantyManagement.Application.Services
         }
 
         // 6. Warranty Claim Denied
-        public async Task SendWarrantyClaimDeniedEmailAsync(string to, string customerName, string vin, Guid claimId)
+        public async Task SendWarrantyClaimDeniedEmailAsync(string to, string customerName, string vin, Guid claimId, string? denialReason = null, string? denialReasonDetail = null)
         {
             var subject = "Warranty Claim Status Update";
 
@@ -211,6 +211,18 @@ namespace OEMEVWarrantyManagement.Application.Services
                 { "VIN", vin },
                 { "Status", "Denied" }
             };
+
+            // Add denial reason to details if provided
+            if (!string.IsNullOrWhiteSpace(denialReason))
+            {
+                details.Add("Denial Reason", denialReason);
+            }
+
+            // Add denial reason detail if provided
+            if (!string.IsNullOrWhiteSpace(denialReasonDetail))
+            {
+                details.Add("Details", denialReasonDetail);
+            }
 
             var mainMessage = $"We regret to inform you that your warranty claim request for vehicle <strong>{WebUtility.HtmlEncode(vin)}</strong> has been <strong>denied</strong>. Please contact the service center for more details.";
 

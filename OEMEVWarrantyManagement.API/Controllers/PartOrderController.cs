@@ -63,6 +63,14 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Unauthorized(ApiResponse<object>.Fail(ResponseError.Forbidden));
         }
 
+        [HttpGet("statuses")]
+        [Authorize]
+        public async Task<IActionResult> GetAllStatuses()
+        {
+            var statuses = await _partOrderService.GetAllStatusesAsync();
+            return Ok(ApiResponse<IEnumerable<string>>.Ok(statuses, "Get all part order statuses successfully"));
+        }
+
         [HttpGet("count")]
         [Authorize]
         public async Task<IActionResult> GetOrderCount([FromQuery] string status = "Pending", [FromQuery] Guid? orgId = null)

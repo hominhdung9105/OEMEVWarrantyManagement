@@ -1,4 +1,3 @@
-using AutoMapper; // still can be kept if injected elsewhere
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.Dtos;

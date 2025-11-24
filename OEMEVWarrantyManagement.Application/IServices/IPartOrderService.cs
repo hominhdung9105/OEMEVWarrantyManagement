@@ -9,6 +9,8 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<PartOrderDto> GetByIdAsync(Guid id);
         Task<ResponsePartOrderDetailDto> GetDetailAsync(Guid id);
         Task<PartOrderDto> UpdateStatusAsync(Guid id, PartOrderStatus status);
+        Task<string> GetStatusAsync(Guid id);
+        Task<IEnumerable<string>> GetAllStatusesAsync();
         Task<PagedResult<ResponsePartOrderDto>> GetPagedPartOrderForEvmStaffAsync(PaginationRequest request, string? search = null, PartOrderStatus? status = null);
         Task<PagedResult<ResponsePartOrderForScStaffDto>> GetPagedPartOrderForScStaffAsync(PaginationRequest request);
         Task<bool> UpdateExpectedDateAsync(Guid id, UpdateExpectedDateDto dto);

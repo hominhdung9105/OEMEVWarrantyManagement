@@ -517,6 +517,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     ConfirmDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     VehicleWarrantyId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     failureDesc = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DenialReason = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DenialReasonDetail = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     WarrantyPolicyPolicyId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>

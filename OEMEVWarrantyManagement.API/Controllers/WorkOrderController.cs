@@ -69,5 +69,19 @@ namespace OEMEVWarrantyManagement.API.Controllers
             var data = await _workOrderService.GetTaskGroupCountsAsync(unit);
             return Ok(ApiResponse<TaskGroupCountDto>.Ok(data, "Get grouped task counts successfully"));
         }
+
+        [HttpPost("reassign")]
+        [Authorize(policy: "RequireScStaff")]
+        public async Task<IActionResult> ReassignTechnicians([FromBody] ReassignTechnicianDto request)
+        {
+            if (request == null || request.TechnicianIds == null || !request.TechnicianIds.Any())
+                throw new ApiException(ResponseError.InvalidJsonFormat);
+
+            if (string.IsNullOrWhiteSpace(request.Target))
+                throw new ApiException(ResponseError.InvalidJsonFormat);
+
+            var result = await _workOrderService.ReassignTechniciansAsync(request);
+            return Ok(ApiResponse<IEnumerable<WorkOrderDto>>.Ok(result, "Reassign technicians successfully!"));
+        }
     }
 }

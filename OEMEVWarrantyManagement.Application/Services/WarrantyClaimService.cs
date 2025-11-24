@@ -120,6 +120,11 @@ namespace OEMEVWarrantyManagement.Application.Services
 
         public async Task<WarrantyClaimDto> UpdateStatusAsync(Guid claimId, WarrantyClaimStatus status, Guid? vehicleWarrantyId = null)
         {
+            return await UpdateStatusAsync(claimId, status, vehicleWarrantyId, null, null);
+        }
+
+        public async Task<WarrantyClaimDto> UpdateStatusAsync(Guid claimId, WarrantyClaimStatus status, Guid? vehicleWarrantyId, string? denialReason, string? denialReasonDetail)
+        {
             var entity = await _warrantyClaimRepository.GetWarrantyClaimByIdAsync(claimId) ?? throw new ApiException(ResponseError.NotFoundWarrantyClaim);
             var oldStatus = entity.Status;
             entity.Status = status.GetWarrantyClaimStatus();
@@ -128,6 +133,10 @@ namespace OEMEVWarrantyManagement.Application.Services
             {
                 entity.ConfirmBy = _currentUserService.GetUserId();
                 entity.ConfirmDate = DateTime.Now;
+                
+                // Save denial reason
+                entity.DenialReason = denialReason;
+                entity.DenialReasonDetail = denialReasonDetail;
             }
             else if (status == WarrantyClaimStatus.Approved)
             {
@@ -184,7 +193,8 @@ namespace OEMEVWarrantyManagement.Application.Services
                 }
                 else if (newStatus == WarrantyClaimStatus.Denied.GetWarrantyClaimStatus())
                 {
-                    await _emailService.SendWarrantyClaimDeniedEmailAsync(customer.Email, customer.Name, claim.Vin, claim.ClaimId);
+                    // Pass denial reason to email service
+                    await _emailService.SendWarrantyClaimDeniedEmailAsync(customer.Email, customer.Name, claim.Vin, claim.ClaimId, claim.DenialReason, claim.DenialReasonDetail);
                 }
                 else if (newStatus == WarrantyClaimStatus.Repaired.GetWarrantyClaimStatus())
                 {
@@ -546,6 +556,16 @@ namespace OEMEVWarrantyManagement.Application.Services
                 OrgName = r.OrgName,
                 Count = r.Count
             });
+        }
+
+        public async Task<IEnumerable<DenialReasonDto>> GetDenialReasonsAsync()
+        {
+            var reasons = WarrantyClaimDenialReasonExtensions.GetAllDenialReasons();
+            return await Task.FromResult(reasons.Select(r => new DenialReasonDto
+            {
+                Value = r,
+                Description = r
+            }));
         }
     }
 }

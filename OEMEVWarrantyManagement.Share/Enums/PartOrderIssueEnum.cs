@@ -7,19 +7,19 @@ namespace OEMEVWarrantyManagement.Share.Enums
     /// </summary>
     public enum PartOrderCancellationReason
     {
-        [Description("Tai n?n giao thông/H? h?ng toàn b?")]
+        [Description("Traffic Accident/Total Damage")]
         AccidentTotalDamage,
 
-        [Description("M?t c?p/Th?t l?c hoàn toàn")]
+        [Description("Theft/Total Loss")]
         TheftOrLost,
 
-        [Description("Cháy n?")]
+        [Description("Fire/Explosion")]
         FireExplosion,
 
-        [Description("Thiên tai")]
+        [Description("Natural Disaster")]
         NaturalDisaster,
 
-        [Description("Lý do khác")]
+        [Description("Other Reason")]
         Other
     }
 
@@ -28,19 +28,19 @@ namespace OEMEVWarrantyManagement.Share.Enums
     /// </summary>
     public enum PartOrderReturnReason
     {
-        [Description("Không giao ???c/T? ch?i nh?n hàng")]
+        [Description("Undeliverable/Delivery Refused")]
         DeliveryRefused,
 
-        [Description("??a ch? sai/Không liên l?c ???c")]
+        [Description("Wrong Address/Unreachable")]
         WrongAddressUnreachable,
 
-        [Description("Service Center t?m ?óng c?a")]
+        [Description("Service Center Temporarily Closed")]
         ServiceCenterClosed,
 
-        [Description("H?y ??n t? phía Service Center")]
+        [Description("Cancelled by Service Center")]
         CancelledBySC,
 
-        [Description("Lý do khác")]
+        [Description("Other Reason")]
         Other
     }
 
