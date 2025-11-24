@@ -16,11 +16,18 @@ namespace OEMEVWarrantyManagement.API.Controllers
         private readonly IPartOrderService _partOrderService;
         private readonly IPartService _partService;
         private readonly ICurrentUserService _currentUserService;
-        public PartOrderController(IPartOrderService partOrderService, IPartService partService, ICurrentUserService currentUserService)
+        private readonly IPartOrderShipmentService _shipmentService;
+
+        public PartOrderController(
+            IPartOrderService partOrderService, 
+            IPartService partService, 
+            ICurrentUserService currentUserService,
+            IPartOrderShipmentService shipmentService)
         {
             _partOrderService = partOrderService;
             _partService = partService;
             _currentUserService = currentUserService;
+            _shipmentService = shipmentService;
         }
 
         [HttpGet]
@@ -75,8 +82,118 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<object>.Ok(update, "update expected date successfully"));
         }
 
+        [HttpPut("{orderID}/confirm")]
+        [Authorize(policy: "RequireEvmStaff")]
+        public async Task<IActionResult> UpdateStatusToConfirm(string orderID)
+        {
+            if (!Guid.TryParse(orderID, out var id)) throw new ApiException(ResponseError.InvalidOrderId);
+
+            var status = PartOrderStatus.Confirm;
+
+            var update = await _partOrderService.UpdateStatusAsync(id, status);
+
+            return Ok(ApiResponse<object>.Ok(update, "Order confirmed successfully"));
+        }
+
+        /// <summary>
+        /// EVM Staff upload file xlsx với danh sách serial để chuẩn bị gửi hàng
+        /// </summary>
+        [HttpPost("{orderID}/validate-shipment")]
+        [Authorize(policy: "RequireEvmStaff")]
+        public async Task<IActionResult> ValidateShipment(string orderID, IFormFile file)
+        {
+            if (!Guid.TryParse(orderID, out var id)) 
+                throw new ApiException(ResponseError.InvalidOrderId);
+
+            var result = await _shipmentService.ValidateShipmentFileAsync(id, file);
+
+            if (result.IsValid)
+            {
+                return Ok(ApiResponse<ShipmentValidationResultDto>.Ok(result, "Shipment file validated successfully. Ready to confirm."));
+            }
+            else
+            {
+                var errorResponse = ApiResponse<ShipmentValidationResultDto>.Fail(ResponseError.ShipmentValidationFailed);
+                errorResponse.Data = result;
+                return BadRequest(errorResponse);
+            }
+        }
+
+        /// <summary>
+        /// EVM Staff xác nhận gửi hàng sau khi validate thành công
+        /// </summary>
+        [HttpPut("{orderID}/confirm-shipment")]
+        [Authorize(policy: "RequireEvmStaff")]
+        public async Task<IActionResult> ConfirmShipment(string orderID)
+        {
+            if (!Guid.TryParse(orderID, out var id)) 
+                throw new ApiException(ResponseError.InvalidOrderId);
+
+            await _shipmentService.ConfirmShipmentAsync(id);
+
+            return Ok(ApiResponse<object>.Ok(null, "Shipment confirmed successfully. Order status changed to In Transit."));
+        }
+
+        /// <summary>
+        /// SC Staff báo đã nhận hàng (chuyển sang trạng thái kiểm tra)
+        /// </summary>
+        [HttpPut("{orderID}/acknowledge-receipt")]
+        [Authorize(policy: "RequireScStaff")]
+        public async Task<IActionResult> AcknowledgeReceipt(string orderID)
+        {
+            if (!Guid.TryParse(orderID, out var id)) 
+                throw new ApiException(ResponseError.InvalidOrderId);
+
+            var status = PartOrderStatus.Delivery;
+            var update = await _partOrderService.UpdateStatusAsync(id, status);
+
+            return Ok(ApiResponse<object>.Ok(update, "Receipt acknowledged. Ready for inspection."));
+        }
+
+        /// <summary>
+        /// SC Staff upload file xlsx để validate hàng nhận được
+        /// </summary>
+        [HttpPost("{orderID}/validate-receipt")]
+        [Authorize(policy: "RequireScStaff")]
+        public async Task<IActionResult> ValidateReceipt(string orderID, IFormFile file)
+        {
+            if (!Guid.TryParse(orderID, out var id)) 
+                throw new ApiException(ResponseError.InvalidOrderId);
+
+            var result = await _shipmentService.ValidateReceiptFileAsync(id, file);
+
+            if (result.IsValid)
+            {
+                return Ok(ApiResponse<ReceiptValidationResultDto>.Ok(result, "Receipt file validated successfully. Ready to confirm."));
+            }
+            else
+            {
+                var errorResponse = ApiResponse<ReceiptValidationResultDto>.Fail(ResponseError.ReceiptValidationFailed);
+                errorResponse.Data = result;
+                return BadRequest(errorResponse);
+            }
+        }
+
+        /// <summary>
+        /// SC Staff xác nhận hoàn tất nhận hàng với báo cáo hư hỏng (nếu có)
+        /// </summary>
+        [HttpPost("{orderID}/confirm-receipt")]
+        [Authorize(policy: "RequireScStaff")]
+        public async Task<IActionResult> ConfirmReceipt(string orderID, [FromBody] ConfirmReceiptRequestDto request)
+        {
+            if (!Guid.TryParse(orderID, out var id)) 
+                throw new ApiException(ResponseError.InvalidOrderId);
+
+            request.OrderId = id;
+            await _shipmentService.ConfirmReceiptAsync(request);
+
+            return Ok(ApiResponse<object>.Ok(null, "Receipt confirmed successfully. Good parts added to stock."));
+        }
+
+        // DEPRECATED - Replaced by confirm-receipt flow
         [HttpPut("{orderID}/confirm-delivery")]
-        [Authorize (policy: "RequireScStaff")]
+        [Authorize(policy: "RequireScStaff")]
+        [ApiExplorerSettings(IgnoreApi = true)] // Hide from Swagger
         public async Task<IActionResult> UpdateStatusDeliverd(string orderID)
         {
             if (!Guid.TryParse(orderID, out var id)) throw new ApiException(ResponseError.InvalidOrderId);
@@ -89,21 +206,10 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<object>.Ok(update, "update status successfully"));
         }
 
-        [HttpPut("{orderID}/confirm")]
-        [Authorize(policy: "RequireEvmStaff")]
-        public async Task<IActionResult> UpdateStatusToConfirm(string orderID)
-        {
-            if (!Guid.TryParse(orderID, out var id)) throw new ApiException(ResponseError.InvalidOrderId);
-
-            var status = PartOrderStatus.Confirm;
-
-            var update = await _partOrderService.UpdateStatusAsync(id, status);
-
-            return Ok(ApiResponse<object>.Ok(update, "update status successfully"));
-        }
-
+        // DEPRECATED - Replaced by confirm-shipment flow
         [HttpPut("{orderID}/delivery")]
         [Authorize(policy: "RequireEvmStaff")]
+        [ApiExplorerSettings(IgnoreApi = true)] // Hide from Swagger
         public async Task<IActionResult> UpdateStatusToDelivery(string orderID)
         {
             if (!Guid.TryParse(orderID, out var id)) throw new ApiException(ResponseError.InvalidOrderId);

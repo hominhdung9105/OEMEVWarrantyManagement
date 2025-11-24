@@ -13,6 +13,9 @@ namespace OEMEVWarrantyManagement.Share.Enums
         [Description("Confirmed")]
         Confirm,
 
+        [Description("In Transit")]
+        InTransit,
+
         [Description("Delivered")]
         Delivery,
 

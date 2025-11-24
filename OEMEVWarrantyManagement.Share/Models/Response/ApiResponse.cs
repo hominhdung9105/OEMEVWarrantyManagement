@@ -166,7 +166,50 @@
         NotFoundWarrantyPolicy,
 
         [ResponseErrorAttr("Not Found that part.", 404, 54)]
-        NotFoundThatPart
+        NotFoundThatPart,
+
+        // Part Order Shipment errors
+        [ResponseErrorAttr("Part order quantity exceeds maximum allowed per part.", 400, 55)]
+        PartOrderQuantityExceedsMax,
+
+        [ResponseErrorAttr("Invalid Excel file format.", 400, 56)]
+        InvalidExcelFormat,
+
+        [ResponseErrorAttr("Shipment validation failed. Check errors for details.", 400, 57)]
+        ShipmentValidationFailed,
+
+        [ResponseErrorAttr("Serial number not found in stock.", 400, 58)]
+        SerialNotInStock,
+
+        [ResponseErrorAttr("Serial number does not match the part model.", 400, 59)]
+        SerialModelMismatch,
+
+        [ResponseErrorAttr("Duplicate serial number in shipment.", 400, 60)]
+        DuplicateSerial,
+
+        [ResponseErrorAttr("Part order has not been confirmed yet.", 400, 61)]
+        OrderNotConfirmed,
+
+        [ResponseErrorAttr("Part order shipment has not been validated yet.", 400, 62)]
+        ShipmentNotValidated,
+
+        [ResponseErrorAttr("Receipt validation failed. Check errors for details.", 400, 63)]
+        ReceiptValidationFailed,
+
+        [ResponseErrorAttr("Serial number was not shipped in this order.", 400, 64)]
+        SerialNotShipped,
+
+        [ResponseErrorAttr("Part order has not been shipped yet.", 400, 65)]
+        OrderNotShipped,
+
+        [ResponseErrorAttr("Receipt has not been validated yet.", 400, 66)]
+        ReceiptNotValidated,
+
+        [ResponseErrorAttr("Part order is not in transit status.", 400, 67)]
+        OrderNotInTransit,
+
+        [ResponseErrorAttr("Shipment file has already been uploaded for this order.", 400, 68)]
+        ShipmentAlreadyUploaded
     }
 
     public class ApiResponse<T>

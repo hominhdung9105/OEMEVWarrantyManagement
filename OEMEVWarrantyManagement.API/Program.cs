@@ -190,6 +190,10 @@ namespace OEMEVWarrantyManagement.API
             //Part Order Item
             builder.Services.AddScoped<IPartOrderItemRepository, PartOrderItemRepository>();
             builder.Services.AddScoped<IPartOrderItemService, PartOrderItemService>();
+            //Part Order Shipment & Receipt
+            builder.Services.AddScoped<IPartOrderShipmentRepository, PartOrderShipmentRepository>();
+            builder.Services.AddScoped<IPartOrderReceiptRepository, PartOrderReceiptRepository>();
+            builder.Services.AddScoped<IPartOrderShipmentService, PartOrderShipmentService>();
             //Vehicle Warranty Policy
             builder.Services.AddScoped<IVehicleWarrantyPolicyRepository, VehicleWarrantyPolicyRepository>();
             builder.Services.AddScoped<IVehicleWarrantyPolicyService, VehicleWarrantyPolicyService>();

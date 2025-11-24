@@ -53,11 +53,24 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                 .FirstOrDefaultAsync(h => h.Model == model && h.SerialNumber == serialNumber && h.Condition == condition && h.Status == VehiclePartCurrentStatus.InStock.GetCurrentStatus());
         }
 
+        public async Task<VehiclePartHistory?> GetBySerialNumberAsync(string serialNumber)
+        {
+            return await _context.VehiclePartHistories
+                .FirstOrDefaultAsync(h => h.SerialNumber == serialNumber);
+        }
+
         public async Task UpdateAsync(VehiclePartHistory entity)
         {
             _context.VehiclePartHistories.Update(entity);
             await _context.SaveChangesAsync();
         }
+
+        public async Task UpdateRangeAsync(IEnumerable<VehiclePartHistory> entities)
+        {
+            _context.VehiclePartHistories.UpdateRange(entities);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task<bool> ExistsByVinAndModelAsync(string vin, string model)
         {
             return await _context.VehiclePartHistories.AsNoTracking().AnyAsync(vp => vp.Vin == vin && vp.Model == model);

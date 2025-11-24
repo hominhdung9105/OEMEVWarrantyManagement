@@ -3,7 +3,10 @@ using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Domain.Entities;
+using OEMEVWarrantyManagement.Share.Constants;
 using OEMEVWarrantyManagement.Share.Enums;
+using OEMEVWarrantyManagement.Share.Exceptions;
+using OEMEVWarrantyManagement.Share.Models.Response;
 
 namespace OEMEVWarrantyManagement.Application.Services
 {
@@ -24,6 +27,12 @@ namespace OEMEVWarrantyManagement.Application.Services
         }
         public async Task<PartOrderItemDto> CreateAsync(RequsetPartOrderItemDto requsetPartOrderItemDto)
         {
+            // Validate số lượng tối đa
+            if (requsetPartOrderItemDto.Quantity > PartOrderConstants.MAX_QUANTITY_PER_PART)
+            {
+                throw new ApiException(ResponseError.PartOrderQuantityExceedsMax);
+            }
+
             //Tạo mơi 1 PartOrder nếu chưa có
             var empoloyee = await _employeeRepository.GetEmployeeByIdAsync(_currentUserService.GetUserId());
             var partOrder = await _partOrderRepository.GetPendingPartOrderByOrgIdAsync(empoloyee.OrgId);

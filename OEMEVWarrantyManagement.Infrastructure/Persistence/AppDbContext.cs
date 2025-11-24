@@ -26,6 +26,8 @@ public class AppDbContext : DbContext
     public DbSet<CampaignVehicle> CampaignVehicles { get; set; }
     public DbSet<PartOrder> PartOrders { get; set; }
     public DbSet<PartOrderItem> PartOrderItems { get; set; }
+    public DbSet<PartOrderShipment> PartOrderShipments { get; set; }
+    public DbSet<PartOrderReceipt> PartOrderReceipts { get; set; }
     public DbSet<BackWarrantyClaim> BackWarrantyClaims { get; set; }
     public DbSet<Appointment> Appointments { get; set; }
     public DbSet<CampaignVehicleReplacement> CampaignVehicleReplacements { get; set; }

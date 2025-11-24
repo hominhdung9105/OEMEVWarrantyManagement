@@ -22,5 +22,9 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public Employee CreatedByEmployee { get; set; }
         [JsonIgnore]
         public ICollection<PartOrderItem> PartOrderItems { get; set; } = new List<PartOrderItem>();
+        [JsonIgnore]
+        public ICollection<PartOrderShipment> Shipments { get; set; } = new List<PartOrderShipment>();
+        [JsonIgnore]
+        public ICollection<PartOrderReceipt> Receipts { get; set; } = new List<PartOrderReceipt>();
     }
 }
