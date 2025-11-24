@@ -209,7 +209,35 @@
         OrderNotInTransit,
 
         [ResponseErrorAttr("Shipment file has already been uploaded for this order.", 400, 68)]
-        ShipmentAlreadyUploaded
+        ShipmentAlreadyUploaded,
+
+        // Part Order Issue errors
+        [ResponseErrorAttr("Invalid issue reason.", 400, 69)]
+        InvalidIssueReason,
+
+        [ResponseErrorAttr("Reason detail is required when reason is 'Other'.", 400, 70)]
+        ReasonDetailRequired,
+
+        [ResponseErrorAttr("Order cannot be cancelled in current status.", 400, 71)]
+        CannotCancelOrder,
+
+        [ResponseErrorAttr("Order cannot be returned in current status.", 400, 72)]
+        CannotReturnOrder,
+
+        [ResponseErrorAttr("Service center not found.", 404, 73)]
+        ServiceCenterNotFound,
+
+        [ResponseErrorAttr("Order has no discrepancy to resolve.", 400, 74)]
+        NoDiscrepancyToResolve,
+
+        [ResponseErrorAttr("Invalid responsible party.", 400, 75)]
+        InvalidResponsibleParty,
+
+        [ResponseErrorAttr("Order is not in return inspection status.", 400, 76)]
+        OrderNotInReturnInspection,
+
+        [ResponseErrorAttr("Cannot create order item. Order must be in Pending status.", 400, 77)]
+        CannotCreateOrderItemInvalidStatus
     }
 
     public class ApiResponse<T>

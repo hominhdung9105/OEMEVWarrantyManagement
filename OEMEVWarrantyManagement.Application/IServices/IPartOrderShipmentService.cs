@@ -8,6 +8,6 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<ShipmentValidationResultDto> ValidateShipmentFileAsync(Guid orderId, IFormFile file);
         Task ConfirmShipmentAsync(Guid orderId);
         Task<ReceiptValidationResultDto> ValidateReceiptFileAsync(Guid orderId, IFormFile file);
-        Task ConfirmReceiptAsync(ConfirmReceiptRequestDto request);
+        Task ConfirmReceiptAsync(Guid orderId, string? damagedPartsJson, List<IFormFile>? images);
     }
 }

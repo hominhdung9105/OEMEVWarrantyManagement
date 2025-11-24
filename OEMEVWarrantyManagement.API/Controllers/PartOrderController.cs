@@ -17,17 +17,20 @@ namespace OEMEVWarrantyManagement.API.Controllers
         private readonly IPartService _partService;
         private readonly ICurrentUserService _currentUserService;
         private readonly IPartOrderShipmentService _shipmentService;
+        private readonly IPartOrderIssueService _issueService;
 
         public PartOrderController(
             IPartOrderService partOrderService, 
             IPartService partService, 
             ICurrentUserService currentUserService,
-            IPartOrderShipmentService shipmentService)
+            IPartOrderShipmentService shipmentService,
+            IPartOrderIssueService issueService)
         {
             _partOrderService = partOrderService;
             _partService = partService;
             _currentUserService = currentUserService;
             _shipmentService = shipmentService;
+            _issueService = issueService;
         }
 
         [HttpGet]
@@ -179,16 +182,160 @@ namespace OEMEVWarrantyManagement.API.Controllers
         /// </summary>
         [HttpPost("{orderID}/confirm-receipt")]
         [Authorize(policy: "RequireScStaff")]
-        public async Task<IActionResult> ConfirmReceipt(string orderID, [FromBody] ConfirmReceiptRequestDto request)
+        public async Task<IActionResult> ConfirmReceipt(
+            string orderID, 
+            [FromForm] string? damagedPartsJson,
+            [FromForm] List<IFormFile>? images)
+        {
+            if (!Guid.TryParse(orderID, out var id)) 
+                throw new ApiException(ResponseError.InvalidOrderId);
+
+            await _shipmentService.ConfirmReceiptAsync(id, damagedPartsJson, images);
+
+            return Ok(ApiResponse<object>.Ok(null, "Receipt confirmed successfully. Good parts added to stock."));
+        }
+
+        #region Issue Handling
+
+        /// <summary>
+        /// Get danh sách lý do HỦY lô hàng (mất hết)
+        /// </summary>
+        [HttpGet("cancellation-reasons")]
+        [Authorize]
+        public async Task<IActionResult> GetCancellationReasons()
+        {
+            var reasons = await _issueService.GetCancellationReasonsAsync();
+            return Ok(ApiResponse<IEnumerable<CancellationReasonDto>>.Ok(reasons, "Get cancellation reasons successfully"));
+        }
+
+        /// <summary>
+        /// Get danh sách lý do TRẢ hàng về (hàng quay về kho EVM)
+        /// </summary>
+        [HttpGet("return-reasons")]
+        [Authorize]
+        public async Task<IActionResult> GetReturnReasons()
+        {
+            var reasons = await _issueService.GetReturnReasonsAsync();
+            return Ok(ApiResponse<IEnumerable<ReturnReasonDto>>.Ok(reasons, "Get return reasons successfully"));
+        }
+
+        /// <summary>
+        /// Admin hủy lô hàng (mất hết, không quay về - do tai nạn, cháy nổ, mất cắp...)
+        /// </summary>
+        [HttpPost("{orderID}/cancel-shipment")]
+        [Authorize(policy: "RequireAdmin")]
+        public async Task<IActionResult> CancelShipment(string orderID, [FromBody] CancelShipmentRequestDto request)
         {
             if (!Guid.TryParse(orderID, out var id)) 
                 throw new ApiException(ResponseError.InvalidOrderId);
 
             request.OrderId = id;
-            await _shipmentService.ConfirmReceiptAsync(request);
+            await _issueService.CancelShipmentAsync(request);
 
-            return Ok(ApiResponse<object>.Ok(null, "Receipt confirmed successfully. Good parts added to stock."));
+            return Ok(ApiResponse<object>.Ok(null, "Shipment cancelled successfully. All items considered lost."));
         }
+
+        /// <summary>
+        /// EVM/Admin báo hàng trả về kho EVM (không giao được, từ chối nhận...)
+        /// </summary>
+        [HttpPost("{orderID}/return-shipment")]
+        [Authorize(policy: "RequireEvmStaff")]
+        public async Task<IActionResult> ReturnShipment(string orderID, [FromBody] ReturnShipmentRequestDto request)
+        {
+            if (!Guid.TryParse(orderID, out var id)) 
+                throw new ApiException(ResponseError.InvalidOrderId);
+
+            request.OrderId = id;
+            await _issueService.ReturnShipmentAsync(request);
+
+            return Ok(ApiResponse<object>.Ok(null, "Shipment marked for return. Items will be returned to EVM warehouse."));
+        }
+
+        /// <summary>
+        /// EVM upload file xlsx để validate hàng trả về
+        /// </summary>
+        [HttpPost("{orderID}/validate-return-receipt")]
+        [Authorize(policy: "RequireEvmStaff")]
+        public async Task<IActionResult> ValidateReturnReceipt(string orderID, IFormFile file)
+        {
+            if (!Guid.TryParse(orderID, out var id)) 
+                throw new ApiException(ResponseError.InvalidOrderId);
+
+            var result = await _issueService.ValidateReturnReceiptAsync(id, file);
+
+            if (result.IsValid)
+            {
+                return Ok(ApiResponse<ReceiptValidationResultDto>.Ok(result, "Return receipt validated successfully. Ready to confirm."));
+            }
+            else
+            {
+                var errorResponse = ApiResponse<ReceiptValidationResultDto>.Fail(ResponseError.ReceiptValidationFailed);
+                errorResponse.Data = result;
+                return BadRequest(errorResponse);
+            }
+        }
+
+        /// <summary>
+        /// EVM xác nhận nhận hàng trả về với báo cáo hư hỏng (nếu có)
+        /// </summary>
+        [HttpPost("{orderID}/confirm-return-receipt")]
+        [Authorize(policy: "RequireEvmStaff")]
+        public async Task<IActionResult> ConfirmReturnReceipt(
+            string orderID, 
+            [FromForm] string? damagedPartsJson,
+            [FromForm] List<IFormFile>? images)
+        {
+            if (!Guid.TryParse(orderID, out var id)) 
+                throw new ApiException(ResponseError.InvalidOrderId);
+
+            await _issueService.ConfirmReturnReceiptAsync(id, damagedPartsJson, images);
+
+            return Ok(ApiResponse<object>.Ok(null, "Return receipt confirmed successfully"));
+        }
+
+        /// <summary>
+        /// Admin xem danh sách sai lệch cần xử lý
+        /// </summary>
+        [HttpGet("pending-discrepancies")]
+        [Authorize(policy: "RequireAdmin")]
+        public async Task<IActionResult> GetPendingDiscrepancies()
+        {
+            var discrepancies = await _issueService.GetPendingDiscrepanciesAsync();
+            return Ok(ApiResponse<IEnumerable<DiscrepancyResolutionDto>>.Ok(discrepancies, "Get pending discrepancies successfully"));
+        }
+
+        /// <summary>
+        /// Admin quyết định về sai lệch
+        /// </summary>
+        [HttpPost("{orderID}/resolve-discrepancy")]
+        [Authorize(policy: "RequireAdmin")]
+        public async Task<IActionResult> ResolveDiscrepancy(string orderID, [FromBody] ResolveDiscrepancyRequestDto request)
+        {
+            if (!Guid.TryParse(orderID, out var id)) 
+                throw new ApiException(ResponseError.InvalidOrderId);
+
+            request.OrderId = id;
+            await _issueService.ResolveDiscrepancyAsync(request);
+
+            return Ok(ApiResponse<object>.Ok(null, "Discrepancy resolved successfully"));
+        }
+
+        #endregion
+
+        #region EVM Create Order
+
+        /// <summary>
+        /// EVM Staff tự tạo đơn hàng cho SC
+        /// </summary>
+        [HttpPost("create-by-evm")]
+        [Authorize(policy: "RequireEvmStaff")]
+        public async Task<IActionResult> CreateOrderByEvm([FromBody] CreatePartOrderByEvmRequestDto request)
+        {
+            var orderId = await _issueService.CreatePartOrderByEvmAsync(request);
+            return Ok(ApiResponse<Guid>.Ok(orderId, "Order created successfully by EVM"));
+        }
+
+        #endregion
 
         // DEPRECATED - Replaced by confirm-receipt flow
         [HttpPut("{orderID}/confirm-delivery")]

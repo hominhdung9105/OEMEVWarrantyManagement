@@ -20,7 +20,19 @@ namespace OEMEVWarrantyManagement.Share.Enums
         Delivery,
 
         [Description("Done")]
-        Done
+        Done,
+
+        [Description("Cancelled")]
+        Cancelled,
+
+        [Description("Returning")]
+        Returning,
+
+        [Description("Return Inspection")]
+        ReturnInspection,
+
+        [Description("Discrepancy Review")]
+        DiscrepancyReview
     }
 
     public static class PartOrderStatusExtensions

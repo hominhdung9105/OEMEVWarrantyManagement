@@ -17,26 +17,32 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IPartOrderItemRepository _partOrderItemRepository;
         private readonly IPartOrderShipmentRepository _shipmentRepository;
         private readonly IPartOrderReceiptRepository _receiptRepository;
+        private readonly IPartOrderDiscrepancyResolutionRepository _discrepancyResolutionRepository;
         private readonly IVehiclePartHistoryRepository _vehiclePartHistoryRepository;
         private readonly ICurrentUserService _currentUserService;
         private readonly IPartRepository _partRepository;
+        private readonly IPartOrderImageService _imageService;
 
         public PartOrderShipmentService(
             IPartOrderRepository partOrderRepository,
             IPartOrderItemRepository partOrderItemRepository,
             IPartOrderShipmentRepository shipmentRepository,
             IPartOrderReceiptRepository receiptRepository,
+            IPartOrderDiscrepancyResolutionRepository discrepancyResolutionRepository,
             IVehiclePartHistoryRepository vehiclePartHistoryRepository,
             ICurrentUserService currentUserService,
-            IPartRepository partRepository)
+            IPartRepository partRepository,
+            IPartOrderImageService imageService)
         {
             _partOrderRepository = partOrderRepository;
             _partOrderItemRepository = partOrderItemRepository;
             _shipmentRepository = shipmentRepository;
             _receiptRepository = receiptRepository;
+            _discrepancyResolutionRepository = discrepancyResolutionRepository;
             _vehiclePartHistoryRepository = vehiclePartHistoryRepository;
             _currentUserService = currentUserService;
             _partRepository = partRepository;
+            _imageService = imageService;
         }
 
         public async Task<ShipmentValidationResultDto> ValidateShipmentFileAsync(Guid orderId, IFormFile file)
@@ -435,10 +441,10 @@ namespace OEMEVWarrantyManagement.Application.Services
             return result;
         }
 
-        public async Task ConfirmReceiptAsync(ConfirmReceiptRequestDto request)
+        public async Task ConfirmReceiptAsync(Guid orderId, string? damagedPartsJson, List<IFormFile>? images)
         {
             // Validate order exists
-            var order = await _partOrderRepository.GetPartOrderByIdAsync(request.OrderId);
+            var order = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
             if (order == null)
                 throw new ApiException(ResponseError.InvalidOrderId);
 
@@ -446,21 +452,57 @@ namespace OEMEVWarrantyManagement.Application.Services
                 throw new ApiException(ResponseError.OrderNotInTransit);
 
             // Check if receipts exist
-            var receipts = (await _receiptRepository.GetByOrderIdAsync(request.OrderId)).ToList();
+            var receipts = (await _receiptRepository.GetByOrderIdAsync(orderId)).ToList();
             if (!receipts.Any())
                 throw new ApiException(ResponseError.ReceiptNotValidated);
 
-            // Update damaged parts
-            if (request.DamagedParts != null && request.DamagedParts.Any())
+            // Parse damaged parts if provided
+            List<DamagedPartInfoDto>? damagedPartInfos = null;
+            if (!string.IsNullOrWhiteSpace(damagedPartsJson))
             {
-                foreach (var damaged in request.DamagedParts)
+                try
                 {
-                    var receipt = receipts.FirstOrDefault(r => r.SerialNumber == damaged.SerialNumber);
+                    damagedPartInfos = System.Text.Json.JsonSerializer.Deserialize<List<DamagedPartInfoDto>>(
+                        damagedPartsJson,
+                        new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                    );
+                }
+                catch (Exception)
+                {
+                    throw new ApiException(ResponseError.InvalidJsonFormat);
+                }
+            }
+
+            // Upload images and map to damaged parts
+            if (damagedPartInfos != null && damagedPartInfos.Any())
+            {
+                if (images == null || !images.Any())
+                {
+                    throw new ApiException(ResponseError.InvalidImage);
+                }
+
+                // Validate: s? l??ng ?nh ph?i b?ng s? l??ng damaged parts
+                if (images.Count != damagedPartInfos.Count)
+                {
+                    throw new ApiException(ResponseError.InvalidImage);
+                }
+
+                // Upload t?ng ?nh và gán URL
+                for (int i = 0; i < damagedPartInfos.Count; i++)
+                {
+                    var damagedPart = damagedPartInfos[i];
+                    var image = images[i];
+
+                    // Upload image
+                    var imageUrl = await _imageService.UploadDamagedPartImageAsync(image, orderId, damagedPart.SerialNumber);
+
+                    // Update receipt status
+                    var receipt = receipts.FirstOrDefault(r => r.SerialNumber == damagedPart.SerialNumber);
                     if (receipt != null)
                     {
                         receipt.Status = "Damaged";
-                        receipt.Note = damaged.Note;
-                        receipt.ImageUrl = damaged.ImageUrl;
+                        receipt.Note = damagedPart.Note;
+                        receipt.ImageUrl = imageUrl;
                     }
                 }
 
@@ -471,7 +513,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             var scOrgId = order.ServiceCenterId;
 
             // Update VehiclePartHistory for received items (excluding damaged, missing, extra)
-            var shipments = await _shipmentRepository.GetByOrderIdAsync(request.OrderId);
+            var shipments = await _shipmentRepository.GetByOrderIdAsync(orderId);
             var shippedSerials = shipments.Select(s => s.SerialNumber).ToHashSet();
             var receivedGoodSerials = receipts
                 .Where(r => r.Status == "Received")
@@ -512,8 +554,33 @@ namespace OEMEVWarrantyManagement.Application.Services
                 await _partRepository.UpdateRangeAsync(partsToUpdate);
             }
 
-            // Update order status to Done
-            order.Status = PartOrderStatus.Done.GetPartOrderStatus();
+            // Check if there are discrepancies
+            var hasDamagedParts = receipts.Any(r => r.Status == "Damaged");
+            var hasMissingParts = receipts.Count < shipments.Count();
+            var hasExtraParts = receipts.Count > shipments.Count();
+
+            if (hasDamagedParts || hasMissingParts || hasExtraParts)
+            {
+                // Create discrepancy resolution record
+                var resolution = new PartOrderDiscrepancyResolution
+                {
+                    ResolutionId = Guid.NewGuid(),
+                    OrderId = orderId,
+                    Status = DiscrepancyResolutionStatus.PendingResolution.GetStatus(),
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _discrepancyResolutionRepository.CreateAsync(resolution);
+
+                // Mark status as DiscrepancyReview
+                order.Status = PartOrderStatus.DiscrepancyReview.GetPartOrderStatus();
+            }
+            else
+            {
+                // No discrepancies, mark as Done
+                order.Status = PartOrderStatus.Done.GetPartOrderStatus();
+            }
+
             order.PartDelivery = DateTime.UtcNow;
             await _partOrderRepository.UpdateAsync(order);
         }

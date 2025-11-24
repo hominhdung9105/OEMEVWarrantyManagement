@@ -26,5 +26,9 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public ICollection<PartOrderShipment> Shipments { get; set; } = new List<PartOrderShipment>();
         [JsonIgnore]
         public ICollection<PartOrderReceipt> Receipts { get; set; } = new List<PartOrderReceipt>();
+        [JsonIgnore]
+        public ICollection<PartOrderIssue> Issues { get; set; } = new List<PartOrderIssue>();
+        [JsonIgnore]
+        public PartOrderDiscrepancyResolution? DiscrepancyResolution { get; set; }
     }
 }

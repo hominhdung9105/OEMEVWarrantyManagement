@@ -84,15 +84,34 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string Model { get; set; }
         public string SerialNumber { get; set; }
         public string Note { get; set; }
-        public string? ImageUrl { get; set; }
+        public string? ImageUrl { get; set; } // This will be set by service after upload
     }
 
     /// <summary>
     /// Request DTO ?? xác nh?n nh?n hàng hoàn t?t
+    /// Note: This DTO is for internal use after images are uploaded
     /// </summary>
     public class ConfirmReceiptRequestDto
     {
         public Guid OrderId { get; set; }
         public List<DamagedPartReportDto>? DamagedParts { get; set; }
+    }
+
+    /// <summary>
+    /// Request t? API ?? confirm receipt v?i upload ?nh
+    /// </summary>
+    public class ConfirmReceiptApiRequestDto
+    {
+        public List<DamagedPartInfoDto>? DamagedParts { get; set; }
+    }
+
+    /// <summary>
+    /// DTO cho thông tin ph? tùng h? h?ng (không bao g?m ?nh)
+    /// </summary>
+    public class DamagedPartInfoDto
+    {
+        public string Model { get; set; }
+        public string SerialNumber { get; set; }
+        public string Note { get; set; }
     }
 }
