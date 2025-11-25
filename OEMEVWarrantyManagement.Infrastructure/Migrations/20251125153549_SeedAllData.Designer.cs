@@ -12,7 +12,7 @@ using OEMEVWarrantyManagement.Infrastructure.Persistence;
 namespace OEMEVWarrantyManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251124163725_SeedAllData")]
+    [Migration("20251125153549_SeedAllData")]
     partial class SeedAllData
     {
         /// <inheritdoc />
@@ -499,6 +499,53 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.ToTable("PartOrders", (string)null);
                 });
 
+            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.PartOrderDiscrepancyDetail", b =>
+                {
+                    b.Property<Guid>("DetailId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("DiscrepancyType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("ResolutionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ResponsibleParty")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("SerialNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("DetailId");
+
+                    b.HasIndex("ResolutionId");
+
+                    b.HasIndex("SerialNumber");
+
+                    b.ToTable("PartOrderDiscrepancyDetails", (string)null);
+                });
+
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.PartOrderDiscrepancyResolution", b =>
                 {
                     b.Property<Guid>("ResolutionId")
@@ -508,26 +555,18 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Decision")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("OverallNote")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<DateTime?>("ResolvedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid?>("ResolvedBy")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ResponsibleParty")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1117,6 +1156,17 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Navigation("ServiceCenter");
                 });
 
+            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.PartOrderDiscrepancyDetail", b =>
+                {
+                    b.HasOne("OEMEVWarrantyManagement.Domain.Entities.PartOrderDiscrepancyResolution", "Resolution")
+                        .WithMany("Details")
+                        .HasForeignKey("ResolutionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Resolution");
+                });
+
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.PartOrderDiscrepancyResolution", b =>
                 {
                     b.HasOne("OEMEVWarrantyManagement.Domain.Entities.PartOrder", "PartOrder")
@@ -1356,6 +1406,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     b.Navigation("Receipts");
 
                     b.Navigation("Shipments");
+                });
+
+            modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.PartOrderDiscrepancyResolution", b =>
+                {
+                    b.Navigation("Details");
                 });
 
             modelBuilder.Entity("OEMEVWarrantyManagement.Domain.Entities.Vehicle", b =>

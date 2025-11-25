@@ -1,13 +1,12 @@
+﻿using System.Text;
 using Microsoft.AspNetCore.Http;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Domain.Entities;
-using OEMEVWarrantyManagement.Share.Constants;
 using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
-using OfficeOpenXml;
 
 namespace OEMEVWarrantyManagement.Application.Services
 {
@@ -57,10 +56,11 @@ namespace OEMEVWarrantyManagement.Application.Services
             if (order.Status != PartOrderStatus.Confirm.GetPartOrderStatus())
                 throw new ApiException(ResponseError.OrderNotConfirmed);
 
-            // Check if shipment already uploaded
-            var hasShipments = await _shipmentRepository.HasShipmentsForOrderAsync(orderId);
-            if (hasShipments)
-                throw new ApiException(ResponseError.ShipmentAlreadyUploaded);
+            // TODO - doc lai flow, co ve sai r
+            //// Check if shipment already uploaded
+            //var hasShipments = await _shipmentRepository.HasShipmentsForOrderAsync(orderId);
+            //if (hasShipments)
+            //    throw new ApiException(ResponseError.ShipmentAlreadyUploaded);
 
             // Get order items
             var orderItems = await _partOrderItemRepository.GetAllByOrderIdAsync(orderId);
@@ -68,25 +68,26 @@ namespace OEMEVWarrantyManagement.Application.Services
                 .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
 
             // Parse Excel file
-            List<ShipmentExcelRowDto> excelRows;
+            List<TransitRowDto> csvRows;
             try
             {
-                excelRows = await ParseShipmentExcelAsync(file);
+                //csvRows = await ParseShipmentExcelAsync(file);
+                csvRows = await ParseTransitModelCsvAsync(file);
             }
             catch (Exception)
             {
-                throw new ApiException(ResponseError.InvalidExcelFormat);
+                throw new ApiException(ResponseError.InvalidCsvFormat);
             }
 
-            if (excelRows.Count == 0)
+            if (csvRows.Count == 0)
             {
                 result.IsValid = false;
-                result.Errors.Add("File Excel kh�ng c� d? li?u");
+                result.Errors.Add("File Excel không có d? li?u");
                 return result;
             }
 
             // Group by model
-            var providedQuantities = excelRows.GroupBy(r => r.Model)
+            var providedQuantities = csvRows.GroupBy(r => r.Model)
                 .ToDictionary(g => g.Key, g => g.Count());
 
             // Get OEM org ID
@@ -135,7 +136,7 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             // Validate serial numbers
             var serialNumbersSeen = new HashSet<string>();
-            foreach (var row in excelRows)
+            foreach (var row in csvRows)
             {
                 // Check duplicate
                 if (serialNumbersSeen.Contains(row.SerialNumber))
@@ -146,7 +147,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                         Model = row.Model,
                         SerialNumber = row.SerialNumber,
                         ErrorType = "Duplicate",
-                        Message = $"Serial {row.SerialNumber} b? tr�ng l?p trong file"
+                        Message = $"Serial {row.SerialNumber} b? trùng l?p trong file"
                     });
                     continue;
                 }
@@ -162,7 +163,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                         Model = row.Model,
                         SerialNumber = row.SerialNumber,
                         ErrorType = "NotInStock",
-                        Message = $"Serial {row.SerialNumber} kh�ng t?n t?i trong kho"
+                        Message = $"Serial {row.SerialNumber} không t?n t?i trong kho"
                     });
                     continue;
                 }
@@ -176,7 +177,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                         Model = row.Model,
                         SerialNumber = row.SerialNumber,
                         ErrorType = "NotInStock",
-                        Message = $"Serial {row.SerialNumber} kh�ng ? tr?ng th�i InStock (hi?n t?i: {partHistory.Status})"
+                        Message = $"Serial {row.SerialNumber} không ? tr?ng thái InStock (hi?n t?i: {partHistory.Status})"
                     });
                     continue;
                 }
@@ -190,7 +191,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                         Model = row.Model,
                         SerialNumber = row.SerialNumber,
                         ErrorType = "NotInStock",
-                        Message = $"Serial {row.SerialNumber} kh�ng thu?c kho c?a t? ch?c n�y"
+                        Message = $"Serial {row.SerialNumber} không thu?c kho c?a t? ch?c này"
                     });
                     continue;
                 }
@@ -204,7 +205,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                         Model = row.Model,
                         SerialNumber = row.SerialNumber,
                         ErrorType = "WrongModel",
-                        Message = $"Serial {row.SerialNumber} thu?c model {partHistory.Model}, kh�ng ph?i {row.Model}"
+                        Message = $"Serial {row.SerialNumber} thu?c model {partHistory.Model}, không ph?i {row.Model}"
                     });
                     continue;
                 }
@@ -219,7 +220,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                         Model = row.Model,
                         SerialNumber = row.SerialNumber,
                         ErrorType = "AlreadyShipped",
-                        Message = $"Serial {row.SerialNumber} ?� ???c g?i trong ??n h�ng kh�c"
+                        Message = $"Serial {row.SerialNumber} ?ã ???c g?i trong ??n hàng khác"
                     });
                 }
             }
@@ -227,7 +228,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             // If valid, save shipments temporarily (not yet confirmed)
             if (result.IsValid)
             {
-                var shipments = excelRows.Select(r => new PartOrderShipment
+                var shipments = csvRows.Select(r => new PartOrderShipment
                 {
                     ShipmentId = Guid.NewGuid(),
                     OrderId = orderId,
@@ -298,8 +299,8 @@ namespace OEMEVWarrantyManagement.Application.Services
             if (order == null)
                 throw new ApiException(ResponseError.InvalidOrderId);
 
-            if (order.Status != PartOrderStatus.InTransit.GetPartOrderStatus())
-                throw new ApiException(ResponseError.OrderNotInTransit);
+            if (order.Status != PartOrderStatus.Delivery.GetPartOrderStatus())
+                throw new ApiException(ResponseError.OrderNotDeliveried);
 
             // Get shipments
             var shipments = await _shipmentRepository.GetByOrderIdAsync(orderId);
@@ -309,25 +310,25 @@ namespace OEMEVWarrantyManagement.Application.Services
             var shippedSerials = shipments.ToDictionary(s => s.SerialNumber, s => s);
 
             // Parse Excel file
-            List<ReceiptExcelRowDto> excelRows;
+            List<TransitRowDto> csvRows;
             try
             {
-                excelRows = await ParseReceiptExcelAsync(file);
+                csvRows = await ParseTransitModelCsvAsync(file);
             }
             catch (Exception)
             {
-                throw new ApiException(ResponseError.InvalidExcelFormat);
+                throw new ApiException(ResponseError.InvalidCsvFormat);
             }
 
-            if (excelRows.Count == 0)
+            if (csvRows.Count == 0)
             {
                 result.IsValid = false;
-                result.Errors.Add("File Excel kh�ng c� d? li?u");
+                result.Errors.Add("File Excel không có d? li?u");
                 return result;
             }
 
             // Group by model
-            var receivedQuantities = excelRows.GroupBy(r => r.Model)
+            var receivedQuantities = csvRows.GroupBy(r => r.Model)
                 .ToDictionary(g => g.Key, g => g.Count());
 
             var shippedQuantities = shipments.GroupBy(s => s.Model)
@@ -376,7 +377,7 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             // Validate serial numbers
             var serialNumbersSeen = new HashSet<string>();
-            foreach (var row in excelRows)
+            foreach (var row in csvRows)
             {
                 // Check duplicate
                 if (serialNumbersSeen.Contains(row.SerialNumber))
@@ -387,7 +388,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                         Model = row.Model,
                         SerialNumber = row.SerialNumber,
                         ErrorType = "Duplicate",
-                        Message = $"Serial {row.SerialNumber} b? tr�ng l?p trong file"
+                        Message = $"Serial {row.SerialNumber} b? trùng l?p trong file"
                     });
                     continue;
                 }
@@ -402,7 +403,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                         Model = row.Model,
                         SerialNumber = row.SerialNumber,
                         ErrorType = "NotShipped",
-                        Message = $"Serial {row.SerialNumber} kh�ng c� trong danh s�ch ?� g?i"
+                        Message = $"Serial {row.SerialNumber} không có trong danh sách ?ã g?i"
                     });
                     continue;
                 }
@@ -417,7 +418,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                         Model = row.Model,
                         SerialNumber = row.SerialNumber,
                         ErrorType = "WrongModel",
-                        Message = $"Serial {row.SerialNumber} ???c g?i v?i model {shippedItem.Model}, kh�ng ph?i {row.Model}"
+                        Message = $"Serial {row.SerialNumber} ???c g?i v?i model {shippedItem.Model}, không ph?i {row.Model}"
                     });
                 }
             }
@@ -425,7 +426,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             // If valid, save receipts temporarily
             if (result.IsValid)
             {
-                var receipts = excelRows.Select(r => new PartOrderReceipt
+                var receipts = csvRows.Select(r => new PartOrderReceipt
                 {
                     ReceiptId = Guid.NewGuid(),
                     OrderId = orderId,
@@ -448,8 +449,8 @@ namespace OEMEVWarrantyManagement.Application.Services
             if (order == null)
                 throw new ApiException(ResponseError.InvalidOrderId);
 
-            if (order.Status != PartOrderStatus.InTransit.GetPartOrderStatus())
-                throw new ApiException(ResponseError.OrderNotInTransit);
+            if (order.Status != PartOrderStatus.Delivery.GetPartOrderStatus())
+                throw new ApiException(ResponseError.OrderNotDeliveried);
 
             // Check if receipts exist
             var receipts = (await _receiptRepository.GetByOrderIdAsync(orderId)).ToList();
@@ -487,7 +488,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                     throw new ApiException(ResponseError.InvalidImage);
                 }
 
-                // Upload t?ng ?nh v� g�n URL
+                // Upload t?ng ?nh và gán URL
                 for (int i = 0; i < damagedPartInfos.Count; i++)
                 {
                     var damagedPart = damagedPartInfos[i];
@@ -585,62 +586,161 @@ namespace OEMEVWarrantyManagement.Application.Services
             await _partOrderRepository.UpdateAsync(order);
         }
 
-        private async Task<List<ShipmentExcelRowDto>> ParseShipmentExcelAsync(IFormFile file)
+        private async Task<List<TransitRowDto>> ParseTransitModelCsvAsync(IFormFile file)
         {
-            var rows = new List<ShipmentExcelRowDto>();
+            if (file == null)
+                throw new ArgumentNullException(nameof(file));
 
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            if (file.Length == 0)
+                throw new InvalidDataException("Uploaded CSV file is empty.");
+
+            var rows = new List<TransitRowDto>();
 
             using var stream = file.OpenReadStream();
-            using var package = new ExcelPackage(stream);
-            var worksheet = package.Workbook.Worksheets[0];
+            using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
 
-            // Expect: Row 1 = Header (Model, SerialNumber), Data starts from Row 2
-            for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
+            string? line;
+            int lineNumber = 0;
+
+            while ((line = await reader.ReadLineAsync()) != null)
             {
-                var model = worksheet.Cells[row, 1].Text?.Trim();
-                var serial = worksheet.Cells[row, 2].Text?.Trim();
+                lineNumber++;
 
-                if (!string.IsNullOrWhiteSpace(model) && !string.IsNullOrWhiteSpace(serial))
+                // Skip header
+                if (lineNumber == 1)
+                    continue;
+
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+
+                var parts = line.Split(',');
+
+                if (parts.Length < 2)
+                    throw new InvalidDataException($"Invalid CSV format at line {lineNumber}. Expect: Model,SerialNumber");
+
+                var model = parts[0].Trim();
+                var serial = parts[1].Trim();
+
+                if (string.IsNullOrWhiteSpace(model) || string.IsNullOrWhiteSpace(serial))
+                    continue;
+
+                rows.Add(new TransitRowDto
                 {
-                    rows.Add(new ShipmentExcelRowDto
-                    {
-                        Model = model,
-                        SerialNumber = serial
-                    });
-                }
+                    Model = model,
+                    SerialNumber = serial
+                });
             }
 
-            return await Task.FromResult(rows);
+            return rows;
         }
 
-        private async Task<List<ReceiptExcelRowDto>> ParseReceiptExcelAsync(IFormFile file)
+        /// <summary>
+        /// Lấy danh sách các part model đã được gửi trong đơn vận chuyển
+        /// </summary>
+        public async Task<IEnumerable<string>> GetShipmentPartModelsAsync(Guid orderId)
         {
-            var rows = new List<ReceiptExcelRowDto>();
+            // Validate order exists
+            var order = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
+            if (order == null)
+                throw new ApiException(ResponseError.InvalidOrderId);
 
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            // Get all shipments for this order
+            var shipments = await _shipmentRepository.GetByOrderIdAsync(orderId);
+            
+            // Get distinct models from shipments
+            var models = shipments
+                .Select(s => s.Model)
+                .Distinct()
+                .OrderBy(m => m)
+                .ToList();
 
-            using var stream = file.OpenReadStream();
-            using var package = new ExcelPackage(stream);
-            var worksheet = package.Workbook.Worksheets[0];
+            return models;
+        }
 
-            // Expect: Row 1 = Header (Model, SerialNumber), Data starts from Row 2
-            for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
-            {
-                var model = worksheet.Cells[row, 1].Text?.Trim();
-                var serial = worksheet.Cells[row, 2].Text?.Trim();
+        /// <summary>
+        /// Lấy danh sách part model với số lượng trong shipment
+        /// </summary>
+        public async Task<IEnumerable<ShipmentPartModelDto>> GetShipmentPartModelsDetailAsync(Guid orderId)
+        {
+            // Validate order exists
+            var order = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
+            if (order == null)
+                throw new ApiException(ResponseError.InvalidOrderId);
 
-                if (!string.IsNullOrWhiteSpace(model) && !string.IsNullOrWhiteSpace(serial))
+            // Get all shipments for this order
+            var shipments = await _shipmentRepository.GetByOrderIdAsync(orderId);
+            
+            // Group by model and count
+            var modelsWithQuantity = shipments
+                .GroupBy(s => s.Model)
+                .Select(g => new ShipmentPartModelDto
                 {
-                    rows.Add(new ReceiptExcelRowDto
-                    {
-                        Model = model,
-                        SerialNumber = serial
-                    });
-                }
-            }
+                    Model = g.Key,
+                    Quantity = g.Count()
+                })
+                .OrderBy(m => m.Model)
+                .ToList();
 
-            return await Task.FromResult(rows);
+            return modelsWithQuantity;
+        }
+
+        /// <summary>
+        /// Lấy danh sách serial number của một part model cụ thể trong đơn vận chuyển
+        /// </summary>
+        public async Task<IEnumerable<string>> GetShipmentSerialsByModelAsync(Guid orderId, string model)
+        {
+            // Validate order exists
+            var order = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
+            if (order == null)
+                throw new ApiException(ResponseError.InvalidOrderId);
+
+            // Validate model parameter
+            if (string.IsNullOrWhiteSpace(model))
+                throw new ApiException(ResponseError.InvalidPartModel);
+
+            // Get all shipments for this order and model
+            var shipments = await _shipmentRepository.GetByOrderIdAsync(orderId);
+            
+            // Filter by model and get serial numbers
+            var serialNumbers = shipments
+                .Where(s => string.Equals(s.Model, model.Trim(), StringComparison.OrdinalIgnoreCase))
+                .Select(s => s.SerialNumber)
+                .OrderBy(sn => sn)
+                .ToList();
+
+            return serialNumbers;
+        }
+
+        /// <summary>
+        /// Lấy danh sách serial với thông tin chi tiết của một part model trong shipment
+        /// </summary>
+        public async Task<IEnumerable<ShipmentSerialDto>> GetShipmentSerialsDetailByModelAsync(Guid orderId, string model)
+        {
+            // Validate order exists
+            var order = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
+            if (order == null)
+                throw new ApiException(ResponseError.InvalidOrderId);
+
+            // Validate model parameter
+            if (string.IsNullOrWhiteSpace(model))
+                throw new ApiException(ResponseError.InvalidPartModel);
+
+            // Get all shipments for this order and model
+            var shipments = await _shipmentRepository.GetByOrderIdAsync(orderId);
+            
+            // Filter by model and map to detailed DTO
+            var serialDetails = shipments
+                .Where(s => string.Equals(s.Model, model.Trim(), StringComparison.OrdinalIgnoreCase))
+                .Select(s => new ShipmentSerialDto
+                {
+                    SerialNumber = s.SerialNumber,
+                    Status = s.Status,
+                    ShippedAt = s.ShippedAt
+                })
+                .OrderBy(s => s.SerialNumber)
+                .ToList();
+
+            return serialDetails;
         }
     }
 }

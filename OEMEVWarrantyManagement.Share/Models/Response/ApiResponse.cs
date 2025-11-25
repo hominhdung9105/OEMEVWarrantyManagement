@@ -172,8 +172,8 @@
         [ResponseErrorAttr("Part order quantity exceeds maximum allowed per part.", 400, 55)]
         PartOrderQuantityExceedsMax,
 
-        [ResponseErrorAttr("Invalid Excel file format.", 400, 56)]
-        InvalidExcelFormat,
+        [ResponseErrorAttr("Invalid CSV file format.", 400, 56)]
+        InvalidCsvFormat,
 
         [ResponseErrorAttr("Shipment validation failed. Check errors for details.", 400, 57)]
         ShipmentValidationFailed,
@@ -254,7 +254,10 @@
         TechnicianCountMismatch,
 
         [ResponseErrorAttr("Technician must be from the same service center.", 403, 82)]
-        TechnicianNotInSameServiceCenter
+        TechnicianNotInSameServiceCenter,
+
+        [ResponseErrorAttr("Part order is not deliveried.", 400, 83)]
+        OrderNotDeliveried,
     }
 
     public class ApiResponse<T>

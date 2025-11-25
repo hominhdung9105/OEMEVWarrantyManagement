@@ -31,17 +31,67 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public Guid ResolutionId { get; set; }
         public Guid OrderId { get; set; }
         public string Status { get; set; } // T? enum DiscrepancyResolutionStatus
-        public string? ResponsibleParty { get; set; } // EVM, SC, Transport, Shared
-        public string? Decision { get; set; } // Quy?t ??nh cu?i cùng
-        public string? Note { get; set; }
         public Guid? ResolvedBy { get; set; }
         public DateTime? ResolvedAt { get; set; }
         public DateTime CreatedAt { get; set; }
+        
+        /// <summary>
+        /// Ghi chú chung cho toàn b? ??n hàng
+        /// </summary>
+        public string? OverallNote { get; set; }
 
         // Navigation Properties
         [JsonIgnore]
         public PartOrder PartOrder { get; set; }
         [JsonIgnore]
         public Employee? ResolvedByEmployee { get; set; }
+        [JsonIgnore]
+        public ICollection<PartOrderDiscrepancyDetail> Details { get; set; } = new List<PartOrderDiscrepancyDetail>();
+    }
+
+    /// <summary>
+    /// Chi ti?t quy?t ??nh cho t?ng ph? tùng b? sai l?ch
+    /// </summary>
+    public class PartOrderDiscrepancyDetail
+    {
+        public Guid DetailId { get; set; }
+        public Guid ResolutionId { get; set; }
+        
+        /// <summary>
+        /// Serial number c?a ph? tùng
+        /// </summary>
+        public string SerialNumber { get; set; }
+        
+        /// <summary>
+        /// Model c?a ph? tùng
+        /// </summary>
+        public string Model { get; set; }
+        
+        /// <summary>
+        /// Lo?i sai l?ch: "Damaged", "Excess", "Shortage"
+        /// </summary>
+        public string DiscrepancyType { get; set; }
+        
+        /// <summary>
+        /// Bên ch?u trách nhi?m: "EVM", "SC", "Transport", "Shared"
+        /// </summary>
+        public string ResponsibleParty { get; set; }
+        
+        /// <summary>
+        /// Hành ??ng x? lý
+        /// Damaged: "Compensate", "Repair", "Accept_As_Is"
+        /// Excess: "Keep_At_SC", "Return_To_EVM"
+        /// Shortage: "Compensate", "Reship", "Accept_Loss"
+        /// </summary>
+        public string Action { get; set; }
+        
+        /// <summary>
+        /// Ghi chú cho ph? tùng này
+        /// </summary>
+        public string? Note { get; set; }
+
+        // Navigation Properties
+        [JsonIgnore]
+        public PartOrderDiscrepancyResolution Resolution { get; set; }
     }
 }

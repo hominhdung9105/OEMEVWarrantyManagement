@@ -381,12 +381,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                     ResolutionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    ResponsibleParty = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    Decision = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
-                    Note = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
                     ResolvedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     ResolvedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    OverallNote = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -583,6 +581,30 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "PartOrderDiscrepancyDetails",
+                columns: table => new
+                {
+                    DetailId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ResolutionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SerialNumber = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Model = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    DiscrepancyType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ResponsibleParty = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Action = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Note = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PartOrderDiscrepancyDetails", x => x.DetailId);
+                    table.ForeignKey(
+                        name: "FK_PartOrderDiscrepancyDetails_PartOrderDiscrepancyResolutions_ResolutionId",
+                        column: x => x.ResolutionId,
+                        principalTable: "PartOrderDiscrepancyResolutions",
+                        principalColumn: "ResolutionId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "BackWarrantyClaim",
                 columns: table => new
                 {
@@ -740,6 +762,16 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 column: "OrgId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_PartOrderDiscrepancyDetails_ResolutionId",
+                table: "PartOrderDiscrepancyDetails",
+                column: "ResolutionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PartOrderDiscrepancyDetails_SerialNumber",
+                table: "PartOrderDiscrepancyDetails",
+                column: "SerialNumber");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_PartOrderDiscrepancyResolutions_OrderId",
                 table: "PartOrderDiscrepancyResolutions",
                 column: "OrderId",
@@ -884,7 +916,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 name: "ClaimParts");
 
             migrationBuilder.DropTable(
-                name: "PartOrderDiscrepancyResolutions");
+                name: "PartOrderDiscrepancyDetails");
 
             migrationBuilder.DropTable(
                 name: "PartOrderIssues");
@@ -914,7 +946,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 name: "WarrantyClaims");
 
             migrationBuilder.DropTable(
-                name: "PartOrders");
+                name: "PartOrderDiscrepancyResolutions");
 
             migrationBuilder.DropTable(
                 name: "Campaigns");
@@ -923,13 +955,16 @@ namespace OEMEVWarrantyManagement.Infrastructure.Migrations
                 name: "VehicleWarrantyPolicies");
 
             migrationBuilder.DropTable(
-                name: "Employee");
+                name: "PartOrders");
 
             migrationBuilder.DropTable(
                 name: "Vehicles");
 
             migrationBuilder.DropTable(
                 name: "WarrantyPolicies");
+
+            migrationBuilder.DropTable(
+                name: "Employee");
 
             migrationBuilder.DropTable(
                 name: "Customers");

@@ -69,7 +69,8 @@ namespace OEMEVWarrantyManagement.Share.Middlewares
                 {
                     Success = false,
                     Code = attr.Code,
-                    Message = attr.Message, 
+                    Message = ex.Message,
+                    //Message = attr.Message,
                     Data = null
                 };
 

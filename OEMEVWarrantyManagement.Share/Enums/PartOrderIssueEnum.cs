@@ -86,18 +86,6 @@ namespace OEMEVWarrantyManagement.Share.Enums
         [Description("Pending Resolution")]
         PendingResolution,
 
-        [Description("EVM Responsible")]
-        EvmResponsible,
-
-        [Description("SC Responsible")]
-        ScResponsible,
-
-        [Description("Shared Responsibility")]
-        SharedResponsibility,
-
-        [Description("Transport Responsible")]
-        TransportResponsible,
-
         [Description("Resolved")]
         Resolved
     }
@@ -109,6 +97,174 @@ namespace OEMEVWarrantyManagement.Share.Enums
             var memberInfo = typeof(DiscrepancyResolutionStatus).GetField(status.ToString());
             var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute));
             return attribute?.Description ?? status.ToString();
+        }
+    }
+
+    /// <summary>
+    /// Lo?i sai l?ch
+    /// </summary>
+    public enum DiscrepancyType
+    {
+        [Description("Damaged")]
+        Damaged,
+
+        [Description("Excess")]
+        Excess,
+
+        [Description("Shortage")]
+        Shortage
+    }
+
+    public static class DiscrepancyTypeExtensions
+    {
+        public static string GetDescription(this DiscrepancyType type)
+        {
+            var memberInfo = typeof(DiscrepancyType).GetField(type.ToString());
+            var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute));
+            return attribute?.Description ?? type.ToString();
+        }
+
+        public static List<string> GetAllTypes()
+        {
+            return Enum.GetValues<DiscrepancyType>()
+                .Select(t => t.GetDescription())
+                .ToList();
+        }
+    }
+
+    /// <summary>
+    /// Bên ch?u trách nhi?m
+    /// </summary>
+    public enum ResponsibleParty
+    {
+        [Description("EVM")]
+        EVM,
+
+        [Description("SC")]
+        SC,
+
+        [Description("Transport")]
+        Transport,
+
+        [Description("Shared")]
+        Shared
+    }
+
+    public static class ResponsiblePartyExtensions
+    {
+        public static string GetDescription(this ResponsibleParty party)
+        {
+            var memberInfo = typeof(ResponsibleParty).GetField(party.ToString());
+            var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute));
+            return attribute?.Description ?? party.ToString();
+        }
+
+        public static List<string> GetAllParties()
+        {
+            return Enum.GetValues<ResponsibleParty>()
+                .Select(p => p.GetDescription())
+                .ToList();
+        }
+
+        public static bool IsValid(string party)
+        {
+            return GetAllParties().Any(p => string.Equals(p, party, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    /// <summary>
+    /// Hành ??ng x? lý cho ph? tùng h? h?ng
+    /// </summary>
+    public enum DamagedPartAction
+    {
+        [Description("Compensate")]
+        Compensate,
+
+        [Description("Repair")]
+        Repair,
+
+        [Description("Accept As Is")]
+        AcceptAsIs,
+
+        [Description("Return To EVM")]
+        ReturnToEVM
+    }
+
+    public static class DamagedPartActionExtensions
+    {
+        public static string GetDescription(this DamagedPartAction action)
+        {
+            var memberInfo = typeof(DamagedPartAction).GetField(action.ToString());
+            var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute));
+            return attribute?.Description ?? action.ToString();
+        }
+
+        public static List<string> GetAllActions()
+        {
+            return Enum.GetValues<DamagedPartAction>()
+                .Select(a => a.GetDescription())
+                .ToList();
+        }
+    }
+
+    /// <summary>
+    /// Hành ??ng x? lý cho ph? tùng d?
+    /// </summary>
+    public enum ExcessPartAction
+    {
+        [Description("Keep At SC")]
+        KeepAtSC,
+
+        [Description("Return To EVM")]
+        ReturnToEVM
+    }
+
+    public static class ExcessPartActionExtensions
+    {
+        public static string GetDescription(this ExcessPartAction action)
+        {
+            var memberInfo = typeof(ExcessPartAction).GetField(action.ToString());
+            var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute));
+            return attribute?.Description ?? action.ToString();
+        }
+
+        public static List<string> GetAllActions()
+        {
+            return Enum.GetValues<ExcessPartAction>()
+                .Select(a => a.GetDescription())
+                .ToList();
+        }
+    }
+
+    /// <summary>
+    /// Hành ??ng x? lý cho ph? tùng thi?u
+    /// </summary>
+    public enum ShortagePartAction
+    {
+        [Description("Compensate")]
+        Compensate,
+
+        [Description("Reship")]
+        Reship,
+
+        [Description("Accept Loss")]
+        AcceptLoss
+    }
+
+    public static class ShortagePartActionExtensions
+    {
+        public static string GetDescription(this ShortagePartAction action)
+        {
+            var memberInfo = typeof(ShortagePartAction).GetField(action.ToString());
+            var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute));
+            return attribute?.Description ?? action.ToString();
+        }
+
+        public static List<string> GetAllActions()
+        {
+            return Enum.GetValues<ShortagePartAction>()
+                .Select(a => a.GetDescription())
+                .ToList();
         }
     }
 }

@@ -4,17 +4,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
     /// DTO ??i di?n cho m?t dòng trong file Excel g?i hàng (EVM)
     /// Format: Model | SerialNumber
     /// </summary>
-    public class ShipmentExcelRowDto
-    {
-        public string Model { get; set; }
-        public string SerialNumber { get; set; }
-    }
-
-    /// <summary>
-    /// DTO ??i di?n cho m?t dòng trong file Excel nh?n hàng (SC)
-    /// Format: Model | SerialNumber
-    /// </summary>
-    public class ReceiptExcelRowDto
+    public class TransitRowDto
     {
         public string Model { get; set; }
         public string SerialNumber { get; set; }
@@ -113,5 +103,24 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string Model { get; set; }
         public string SerialNumber { get; set; }
         public string Note { get; set; }
+    }
+
+    /// <summary>
+    /// DTO cho danh sách part model trong shipment v?i s? l??ng
+    /// </summary>
+    public class ShipmentPartModelDto
+    {
+        public string Model { get; set; }
+        public int Quantity { get; set; }
+    }
+
+    /// <summary>
+    /// DTO cho serial number v?i thông tin chi ti?t
+    /// </summary>
+    public class ShipmentSerialDto
+    {
+        public string SerialNumber { get; set; }
+        public string Status { get; set; }
+        public DateTime ShippedAt { get; set; }
     }
 }

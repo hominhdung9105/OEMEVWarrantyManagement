@@ -13,7 +13,9 @@ namespace OEMEVWarrantyManagement.Application.IRepository
     {
         Task<PartOrderDiscrepancyResolution> CreateAsync(PartOrderDiscrepancyResolution resolution);
         Task<PartOrderDiscrepancyResolution?> GetByOrderIdAsync(Guid orderId);
-        Task UpdateAsync(PartOrderDiscrepancyResolution resolution);
+        Task<PartOrderDiscrepancyResolution> UpdateAsync(PartOrderDiscrepancyResolution resolution);
         Task<IEnumerable<PartOrderDiscrepancyResolution>> GetPendingResolutionsAsync();
+        Task<PartOrderDiscrepancyDetail> CreateDetailAsync(PartOrderDiscrepancyDetail detail);
+        Task<IEnumerable<PartOrderDiscrepancyDetail>> GetDetailsByResolutionIdAsync(Guid resolutionId);
     }
 }

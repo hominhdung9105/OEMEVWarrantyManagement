@@ -58,20 +58,37 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         public async Task<PartOrderDiscrepancyResolution?> GetByOrderIdAsync(Guid orderId)
         {
             return await _context.PartOrderDiscrepancyResolutions
+                .Include(r => r.Details)
                 .FirstOrDefaultAsync(r => r.OrderId == orderId);
         }
 
-        public async Task UpdateAsync(PartOrderDiscrepancyResolution resolution)
+        public async Task<PartOrderDiscrepancyResolution> UpdateAsync(PartOrderDiscrepancyResolution resolution)
         {
             _context.PartOrderDiscrepancyResolutions.Update(resolution);
             await _context.SaveChangesAsync();
+            return resolution;
         }
 
         public async Task<IEnumerable<PartOrderDiscrepancyResolution>> GetPendingResolutionsAsync()
         {
             return await _context.PartOrderDiscrepancyResolutions
+                .Include(r => r.Details)
                 .Where(r => r.Status == DiscrepancyResolutionStatus.PendingResolution.GetStatus())
                 .OrderBy(r => r.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<PartOrderDiscrepancyDetail> CreateDetailAsync(PartOrderDiscrepancyDetail detail)
+        {
+            await _context.PartOrderDiscrepancyDetails.AddAsync(detail);
+            await _context.SaveChangesAsync();
+            return detail;
+        }
+
+        public async Task<IEnumerable<PartOrderDiscrepancyDetail>> GetDetailsByResolutionIdAsync(Guid resolutionId)
+        {
+            return await _context.PartOrderDiscrepancyDetails
+                .Where(d => d.ResolutionId == resolutionId)
                 .ToListAsync();
         }
     }

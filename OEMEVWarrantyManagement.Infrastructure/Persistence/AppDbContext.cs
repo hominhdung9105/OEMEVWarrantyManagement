@@ -30,6 +30,7 @@ public class AppDbContext : DbContext
     public DbSet<PartOrderReceipt> PartOrderReceipts { get; set; }
     public DbSet<PartOrderIssue> PartOrderIssues { get; set; }
     public DbSet<PartOrderDiscrepancyResolution> PartOrderDiscrepancyResolutions { get; set; }
+    public DbSet<PartOrderDiscrepancyDetail> PartOrderDiscrepancyDetails { get; set; }
     public DbSet<BackWarrantyClaim> BackWarrantyClaims { get; set; }
     public DbSet<Appointment> Appointments { get; set; }
     public DbSet<CampaignVehicleReplacement> CampaignVehicleReplacements { get; set; }

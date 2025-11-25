@@ -244,6 +244,17 @@ namespace OEMEVWarrantyManagement.API.Controllers
         }
 
         /// <summary>
+        /// Get tất cả các lựa chọn cho việc xử lý sai lệch (loại sai lệch, bên chịu trách nhiệm, hành động)
+        /// </summary>
+        [HttpGet("discrepancy-resolution-options")]
+        [Authorize]
+        public async Task<IActionResult> GetDiscrepancyResolutionOptions()
+        {
+            var options = await _issueService.GetDiscrepancyResolutionOptionsAsync();
+            return Ok(ApiResponse<DiscrepancyResolutionOptionsDto>.Ok(options, "Get discrepancy resolution options successfully"));
+        }
+
+        /// <summary>
         /// Admin hủy lô hàng (mất hết, không quay về - do tai nạn, cháy nổ, mất cắp...)
         /// </summary>
         [HttpPost("{orderID}/cancel-shipment")]
@@ -361,34 +372,88 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         #endregion
 
-        // DEPRECATED - Replaced by confirm-receipt flow
-        [HttpPut("{orderID}/confirm-delivery")]
-        [Authorize(policy: "RequireScStaff")]
-        [ApiExplorerSettings(IgnoreApi = true)] // Hide from Swagger
-        public async Task<IActionResult> UpdateStatusDeliverd(string orderID)
+        #region Shipment Information
+
+        /// <summary>
+        /// Lấy danh sách các part model đã được gửi trong đơn vận chuyển
+        /// </summary>
+        [HttpGet("{orderID}/shipment-models")]
+        [Authorize]
+        public async Task<IActionResult> GetShipmentPartModels(string orderID)
         {
-            if (!Guid.TryParse(orderID, out var id)) throw new ApiException(ResponseError.InvalidOrderId);
+            if (!Guid.TryParse(orderID, out var id))
+                throw new ApiException(ResponseError.InvalidOrderId);
 
-            var status = PartOrderStatus.Done;
-
-            var update = await _partOrderService.UpdateStatusAsync(id, status);
-            var _ = await _partService.UpdateQuantityAsync(Guid.Parse(orderID));
-
-            return Ok(ApiResponse<object>.Ok(update, "update status successfully"));
+            var models = await _shipmentService.GetShipmentPartModelsAsync(id);
+            return Ok(ApiResponse<IEnumerable<string>>.Ok(models, "Get shipment part models successfully"));
         }
 
-        // DEPRECATED - Replaced by confirm-shipment flow
-        [HttpPut("{orderID}/delivery")]
-        [Authorize(policy: "RequireEvmStaff")]
-        [ApiExplorerSettings(IgnoreApi = true)] // Hide from Swagger
-        public async Task<IActionResult> UpdateStatusToDelivery(string orderID)
+        /// <summary>
+        /// Lấy danh sách serial number của một part model cụ thể trong đơn vận chuyển
+        /// </summary>
+        [HttpGet("{orderID}/shipment-serials")]
+        [Authorize]
+        public async Task<IActionResult> GetShipmentSerialsByModel(string orderID, [FromQuery] string model)
         {
-            if (!Guid.TryParse(orderID, out var id)) throw new ApiException(ResponseError.InvalidOrderId);
-            var status = PartOrderStatus.Delivery;
+            if (!Guid.TryParse(orderID, out var id))
+                throw new ApiException(ResponseError.InvalidOrderId);
 
-            var update = await _partOrderService.UpdateStatusAsync(id, status);
-            var _ = await _partService.UpdateEvmQuantityAsync(Guid.Parse(orderID));
-            return Ok(ApiResponse<object>.Ok(update, "update status successfully"));
+            if (string.IsNullOrWhiteSpace(model))
+                throw new ApiException(ResponseError.InvalidPartModel);
+
+            var serials = await _shipmentService.GetShipmentSerialsByModelAsync(id, model);
+            return Ok(ApiResponse<IEnumerable<string>>.Ok(serials, "Get shipment serials successfully"));
         }
+
+        #endregion
+
+        /// <summary>
+        /// Lấy thông tin chi tiết đầy đủ của một đơn hàng part request
+        /// Bao gồm: items, shipments, receipts, issues (cancel/return), và discrepancy resolution
+        /// </summary>
+        [HttpGet("{orderID}")]
+        [Authorize]
+        public async Task<IActionResult> GetDetail(string orderID)
+        {
+            if (!Guid.TryParse(orderID, out var id))
+                throw new ApiException(ResponseError.InvalidOrderId);
+
+            var result = await _partOrderService.GetDetailAsync(id);
+            
+            if (result == null)
+                throw new ApiException(ResponseError.InvalidOrderId);
+
+            return Ok(ApiResponse<ResponsePartOrderDetailDto>.Ok(result, "Get part order detail successfully"));
+        }
+
+        //// DEPRECATED - Replaced by confirm-receipt flow
+        //[HttpPut("{orderID}/confirm-delivery")]
+        //[Authorize(policy: "RequireScStaff")]
+        //[ApiExplorerSettings(IgnoreApi = true)] // Hide from Swagger
+        //public async Task<IActionResult> UpdateStatusDeliverd(string orderID)
+        //{
+        //    if (!Guid.TryParse(orderID, out var id)) throw new ApiException(ResponseError.InvalidOrderId);
+
+        //    var status = PartOrderStatus.Done;
+
+        //    var update = await _partOrderService.UpdateStatusAsync(id, status);
+        //    var _ = await _partService.UpdateQuantityAsync(Guid.Parse(orderID));
+
+        //    return Ok(ApiResponse<object>.Ok(update, "update status successfully"));
+        //}
+
+        //// DEPRECATED - Replaced by confirm-shipment flow
+        //[HttpPut("{orderID}/delivery")]
+        //[Authorize(policy: "RequireEvmStaff")]
+        //[ApiExplorerSettings(IgnoreApi = true)] // Hide from Swagger
+        //public async Task<IActionResult> UpdateStatusToDelivery(string orderID)
+        //{
+        //    if (!Guid.TryParse(orderID, out var id)) throw new ApiException(ResponseError.InvalidOrderId);
+        //    var status = PartOrderStatus.Delivery;
+
+        //    var update = await _partOrderService.UpdateStatusAsync(id, status);
+        //    var _ = await _partService.UpdateEvmQuantityAsync(Guid.Parse(orderID));
+        //    return Ok(ApiResponse<object>.Ok(update, "update status successfully"));
+        //}
     }
 }

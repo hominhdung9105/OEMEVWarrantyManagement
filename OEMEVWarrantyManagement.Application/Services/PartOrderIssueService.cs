@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.AspNetCore.Http;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
@@ -74,6 +75,53 @@ namespace OEMEVWarrantyManagement.Application.Services
             }));
         }
 
+        public async Task<DiscrepancyResolutionOptionsDto> GetDiscrepancyResolutionOptionsAsync()
+        {
+            var options = new DiscrepancyResolutionOptionsDto();
+
+            // Get discrepancy types
+            options.DiscrepancyTypes = DiscrepancyTypeExtensions.GetAllTypes()
+                .Select(t => new DiscrepancyTypeOptionDto
+                {
+                    Value = t,
+                    Description = t
+                }).ToList();
+
+            // Get responsible parties
+            options.ResponsibleParties = ResponsiblePartyExtensions.GetAllParties()
+                .Select(p => new ResponsiblePartyOptionDto
+                {
+                    Value = p,
+                    Description = p
+                }).ToList();
+
+            // Get damaged part actions
+            options.DamagedPartActions = DamagedPartActionExtensions.GetAllActions()
+                .Select(a => new DamagedPartActionOptionDto
+                {
+                    Value = a,
+                    Description = a
+                }).ToList();
+
+            // Get excess part actions
+            options.ExcessPartActions = ExcessPartActionExtensions.GetAllActions()
+                .Select(a => new ExcessPartActionOptionDto
+                {
+                    Value = a,
+                    Description = a
+                }).ToList();
+
+            // Get shortage part actions
+            options.ShortagePartActions = ShortagePartActionExtensions.GetAllActions()
+                .Select(a => new ShortagePartActionOptionDto
+                {
+                    Value = a,
+                    Description = a
+                }).ToList();
+
+            return await Task.FromResult(options);
+        }
+
         public async Task CancelShipmentAsync(CancelShipmentRequestDto request)
         {
             // Validate order exists and is in InTransit
@@ -84,12 +132,12 @@ namespace OEMEVWarrantyManagement.Application.Services
             if (order.Status != PartOrderStatus.InTransit.GetPartOrderStatus())
                 throw new ApiException(ResponseError.CannotCancelOrder);
 
-            // Validate reason
-            if (!Enum.TryParse<PartOrderCancellationReason>(request.Reason, out var reason))
-                throw new ApiException(ResponseError.InvalidIssueReason);
+            //// Validate reason
+            //if (!Enum.TryParse<PartOrderCancellationReason>(request.Reason, out var reason))
+            //    throw new ApiException(ResponseError.InvalidIssueReason);
 
             // If reason is Other, ReasonDetail is required
-            if (reason == PartOrderCancellationReason.Other && string.IsNullOrWhiteSpace(request.ReasonDetail))
+            if (request.Reason == PartOrderCancellationReason.Other && string.IsNullOrWhiteSpace(request.ReasonDetail))
                 throw new ApiException(ResponseError.ReasonDetailRequired);
 
             var userId = _currentUserService.GetUserId();
@@ -100,7 +148,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                 IssueId = Guid.NewGuid(),
                 OrderId = request.OrderId,
                 IssueType = "Cancellation",
-                Reason = reason.GetDescription(),
+                Reason = request.Reason.GetDescription(),
                 ReasonDetail = request.ReasonDetail,
                 Note = request.Note,
                 CreatedBy = userId,
@@ -181,36 +229,17 @@ namespace OEMEVWarrantyManagement.Application.Services
             var shippedSerials = shipments.ToDictionary(s => s.SerialNumber, s => s);
 
             // Parse Excel file
-            List<ReceiptExcelRowDto> excelRows;
+            List<TransitRowDto> csvRows;
             try
             {
-                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-                using var stream = file.OpenReadStream();
-                using var package = new ExcelPackage(stream);
-                var worksheet = package.Workbook.Worksheets[0];
-
-                excelRows = new List<ReceiptExcelRowDto>();
-                for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
-                {
-                    var model = worksheet.Cells[row, 1].Text?.Trim();
-                    var serial = worksheet.Cells[row, 2].Text?.Trim();
-
-                    if (!string.IsNullOrWhiteSpace(model) && !string.IsNullOrWhiteSpace(serial))
-                    {
-                        excelRows.Add(new ReceiptExcelRowDto
-                        {
-                            Model = model,
-                            SerialNumber = serial
-                        });
-                    }
-                }
+                csvRows = await ParseTransitModelCsvAsync(file);
             }
             catch (Exception)
             {
-                throw new ApiException(ResponseError.InvalidExcelFormat);
+                throw new ApiException(ResponseError.InvalidCsvFormat);
             }
 
-            if (excelRows.Count == 0)
+            if (csvRows.Count == 0)
             {
                 result.IsValid = false;
                 result.Errors.Add("File Excel không có d? li?u");
@@ -218,7 +247,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             }
 
             // Group by model
-            var returnedQuantities = excelRows.GroupBy(r => r.Model)
+            var returnedQuantities = csvRows.GroupBy(r => r.Model)
                 .ToDictionary(g => g.Key, g => g.Count());
 
             var shippedQuantities = shipments.GroupBy(s => s.Model)
@@ -250,7 +279,7 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             // Validate serial numbers
             var serialNumbersSeen = new HashSet<string>();
-            foreach (var row in excelRows)
+            foreach (var row in csvRows)
             {
                 // Check duplicate
                 if (serialNumbersSeen.Contains(row.SerialNumber))
@@ -302,7 +331,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             // If valid, save return receipts
             if (result.IsValid)
             {
-                var receipts = excelRows.Select(r => new PartOrderReceipt
+                var receipts = csvRows.Select(r => new PartOrderReceipt
                 {
                     ReceiptId = Guid.NewGuid(),
                     OrderId = orderId,
@@ -469,26 +498,151 @@ namespace OEMEVWarrantyManagement.Application.Services
             if (resolution == null)
                 throw new ApiException(ResponseError.NoDiscrepancyToResolve);
 
-            // Validate responsible party
-            var validParties = new[] { "EVM", "SC", "Transport", "Shared" };
-            if (!validParties.Contains(request.ResponsibleParty))
-                throw new ApiException(ResponseError.InvalidResponsibleParty);
+            // Validate part resolutions
+            if (request.PartResolutions == null || !request.PartResolutions.Any())
+                throw new ApiException(ResponseError.InvalidJsonFormat);
+
+            // Get shipments and receipts for validation
+            var shipments = (await _shipmentRepository.GetByOrderIdAsync(request.OrderId)).ToList();
+            var receipts = (await _receiptRepository.GetByOrderIdAsync(request.OrderId)).ToList();
+
+            // Create lookup dictionaries for faster validation
+            var shippedSerials = shipments.ToDictionary(s => s.SerialNumber, s => s);
+            var receivedSerials = receipts.Where(r => r.Status == PartOrderReceiptStatus.Received.GetStatus())
+                                          .ToDictionary(r => r.SerialNumber, r => r);
+            var damagedSerials = receipts.Where(r => r.Status == PartOrderReceiptStatus.Damaged.GetStatus())
+                                         .ToDictionary(r => r.SerialNumber, r => r);
+
+            // Validate each part resolution
+            foreach (var partResolution in request.PartResolutions)
+            {
+                // Validate responsible party
+                if (!ResponsiblePartyExtensions.IsValid(partResolution.ResponsibleParty))
+                    throw new ApiException(ResponseError.InvalidResponsibleParty);
+
+                var serial = partResolution.SerialNumber;
+                var model = partResolution.Model;
+                var discrepancyType = partResolution.DiscrepancyType;
+
+                // Validate based on discrepancy type
+                switch (discrepancyType)
+                {
+                    case "Damaged":
+                        // For damaged: serial must be in damaged receipts
+                        if (!damagedSerials.ContainsKey(serial))
+                        {
+                            throw new ApiException(ResponseError.SerialNotInStock);
+                        }
+                        
+                        // Verify model matches
+                        if (damagedSerials[serial].Model != model)
+                        {
+                            throw new ApiException(ResponseError.SerialModelMismatch);
+                        }
+                        break;
+
+                    case "Excess":
+                        // For excess: serial must be in received receipts but NOT in shipments
+                        if (!receivedSerials.ContainsKey(serial))
+                        {
+                            throw new ApiException(ResponseError.SerialNotInStock);
+                        }
+
+                        // Verify model matches
+                        if (receivedSerials[serial].Model != model)
+                        {
+                            throw new ApiException(ResponseError.SerialModelMismatch);
+                        }
+
+                        // Check if it's truly excess (received but not in original shipment)
+                        // Note: This validation depends on your business logic
+                        // You may want to check against order items instead
+                        break;
+
+                    case "Shortage":
+                        // For shortage: serial must be in shipments but NOT in receipts
+                        if (!shippedSerials.ContainsKey(serial))
+                        {
+                            throw new ApiException(ResponseError.SerialNotShipped);
+                        }
+
+                        // Verify model matches
+                        if (shippedSerials[serial].Model != model)
+                        {
+                            throw new ApiException(ResponseError.SerialModelMismatch);
+                        }
+
+                        // Verify it's truly missing (not received)
+                        if (receivedSerials.ContainsKey(serial) || damagedSerials.ContainsKey(serial))
+                        {
+                            throw new ApiException(ResponseError.InvalidJsonFormat);
+                        }
+                        break;
+
+                    default:
+                        throw new ApiException(ResponseError.InvalidJsonFormat);
+                }
+
+                // Validate action based on discrepancy type
+                ValidateActionForDiscrepancyType(discrepancyType, partResolution.Action);
+            }
 
             var userId = _currentUserService.GetUserId();
 
             // Update resolution
             resolution.Status = DiscrepancyResolutionStatus.Resolved.GetStatus();
-            resolution.ResponsibleParty = request.ResponsibleParty;
-            resolution.Decision = request.Decision;
-            resolution.Note = request.Note;
+            resolution.OverallNote = request.OverallNote;
             resolution.ResolvedBy = userId;
             resolution.ResolvedAt = DateTime.UtcNow;
 
             await _resolutionRepository.UpdateAsync(resolution);
 
+            // Create detail records for each part resolution
+            foreach (var partResolution in request.PartResolutions)
+            {
+                var detail = new PartOrderDiscrepancyDetail
+                {
+                    DetailId = Guid.NewGuid(),
+                    ResolutionId = resolution.ResolutionId,
+                    SerialNumber = partResolution.SerialNumber,
+                    Model = partResolution.Model,
+                    DiscrepancyType = partResolution.DiscrepancyType,
+                    ResponsibleParty = partResolution.ResponsibleParty,
+                    Action = partResolution.Action,
+                    Note = partResolution.Note
+                };
+
+                // TODO: Process action based on type and action
+                // For example:
+                // - If Excess + Keep_At_SC: Update VehiclePartHistory to SC's stock
+                // - If Shortage + Reship: Create new shipment request
+                // - If Damaged + Compensate: Record compensation
+                
+                await _resolutionRepository.CreateDetailAsync(detail);
+            }
+
             // Update order status to Done
             order.Status = PartOrderStatus.Done.GetPartOrderStatus();
             await _partOrderRepository.UpdateAsync(order);
+        }
+
+        /// <summary>
+        /// Validate that the action is appropriate for the discrepancy type
+        /// </summary>
+        private void ValidateActionForDiscrepancyType(string discrepancyType, string action)
+        {
+            var validActions = discrepancyType switch
+            {
+                "Damaged" => DamagedPartActionExtensions.GetAllActions(),
+                "Excess" => ExcessPartActionExtensions.GetAllActions(),
+                "Shortage" => ShortagePartActionExtensions.GetAllActions(),
+                _ => new List<string>()
+            };
+
+            if (!validActions.Contains(action))
+            {
+                throw new ApiException(ResponseError.InvalidJsonFormat);
+            }
         }
 
         public async Task<IEnumerable<DiscrepancyResolutionDto>> GetPendingDiscrepanciesAsync()
@@ -505,19 +659,33 @@ namespace OEMEVWarrantyManagement.Application.Services
                     resolvedByName = employee?.Name;
                 }
 
-                result.Add(new DiscrepancyResolutionDto
+                // Get details for this resolution
+                var details = await _resolutionRepository.GetDetailsByResolutionIdAsync(resolution.ResolutionId);
+
+                var discrepancyDto = new DiscrepancyResolutionDto
                 {
                     ResolutionId = resolution.ResolutionId,
                     OrderId = resolution.OrderId,
                     Status = resolution.Status,
-                    ResponsibleParty = resolution.ResponsibleParty,
-                    Decision = resolution.Decision,
-                    Note = resolution.Note,
+                    OverallNote = resolution.OverallNote,
                     ResolvedBy = resolution.ResolvedBy,
                     ResolvedByName = resolvedByName,
                     ResolvedAt = resolution.ResolvedAt,
-                    CreatedAt = resolution.CreatedAt
-                });
+                    CreatedAt = resolution.CreatedAt,
+                    PartResolutions = details.Select(d => new PartDiscrepancyDetailDto
+                    {
+                        DetailId = d.DetailId,
+                        ResolutionId = d.ResolutionId,
+                        SerialNumber = d.SerialNumber,
+                        Model = d.Model,
+                        DiscrepancyType = d.DiscrepancyType,
+                        ResponsibleParty = d.ResponsibleParty,
+                        Action = d.Action,
+                        Note = d.Note
+                    }).ToList()
+                };
+
+                result.Add(discrepancyDto);
             }
 
             return result;
@@ -571,6 +739,54 @@ namespace OEMEVWarrantyManagement.Application.Services
             }
 
             return order.OrderId;
+        }
+
+        private async Task<List<TransitRowDto>> ParseTransitModelCsvAsync(IFormFile file)
+        {
+            if (file == null)
+                throw new ArgumentNullException(nameof(file));
+
+            if (file.Length == 0)
+                throw new InvalidDataException("Uploaded CSV file is empty.");
+
+            var rows = new List<TransitRowDto>();
+
+            using var stream = file.OpenReadStream();
+            using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+
+            string? line;
+            int lineNumber = 0;
+
+            while ((line = await reader.ReadLineAsync()) != null)
+            {
+                lineNumber++;
+
+                // Skip header
+                if (lineNumber == 1)
+                    continue;
+
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+
+                var parts = line.Split(',');
+
+                if (parts.Length < 2)
+                    throw new InvalidDataException($"Invalid CSV format at line {lineNumber}. Expect: Model,SerialNumber");
+
+                var model = parts[0].Trim();
+                var serial = parts[1].Trim();
+
+                if (string.IsNullOrWhiteSpace(model) || string.IsNullOrWhiteSpace(serial))
+                    continue;
+
+                rows.Add(new TransitRowDto
+                {
+                    Model = model,
+                    SerialNumber = serial
+                });
+            }
+
+            return rows;
         }
     }
 }

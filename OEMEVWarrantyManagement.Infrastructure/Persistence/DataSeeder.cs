@@ -154,6 +154,34 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var vehiclePartHistories = new List<VehiclePartHistory>();
             var rng2 = new Random(999);
 
+            // add for evm
+            var evmParts = parts.Where(p => p.OrgId == oems[0].OrgId).ToList();
+            foreach (var part in evmParts)
+            {
+                if (part.StockQuantity <= 0) continue;
+                for (int i = 0; i < part.StockQuantity; i++)
+                {
+                    var productionDate = DateTime.UtcNow.AddDays(-rng2.Next(30, 180));
+                    var warrantyMonths = rng2.Next(12, 49);
+                    vehiclePartHistories.Add(new VehiclePartHistory
+                    {
+                        VehiclePartHistoryId = Guid.NewGuid(),
+                        Vin = null, // inventory item
+                        Model = part.Model,
+                        SerialNumber = $"SN{Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper()}",
+                        InstalledAt = DateTime.MinValue, // not installed
+                        UninstalledAt = DateTime.MinValue,
+                        ProductionDate = productionDate,
+                        WarrantyPeriodMonths = warrantyMonths,
+                        WarrantyEndDate = productionDate.AddMonths(warrantyMonths),
+                        ServiceCenterId = oems[0].OrgId,
+                        Condition = VehiclePartCondition.New.GetCondition(),
+                        Status = VehiclePartCurrentStatus.InStock.GetCurrentStatus(),
+                        Note = "Seed new inventory"
+                    });
+                }
+            }
+
             // 1. Inventory: For each SC part, create New condition InStock entries equal to StockQuantity (VIN null)
             foreach (var sc in serviceCenters)
             {

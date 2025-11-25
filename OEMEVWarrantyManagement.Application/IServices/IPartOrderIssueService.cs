@@ -11,6 +11,9 @@ namespace OEMEVWarrantyManagement.Application.IServices
         // Get return reasons
         Task<IEnumerable<ReturnReasonDto>> GetReturnReasonsAsync();
 
+        // Get discrepancy resolution options (types, responsible parties, actions)
+        Task<DiscrepancyResolutionOptionsDto> GetDiscrepancyResolutionOptionsAsync();
+
         // Cancel shipment (admin) - m?t h?t, không quay v?
         Task CancelShipmentAsync(CancelShipmentRequestDto request);
 

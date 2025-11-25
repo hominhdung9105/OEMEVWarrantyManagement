@@ -42,9 +42,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.Property(r => r.ResolutionId).ValueGeneratedOnAdd();
             builder.Property(r => r.OrderId).IsRequired();
             builder.Property(r => r.Status).IsRequired().HasMaxLength(50);
-            builder.Property(r => r.ResponsibleParty).HasMaxLength(50);
-            builder.Property(r => r.Decision).HasMaxLength(1000);
-            builder.Property(r => r.Note).HasMaxLength(1000);
+            builder.Property(r => r.OverallNote).HasMaxLength(2000);
             builder.Property(r => r.ResolvedBy);
             builder.Property(r => r.ResolvedAt);
             builder.Property(r => r.CreatedAt).IsRequired();
@@ -59,8 +57,38 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
                    .HasForeignKey(r => r.ResolvedBy)
                    .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasMany(r => r.Details)
+                   .WithOne(d => d.Resolution)
+                   .HasForeignKey(d => d.ResolutionId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
             builder.HasIndex(r => r.OrderId).IsUnique();
             builder.HasIndex(r => r.Status);
+        }
+    }
+
+    public class PartOrderDiscrepancyDetailConfiguration : IEntityTypeConfiguration<PartOrderDiscrepancyDetail>
+    {
+        public void Configure(EntityTypeBuilder<PartOrderDiscrepancyDetail> builder)
+        {
+            builder.ToTable("PartOrderDiscrepancyDetails");
+            builder.HasKey(d => d.DetailId);
+            builder.Property(d => d.DetailId).ValueGeneratedOnAdd();
+            builder.Property(d => d.ResolutionId).IsRequired();
+            builder.Property(d => d.SerialNumber).IsRequired().HasMaxLength(100);
+            builder.Property(d => d.Model).IsRequired().HasMaxLength(200);
+            builder.Property(d => d.DiscrepancyType).IsRequired().HasMaxLength(50);
+            builder.Property(d => d.ResponsibleParty).IsRequired().HasMaxLength(50);
+            builder.Property(d => d.Action).IsRequired().HasMaxLength(100);
+            builder.Property(d => d.Note).HasMaxLength(1000);
+
+            builder.HasOne(d => d.Resolution)
+                   .WithMany(r => r.Details)
+                   .HasForeignKey(d => d.ResolutionId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasIndex(d => d.ResolutionId);
+            builder.HasIndex(d => d.SerialNumber);
         }
     }
 }
