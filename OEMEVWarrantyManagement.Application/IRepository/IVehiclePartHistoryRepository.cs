@@ -1,5 +1,6 @@
 using OEMEVWarrantyManagement.Domain.Entities;
 using System.Linq;
+using OEMEVWarrantyManagement.Share.Models.Pagination;
 
 namespace OEMEVWarrantyManagement.Application.IRepository
 {

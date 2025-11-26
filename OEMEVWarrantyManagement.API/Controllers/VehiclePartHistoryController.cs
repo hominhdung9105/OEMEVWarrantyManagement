@@ -19,14 +19,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             _vehiclePartHistoryService = historyService;
         }
 
-        //[HttpGet("Find")]
-        //[Authorize(Policy = "RequireAdmin")]
-        //public async Task<IActionResult> Get([FromQuery] string? vin, [FromQuery] string? model)
-        //{
-        //    var dto = await _vehiclePartHistoryService.GetVehicleWithHistoryAsync(vin!, model);
-        //    return Ok(ApiResponse<VehicleWithHistoryDto>.Ok(dto, "Get vehicle part histories successfully"));
-        //}
-
         [HttpGet]
         [Authorize] // Allow Admin, EVM Staff, and SC Staff (role-based filtering in service)
         public async Task<IActionResult> Get(

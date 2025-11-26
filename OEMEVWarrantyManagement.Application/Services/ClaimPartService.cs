@@ -123,18 +123,18 @@ namespace OEMEVWarrantyManagement.Application.Services
                     var vehiclePart = vehicleParts.FirstOrDefault(vp => vp.SerialNumber == claimPart.SerialNumberOld);
                     if (vehiclePart != null)
                     {
-                        vehiclePart.Status = VehiclePartCurrentStatus.Returned.GetCurrentStatus();
-                        vehiclePart.UninstalledAt = DateTime.UtcNow;
-                        await _vehiclePartHistoryRepository.UpdateAsync(vehiclePart);
+                        //vehiclePart.Status = VehiclePartCurrentStatus.Returned.GetCurrentStatus();
+                        //vehiclePart.UninstalledAt = DateTime.UtcNow;
+                        //await _vehiclePartHistoryRepository.UpdateAsync(vehiclePart);
 
                         // update history for uninstall
                         var existingHistoryOld = await _vehiclePartHistoryRepository.GetByVinAndSerialAsync(claim.Vin, vehiclePart.SerialNumber);
                         if (existingHistoryOld != null)
                         {
-                            existingHistoryOld.UninstalledAt = vehiclePart.UninstalledAt;
-                            existingHistoryOld.Status = VehiclePartCurrentStatus.InStock.GetCurrentStatus();
-                            existingHistoryOld.Condition = VehiclePartCondition.Used.GetCondition();
-                            existingHistoryOld.Note = "Updated due to warranty replacement (uninstall)";
+                            existingHistoryOld.UninstalledAt = vehiclePart.UninstalledAt; // DateTime.UtcNow; ??
+                            existingHistoryOld.Status = VehiclePartCurrentStatus.InStock.GetCurrentStatus();//TODO: BAo hanh ve thi la return hay instock
+                            existingHistoryOld.Condition = VehiclePartCondition.Used.GetCondition();//TODO: Chua xu ly viec bao hanh chon condition cho part(hard code = used)
+                            existingHistoryOld.Note = "Updated due to warranty replacement (uninstall)";//TODO
                             await _vehiclePartHistoryRepository.UpdateAsync(existingHistoryOld);
                         }
 
@@ -147,16 +147,17 @@ namespace OEMEVWarrantyManagement.Application.Services
                             Status = VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus()
                         };
 
-                        await _vehiclePartHistoryRepository.AddAsync(newvehiclePart);
+                        //await _vehiclePartHistoryRepository.AddAsync(newvehiclePart);
 
                         // update history for install new (use enums)
                         var existingHistoryNew = await _vehiclePartHistoryRepository.GetByModelAndSerialAsync(newvehiclePart.Model, newvehiclePart.SerialNumber, VehiclePartCondition.New.GetCondition()) ?? throw new ApiException(ResponseError.NotFoundThatPart);
                         if (existingHistoryNew != null)
                         {
+                            existingHistoryNew.Vin = newvehiclePart.Vin;
                             existingHistoryNew.InstalledAt = newvehiclePart.InstalledAt;
                             existingHistoryNew.Status = VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus();
                             existingHistoryNew.WarrantyEndDate = DateTime.UtcNow.AddMonths(existingHistoryNew.WarrantyPeriodMonths);
-                            existingHistoryNew.Note = "Updated as replacement part installed";
+                            existingHistoryNew.Note = "Updated as replacement part installed";//TODO??
                             await _vehiclePartHistoryRepository.UpdateAsync(existingHistoryNew);
                         }
                     }
@@ -185,7 +186,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             claim.Status = WarrantyClaimStatus.Repaired.GetWarrantyClaimStatus();
 
             await _warrantyClaimRepository.UpdateAsync(claim);
-            await _claimPartRepository.UpdateRangeAsync(claimParts);
+            await _claimPartRepository.UpdateRangeAsync(claimParts); // goi context.SaveChangesAsync(); nen tat ca deu luu, dang le can UnitOfWork hon
         }
     }
 }

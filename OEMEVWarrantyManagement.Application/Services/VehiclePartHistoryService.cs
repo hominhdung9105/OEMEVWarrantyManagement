@@ -33,6 +33,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             _currentUserService = currentUserService;
             _organizationRepository = organizationRepository;
         }
+
         public async Task<IEnumerable<VehiclePartHistoryDto>> GetHistoryByVinAsync(string vin)
         {
             var entities = await _repository.GetByVinAsync(vin);
@@ -65,6 +66,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             }
             return dto;
         }
+
         public async Task<IEnumerable<string>> GetSerialsByVinAndPartModelAsync(string vin, string partModel)
         {
             var vehicle = await _vehicleRepository.GetVehicleByVinAsync(vin) ?? throw new ApiException(ResponseError.NotfoundVin);
@@ -102,23 +104,33 @@ namespace OEMEVWarrantyManagement.Application.Services
             var (data, totalRecords) = await _repository.GetPagedAsync(request.Page, request.Size, search, condition, status, orgId);
 
             var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
+
             var items = new List<ResponseVehiclePartHistoryDto>();
 
-            foreach (var item in data)
+            // Batch load vehicles and customers to avoid N+1
+            var vins = entities.Select(e => e.Vin).Where(v => !string.IsNullOrWhiteSpace(v)).Distinct().ToList();
+            var vehicles = await _vehicleRepository.GetVehiclesByVinsAsync(vins);
+            var vehicleDict = vehicles.ToDictionary(v => v.Vin);
+
+            var customerIds = vehicles.Select(v => v.CustomerId).Distinct().ToList();
+            var customers = await _customerRepository.GetCustomersByIdsAsync(customerIds);
+            var customerDict = customers.ToDictionary(c => c.CustomerId);
+
+            foreach (var item in entities)
             {
-                var vehicle = await _vehicleRepository.GetVehicleByVinAsync(item.Vin);
-                var customer = vehicle != null ? await _customerRepository.GetCustomerByIdAsync(vehicle.CustomerId) : null;
-
                 var dto = _mapper.Map<ResponseVehiclePartHistoryDto>(item);
-                
-                if (vehicle != null)
-                {
-                    dto.CarModel = vehicle.Model;
-                    dto.CarYear = vehicle.Year.ToString();
 
-                    dto.CustomerName = customer.Name;
-                    dto.CustomerPhone = customer.Phone;
-                    dto.CustomerEmail = customer.Email;
+                if (!string.IsNullOrWhiteSpace(item.Vin) && vehicleDict.TryGetValue(item.Vin, out var veh))
+                {
+                    dto.CarModel = veh.Model;
+                    dto.CarYear = veh.Year.ToString();
+
+                    if (customerDict.TryGetValue(veh.CustomerId, out var cust))
+                    {
+                        dto.CustomerName = cust.Name;
+                        dto.CustomerPhone = cust.Phone;
+                        dto.CustomerEmail = cust.Email;
+                    }
                 }
 
                 // Get organization name for ServiceCenterId
@@ -135,7 +147,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             {
                 PageNumber = request.Page,
                 PageSize = request.Size,
-                TotalRecords = totalRecords,
+                TotalRecords = (int)totalRecords,
                 TotalPages = totalPages,
                 Items = items
             };

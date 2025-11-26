@@ -3,6 +3,7 @@ using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
 using OEMEVWarrantyManagement.Share.Enums;
+using OEMEVWarrantyManagement.Share.Models.Pagination;
 using System.Linq;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
