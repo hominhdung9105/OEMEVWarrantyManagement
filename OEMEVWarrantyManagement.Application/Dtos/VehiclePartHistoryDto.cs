@@ -28,6 +28,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string Model { get; set; }
         public string SerialNumber { get; set; }
         public DateTime InstalledAt { get; set; }
+        public DateTime UninstalledAt { get; set; }
         public DateTime ProductionDate { get; set; }
         public int WarrantyPeriodMonths { get; set; }
         public DateTime WarrantyEndDate { get; set; }

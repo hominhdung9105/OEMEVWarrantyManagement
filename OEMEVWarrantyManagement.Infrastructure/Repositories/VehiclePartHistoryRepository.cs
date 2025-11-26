@@ -3,6 +3,7 @@ using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Infrastructure.Persistence;
 using OEMEVWarrantyManagement.Share.Enums;
+using OEMEVWarrantyManagement.Share.Models.Pagination;
 using System.Linq;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Repositories
@@ -81,7 +82,48 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return _context.VehiclePartHistories.AsQueryable();
         }
 
-        // Updated: include condition & status filters
+        // New: DB-side unified paging with orgId and search similar to WarrantyClaimRepository
+        public async Task<(IEnumerable<VehiclePartHistory> data, long totalRecords)> GetPagedUnifiedAsync(PaginationRequest request, Guid? orgId, string? search, string? condition, string? status)
+        {
+            var query = _context.VehiclePartHistories.AsQueryable();
+
+            if (orgId.HasValue)
+            {
+                query = query.Where(h => h.ServiceCenterId == orgId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(condition))
+            {
+                query = query.Where(h => h.Condition == condition);
+            }
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                query = query.Where(h => h.Status == status);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.Trim().ToLower();
+
+                // Search by serial number, model, or VIN
+                query = query.Where(h => (h.SerialNumber != null && h.SerialNumber.ToLower().Contains(s))
+                                          || (h.Model != null && h.Model.ToLower().Contains(s))
+                                          || (h.Vin != null && h.Vin.ToLower().Contains(s)));
+            }
+
+            var total = await query.LongCountAsync();
+
+            var data = await query
+                .OrderByDescending(h => h.InstalledAt)
+                .Skip(request.Page * request.Size)
+                .Take(request.Size)
+                .ToListAsync();
+
+            return (data, total);
+        }
+
+        // Existing paged method (kept for compatibility)
         public async Task<(IEnumerable<VehiclePartHistory> data, long totalRecords)> GetPagedAsync(int page, int size, string? vin, string? model, string? condition, string? status)
         {
             if (page < 0) page = 0;

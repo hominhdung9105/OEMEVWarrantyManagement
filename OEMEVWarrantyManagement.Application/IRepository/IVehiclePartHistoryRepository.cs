@@ -1,5 +1,6 @@
 using OEMEVWarrantyManagement.Domain.Entities;
 using System.Linq;
+using OEMEVWarrantyManagement.Share.Models.Pagination;
 
 namespace OEMEVWarrantyManagement.Application.IRepository
 {
@@ -15,7 +16,9 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task UpdateAsync(VehiclePartHistory entity);
         Task UpdateRangeAsync(IEnumerable<VehiclePartHistory> entities);
         Task<bool> ExistsByVinAndModelAsync(string vin, string model);
-        // Paged with filters handled inside repository (style like Vehicle/WarrantyClaim)
-        Task<(IEnumerable<VehiclePartHistory> data, long totalRecords)> GetPagedAsync(int page, int size, string? vin, string? model, string? condition, string? status);
+        IQueryable<VehiclePartHistory> Query();
+
+        // Unified paged with search (vin|model|customer) and orgId filter handled at DB level similar to WarrantyClaimRepository
+        Task<(IEnumerable<VehiclePartHistory> data, long totalRecords)> GetPagedUnifiedAsync(PaginationRequest request, Guid? orgId, string? search, string? condition, string? status);
     }
 }

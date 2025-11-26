@@ -218,16 +218,16 @@ namespace OEMEVWarrantyManagement.Application.Services
                         if (vp == null)
                             throw new ApiException(ResponseError.NotFoundVehiclePart);
 
-                        // Mark old as uninstalled
-                        vp.Status = VehiclePartCurrentStatus.Returned.GetCurrentStatus();
-                        vp.UninstalledAt = now;
-                        await _vehiclePartHistoryRepository.UpdateAsync(vp);
+                        //// Mark old as uninstalled
+                        //vp.Status = VehiclePartCurrentStatus.Returned.GetCurrentStatus();
+                        //vp.UninstalledAt = now;
+                        //await _vehiclePartHistoryRepository.UpdateAsync(vp);
 
                         // update history uninstall (use enums)
                         var histOld = await _vehiclePartHistoryRepository.GetByVinAndSerialAsync(entity.Vin, vp.SerialNumber);
                         if (histOld != null)
                         {
-                            histOld.UninstalledAt = vp.UninstalledAt;
+                            histOld.UninstalledAt = DateTime.UtcNow;
                             histOld.Status = VehiclePartCurrentStatus.Returned.GetCurrentStatus();
                             histOld.Condition = VehiclePartCondition.Defective.GetCondition();
                             histOld.Note = "Updated due to campaign replacement (uninstall)";//TODO
@@ -245,12 +245,13 @@ namespace OEMEVWarrantyManagement.Application.Services
                             UninstalledAt = DateTime.MinValue,
                             Status = VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus()
                         };
-                        await _vehiclePartHistoryRepository.AddAsync(newVp);
+                        //await _vehiclePartHistoryRepository.AddAsync(newVp);
 
                         // update history for installed replacement (use enums)
                         var histNew = await _vehiclePartHistoryRepository.GetByModelAndSerialAsync(newVp.Model, newVp.SerialNumber, VehiclePartCondition.New.GetCondition());//loi~ ma cua campgain bat buoc phai chon hang la new
                         if (histNew != null)
                         {
+                            histNew.Vin = newVp.Vin;
                             histNew.InstalledAt = newVp.InstalledAt;
                             histNew.Status = VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus();
                             histNew.WarrantyEndDate = DateTime.UtcNow.AddMonths(histNew.WarrantyPeriodMonths);
