@@ -17,8 +17,8 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task UpdateRangeAsync(IEnumerable<VehiclePartHistory> entities);
         Task<bool> ExistsByVinAndModelAsync(string vin, string model);
         // Paged with filters handled inside repository (style like Vehicle/WarrantyClaim)
-        Task<(IEnumerable<VehiclePartHistory> data, long totalRecords)> GetPagedAsync(int page, int size, string? search, string? condition, string? status, Guid? orgId);
-        
+        Task<(IEnumerable<VehiclePartHistory> data, long totalRecords)> GetPagedUnifiedAsync(PaginationRequest request, Guid? orgId, string? search, string? condition, string? status);
+
         // New: Get serials by org and model (InStock only)
         Task<IEnumerable<string>> GetAvailableSerialsByOrgAndModelAsync(Guid orgId, string model);
         

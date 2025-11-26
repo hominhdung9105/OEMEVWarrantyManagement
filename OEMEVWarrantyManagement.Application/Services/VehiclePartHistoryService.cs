@@ -79,29 +79,24 @@ namespace OEMEVWarrantyManagement.Application.Services
             return parts.Select(p => p.SerialNumber);
         }
 
+        // Updated: accept unified search parameter and use DB-side unified paging similar to WarrantyClaimService
         public async Task<PagedResult<ResponseVehiclePartHistoryDto>> GetPagedAsync(PaginationRequest request, string? search = null, string? condition = null, string? status = null)
         {
-            // Role-based access: Admin and EVM Staff can see all; SC Staff can only see their org's parts
+            // Role-based access: evm + admin => all; sc staff => org only; tech => forbidden
             var role = _currentUserService.GetRole();
             Guid? orgId = null;
 
-            if (role == RoleIdEnum.ScStaff.GetRoleId())
+            if (role == RoleIdEnum.Technician.GetRoleId())
             {
-                // SC Staff: only see parts in their organization
-                orgId = await _currentUserService.GetOrgId();
-            }
-            else if (role == RoleIdEnum.EvmStaff.GetRoleId() || role == RoleIdEnum.Admin.GetRoleId())
-            {
-                // Admin and EVM Staff: can see all (orgId remains null)
-                orgId = null;
-            }
-            else
-            {
-                // Other roles (e.g., Technician) are forbidden
                 throw new ApiException(ResponseError.Forbidden);
             }
+            else if (role == RoleIdEnum.ScStaff.GetRoleId())
+            {
+                orgId = await _currentUserService.GetOrgId();
+            }
+            // Admin or EvmStaff: orgId remains null (no restriction)
 
-            var (data, totalRecords) = await _repository.GetPagedAsync(request.Page, request.Size, search, condition, status, orgId);
+            var (entities, totalRecords) = await _repository.GetPagedUnifiedAsync(request, orgId, search, condition, status);
 
             var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
 
@@ -131,13 +126,6 @@ namespace OEMEVWarrantyManagement.Application.Services
                         dto.CustomerPhone = cust.Phone;
                         dto.CustomerEmail = cust.Email;
                     }
-                }
-
-                // Get organization name for ServiceCenterId
-                var organization = await _organizationRepository.GetOrganizationById(item.ServiceCenterId);
-                if (organization != null)
-                {
-                    dto.ServiceCenterName = organization.Name;
                 }
 
                 items.Add(dto);

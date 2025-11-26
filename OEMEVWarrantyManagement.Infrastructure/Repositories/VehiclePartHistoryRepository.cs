@@ -88,54 +88,41 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         }
 
         // Updated: use 'search' parameter to filter across VIN, model, and serial number (Contains), plus condition, status, and orgId filters
-        public async Task<(IEnumerable<VehiclePartHistory> data, long totalRecords)> GetPagedAsync(int page, int size, string? search, string? condition, string? status, Guid? orgId)
+        public async Task<(IEnumerable<VehiclePartHistory> data, long totalRecords)> GetPagedUnifiedAsync(PaginationRequest request, Guid? orgId, string? search, string? condition, string? status)
         {
-            if (page < 0) page = 0;
-            if (size <= 0) size = 20;
-            if (size > 100) size = 100;
-
             var query = _context.VehiclePartHistories.AsQueryable();
-            
-            // Organization filter for SC Staff: show parts in their org's inventory (InStock + InTransit)
+
             if (orgId.HasValue)
             {
-                var inStockStatus = VehiclePartCurrentStatus.InStock.GetCurrentStatus();
-                var inTransitStatus = VehiclePartCurrentStatus.InTransit.GetCurrentStatus();
-                
-                // SC Staff can see both InStock and InTransit parts for their org
-                query = query.Where(h => h.ServiceCenterId == orgId.Value 
-                    && (h.Status == inStockStatus || h.Status == inTransitStatus));
+                query = query.Where(h => h.ServiceCenterId == orgId.Value);
             }
 
-            // Search across VIN, model, and serial number
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                var s = search.Trim();
-                query = query.Where(h => 
-                    (h.Vin != null && h.Vin.Contains(s)) || 
-                    h.Model.Contains(s) ||
-                    h.SerialNumber.Contains(s));
-            }
-            
             if (!string.IsNullOrWhiteSpace(condition))
             {
-                var c = condition.Trim();
-                query = query.Where(h => h.Condition == c);
+                query = query.Where(h => h.Condition == condition);
             }
-            
-            // Status filter: can be applied for all roles
-            // If SC Staff specifies a status filter, it will further narrow down the InStock/InTransit results
+
             if (!string.IsNullOrWhiteSpace(status))
             {
-                var s = status.Trim();
-                query = query.Where(h => h.Status == s);
+                query = query.Where(h => h.Status == status);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.Trim().ToLower();
+
+                // Search by serial number, model, or VIN
+                query = query.Where(h => (h.SerialNumber != null && h.SerialNumber.ToLower().Contains(s))
+                                          || (h.Model != null && h.Model.ToLower().Contains(s))
+                                          || (h.Vin != null && h.Vin.ToLower().Contains(s)));
             }
 
             var total = await query.LongCountAsync();
+
             var data = await query
                 .OrderByDescending(h => h.InstalledAt)
-                .Skip(page * size)
-                .Take(size)
+                .Skip(request.Page * request.Size)
+                .Take(request.Size)
                 .ToListAsync();
 
             return (data, total);
