@@ -73,7 +73,12 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         public async Task<bool> ExistsByVinAndModelAsync(string vin, string model)
         {
-            return await _context.VehiclePartHistories.AsNoTracking().AnyAsync(vp => vp.Vin == vin && vp.Model == model);
+            var onVehicleStatus = VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus();
+            return await _context.VehiclePartHistories
+                .AsNoTracking()
+                .AnyAsync(vp => vp.Vin == vin 
+                    && vp.Model == model 
+                    && vp.Status == onVehicleStatus);
         }
 
         public IQueryable<VehiclePartHistory> Query()
@@ -81,29 +86,44 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return _context.VehiclePartHistories.AsQueryable();
         }
 
-        // Updated: include condition & status filters
-        public async Task<(IEnumerable<VehiclePartHistory> data, long totalRecords)> GetPagedAsync(int page, int size, string? vin, string? model, string? condition, string? status)
+        // Updated: use 'search' parameter to filter across VIN, model, and serial number (Contains), plus condition, status, and orgId filters
+        public async Task<(IEnumerable<VehiclePartHistory> data, long totalRecords)> GetPagedAsync(int page, int size, string? search, string? condition, string? status, Guid? orgId)
         {
             if (page < 0) page = 0;
             if (size <= 0) size = 20;
             if (size > 100) size = 100;
 
             var query = _context.VehiclePartHistories.AsQueryable();
-            if (!string.IsNullOrWhiteSpace(vin))
+            
+            // Organization filter for SC Staff: show parts in their org's inventory (InStock + InTransit)
+            if (orgId.HasValue)
             {
-                var v = vin.Trim();
-                query = query.Where(h => h.Vin != null && h.Vin.Contains(v));
+                var inStockStatus = VehiclePartCurrentStatus.InStock.GetCurrentStatus();
+                var inTransitStatus = VehiclePartCurrentStatus.InTransit.GetCurrentStatus();
+                
+                // SC Staff can see both InStock and InTransit parts for their org
+                query = query.Where(h => h.ServiceCenterId == orgId.Value 
+                    && (h.Status == inStockStatus || h.Status == inTransitStatus));
             }
-            if (!string.IsNullOrWhiteSpace(model))
+
+            // Search across VIN, model, and serial number
+            if (!string.IsNullOrWhiteSpace(search))
             {
-                var m = model.Trim();
-                query = query.Where(h => h.Model.Contains(m));
+                var s = search.Trim();
+                query = query.Where(h => 
+                    (h.Vin != null && h.Vin.Contains(s)) || 
+                    h.Model.Contains(s) ||
+                    h.SerialNumber.Contains(s));
             }
+            
             if (!string.IsNullOrWhiteSpace(condition))
             {
                 var c = condition.Trim();
                 query = query.Where(h => h.Condition == c);
             }
+            
+            // Status filter: can be applied for all roles
+            // If SC Staff specifies a status filter, it will further narrow down the InStock/InTransit results
             if (!string.IsNullOrWhiteSpace(status))
             {
                 var s = status.Trim();
@@ -118,6 +138,60 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
                 .ToListAsync();
 
             return (data, total);
+        }
+
+        public async Task<IEnumerable<string>> GetAvailableSerialsByOrgAndModelAsync(Guid orgId, string model)
+        {
+            var inStockStatus = VehiclePartCurrentStatus.InStock.GetCurrentStatus();
+            
+            return await _context.VehiclePartHistories
+                .Where(h => h.ServiceCenterId == orgId 
+                    && h.Model == model 
+                    && h.Status == inStockStatus
+                    && h.Vin == null) // Only parts not installed on vehicle
+                .Select(h => h.SerialNumber)
+                .Distinct()
+                .OrderBy(s => s)
+                .ToListAsync();
+        }
+
+        public async Task<bool> ValidateSerialInOrgStockAsync(Guid orgId, string model, string serialNumber)
+        {
+            var inStockStatus = VehiclePartCurrentStatus.InStock.GetCurrentStatus();
+            
+            return await _context.VehiclePartHistories
+                .AnyAsync(h => h.ServiceCenterId == orgId 
+                    && h.Model == model 
+                    && h.SerialNumber == serialNumber
+                    && h.Status == inStockStatus
+                    && h.Vin == null); // Only parts not installed
+        }
+
+        public async Task<IEnumerable<VehiclePartHistory>> GetInTransitToOrgAsync(Guid orgId)
+        {
+            var inTransitStatus = VehiclePartCurrentStatus.InTransit.GetCurrentStatus();
+            
+            return await _context.VehiclePartHistories
+                .Where(h => h.ServiceCenterId == orgId && h.Status == inTransitStatus)
+                .OrderByDescending(h => h.InstalledAt)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<VehiclePartHistory>> GetInTransitByOrderAsync(Guid orderId)
+        {
+            var inTransitStatus = VehiclePartCurrentStatus.InTransit.GetCurrentStatus();
+            
+            // Get shipments for this order
+            var shipmentSerials = await _context.PartOrderShipments
+                .Where(s => s.OrderId == orderId && s.Status == "Confirmed")
+                .Select(s => s.SerialNumber)
+                .ToListAsync();
+            
+            // Get part histories matching those serials and in InTransit status
+            return await _context.VehiclePartHistories
+                .Where(h => shipmentSerials.Contains(h.SerialNumber) && h.Status == inTransitStatus)
+                .OrderByDescending(h => h.InstalledAt)
+                .ToListAsync();
         }
     }
 }

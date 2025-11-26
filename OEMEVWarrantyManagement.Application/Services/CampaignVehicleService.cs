@@ -18,8 +18,8 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly ICampaignVehicleRepository _campaignVehicleRepository;
         private readonly IWorkOrderRepository _workOrderRepository;
         private readonly IEmployeeRepository _employeeRepository;
-        //private readonly IVehiclePartRepository _vehiclePartRepository;
-        private readonly IVehiclePartHistoryRepository _vehiclePartHistoryRepository; // added
+        private readonly IVehiclePartHistoryRepository _vehiclePartHistoryRepository;
+        private readonly IVehiclePartHistoryService _vehiclePartHistoryService;
         private readonly IMapper _mapper;
         private readonly IWorkOrderService _workOrderService;
         private readonly ICampaignNotificationService _notificationService;
@@ -30,8 +30,8 @@ namespace OEMEVWarrantyManagement.Application.Services
             ICampaignVehicleRepository campaignVehicleRepository, 
             IWorkOrderRepository workOrderRepository, 
             IEmployeeRepository employeeRepository, 
-            //IVehiclePartRepository vehiclePartRepository, 
             IVehiclePartHistoryRepository vehiclePartHistoryRepository, 
+            IVehiclePartHistoryService vehiclePartHistoryService,
             IMapper mapper, 
             IWorkOrderService workOrderService, 
             ICampaignNotificationService notificationService)
@@ -41,8 +41,8 @@ namespace OEMEVWarrantyManagement.Application.Services
             _campaignVehicleRepository = campaignVehicleRepository;
             _workOrderRepository = workOrderRepository;
             _employeeRepository = employeeRepository;
-            //_vehiclePartRepository = vehiclePartRepository;
-            _vehiclePartHistoryRepository = vehiclePartHistoryRepository; // added
+            _vehiclePartHistoryRepository = vehiclePartHistoryRepository;
+            _vehiclePartHistoryService = vehiclePartHistoryService;
             _mapper = mapper;
             _workOrderService = workOrderService;
             _notificationService = notificationService;
@@ -59,9 +59,11 @@ namespace OEMEVWarrantyManagement.Application.Services
             var existing = await _campaignVehicleRepository.GetByCampaignAndVinsAsync(request.CampaignId, new[] { request.Vin });
             if (existing.Any()) throw new ApiException(ResponseError.DuplicateCampaignVehicle);
 
-            var parts = _vehiclePartHistoryRepository.GetByVinAndModelAsync(request.Vin, campaign.PartModel);
+            // Check if vehicle has the part model currently installed (OnVehicle status only)
+            var parts = await _vehiclePartHistoryRepository.GetByVinAndModelAsync(request.Vin, campaign.PartModel);
+            var installedParts = parts.Where(p => p.Status == VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus()).ToList();
 
-            if (parts == null || !parts.Result.Any())
+            if (!installedParts.Any())
                 throw new ApiException(ResponseError.NotFoundVehiclePart);
 
             var now = DateTime.UtcNow;
@@ -203,11 +205,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                     var parts = await _vehiclePartHistoryRepository.GetByVinAndModelAsync(entity.Vin, campaign.PartModel);
                     var installedParts = parts.Where(p => p.Status == VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus()).ToList();
 
-                    var now = DateTime.UtcNow;
-
-                    // Process each provided replacement (no strict equality with installed count, follow warranty repair semantics)
-                    var newSerials = new List<string>();
-                    var replacementEntities = new List<CampaignVehicleReplacement>();
+                    // Validate all new serials before processing
                     foreach (var rep in request.Replacements)
                     {
                         if (string.IsNullOrWhiteSpace(rep.OldSerial) || string.IsNullOrWhiteSpace(rep.NewSerial))
@@ -217,6 +215,20 @@ namespace OEMEVWarrantyManagement.Application.Services
                         var vp = installedParts.FirstOrDefault(p => p.SerialNumber == rep.OldSerial);
                         if (vp == null)
                             throw new ApiException(ResponseError.NotFoundVehiclePart);
+
+                        // Validate new serial is in stock at current org and matches replacement model
+                        await _vehiclePartHistoryService.ValidateSerialForRepairAsync(campaign.ReplacementPartModel!, rep.NewSerial);
+                    }
+
+                    var now = DateTime.UtcNow;
+
+                    // Process each provided replacement
+                    var newSerials = new List<string>();
+                    var replacementEntities = new List<CampaignVehicleReplacement>();
+                    foreach (var rep in request.Replacements)
+                    {
+                        // Validate old serial exists in installed list
+                        var vp = installedParts.FirstOrDefault(p => p.SerialNumber == rep.OldSerial);
 
                         // Mark old as uninstalled
                         vp.Status = VehiclePartCurrentStatus.Returned.GetCurrentStatus();
@@ -230,7 +242,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                             histOld.UninstalledAt = vp.UninstalledAt;
                             histOld.Status = VehiclePartCurrentStatus.Returned.GetCurrentStatus();
                             histOld.Condition = VehiclePartCondition.Defective.GetCondition();
-                            histOld.Note = "Updated due to campaign replacement (uninstall)";//TODO
+                            histOld.Note = "Updated due to campaign replacement (uninstall)";
                             await _vehiclePartHistoryRepository.UpdateAsync(histOld);
                         }
 
@@ -248,13 +260,13 @@ namespace OEMEVWarrantyManagement.Application.Services
                         await _vehiclePartHistoryRepository.AddAsync(newVp);
 
                         // update history for installed replacement (use enums)
-                        var histNew = await _vehiclePartHistoryRepository.GetByModelAndSerialAsync(newVp.Model, newVp.SerialNumber, VehiclePartCondition.New.GetCondition());//loi~ ma cua campgain bat buoc phai chon hang la new
+                        var histNew = await _vehiclePartHistoryRepository.GetByModelAndSerialAsync(newVp.Model, newVp.SerialNumber, VehiclePartCondition.New.GetCondition());
                         if (histNew != null)
                         {
                             histNew.InstalledAt = newVp.InstalledAt;
                             histNew.Status = VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus();
                             histNew.WarrantyEndDate = DateTime.UtcNow.AddMonths(histNew.WarrantyPeriodMonths);
-                            histNew.Note = "Updated after campaign replacement (install)";//TODO
+                            histNew.Note = "Updated after campaign replacement (install)";
                             await _vehiclePartHistoryRepository.UpdateAsync(histNew);
                         }
 
@@ -296,6 +308,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                         await _workOrderRepository.UpdateAsync(wo);
                     }
                     break;
+                    
                 case CampaignVehicleStatus.Done:
                     if (entity.Status != CampaignVehicleStatus.Repaired.GetCampaignVehicleStatus())
                         throw new ApiException(ResponseError.InvalidCampaignVehicleStatus);
@@ -309,6 +322,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                     // Note: IsCompleted was already set to true when vehicle was added to campaign
                     // No need to call MarkVehicleAsCompletedAsync again here
                     break;
+                    
                 default:
                     throw new ApiException(ResponseError.InvalidCampaignVehicleStatus);
             }
@@ -361,6 +375,45 @@ namespace OEMEVWarrantyManagement.Application.Services
             var updated = await _campaignVehicleRepository.UpdateAsync(entity);
 
             return _mapper.Map<CampaignVehicleDto>(updated);
+        }
+
+        // Get assigned technicians for a specific campaign vehicle
+        public async Task<IEnumerable<AssignedTechDto>> GetAssignedTechniciansAsync(Guid campaignVehicleId)
+        {
+            // Verify campaign vehicle exists
+            var campaignVehicle = await _campaignVehicleRepository.GetByIdAsync(campaignVehicleId) 
+                ?? throw new ApiException(ResponseError.NotFoundCampaignVehicle);
+
+            // Get all in-progress work orders for this campaign vehicle
+            var workOrders = await _workOrderRepository.GetWorkOrders(
+                campaignVehicleId, 
+                WorkOrderType.Repair.GetWorkOrderType(), 
+                WorkOrderTarget.Campaign.GetWorkOrderTarget());
+
+            // Extract unique technician IDs from active work orders
+            var techIds = workOrders
+                .Where(wo => wo.AssignedTo != null && wo.Status == WorkOrderStatus.InProgress.GetWorkOrderStatus())
+                .Select(wo => wo.AssignedTo.Value)
+                .Distinct()
+                .ToList();
+
+            // Get technician details
+            var result = new List<AssignedTechDto>();
+            foreach (var techId in techIds)
+            {
+                var emp = await _employeeRepository.GetEmployeeByIdAsync(techId);
+                if (emp != null)
+                {
+                    result.Add(new AssignedTechDto 
+                    { 
+                        UserId = emp.UserId, 
+                        Name = emp.Name, 
+                        Email = emp.Email 
+                    });
+                }
+            }
+
+            return result;
         }
     }
 }

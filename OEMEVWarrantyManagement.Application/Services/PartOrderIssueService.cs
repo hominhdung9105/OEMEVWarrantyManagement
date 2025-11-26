@@ -161,9 +161,9 @@ namespace OEMEVWarrantyManagement.Application.Services
             order.Status = PartOrderStatus.Cancelled.GetPartOrderStatus();
             await _partOrderRepository.UpdateAsync(order);
 
-            // H?Y LÔ HÀNG = M?T H?T
-            // Không c?n x? lý gì thêm, admin s? quy?t ??nh b?i th??ng/x? lý sau
-            // Stock EVM ?ã b? tr? khi confirm shipment, gi? coi nh? m?t
+            // SHIPMENT CANCELLATION = TOTAL LOSS
+            // No additional processing needed, admin will decide on compensation/handling later
+            // EVM stock was already deducted when shipment was confirmed, now considered lost
         }
 
         public async Task ReturnShipmentAsync(ReturnShipmentRequestDto request)
@@ -205,14 +205,12 @@ namespace OEMEVWarrantyManagement.Application.Services
             order.Status = PartOrderStatus.Returning.GetPartOrderStatus();
             await _partOrderRepository.UpdateAsync(order);
 
-            // TR? HÀNG = HÀNG QUAY V? KHO EVM
-            // S? c?n validate và confirm return receipt nh? bình th??ng
+            // SHIPMENT RETURN = PARTS RETURN TO EVM WAREHOUSE
+            // Will need to acknowledge receipt first, then validate and confirm return receipt as normal process
         }
 
-        public async Task<ReceiptValidationResultDto> ValidateReturnReceiptAsync(Guid orderId, IFormFile file)
+        public async Task AcknowledgeReturnReceiptAsync(Guid orderId)
         {
-            var result = new ReceiptValidationResultDto { IsValid = true };
-
             // Validate order exists and is in Returning status
             var order = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
             if (order == null)
@@ -221,6 +219,23 @@ namespace OEMEVWarrantyManagement.Application.Services
             if (order.Status != PartOrderStatus.Returning.GetPartOrderStatus())
                 throw new ApiException(ResponseError.CannotReturnOrder);
 
+            // Update order status to ReturnInspection
+            order.Status = PartOrderStatus.ReturnInspection.GetPartOrderStatus();
+            await _partOrderRepository.UpdateAsync(order);
+        }
+
+        public async Task<ReceiptValidationResultDto> ValidateReturnReceiptAsync(Guid orderId, IFormFile file)
+        {
+            var result = new ReceiptValidationResultDto { IsValid = true };
+
+            // Validate order exists and is in ReturnInspection status
+            var order = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
+            if (order == null)
+                throw new ApiException(ResponseError.InvalidOrderId);
+
+            if (order.Status != PartOrderStatus.ReturnInspection.GetPartOrderStatus())
+                throw new ApiException(ResponseError.OrderNotInReturnInspection);
+
             // Get shipments (what was sent)
             var shipments = await _shipmentRepository.GetByOrderIdAsync(orderId);
             if (!shipments.Any())
@@ -228,7 +243,7 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             var shippedSerials = shipments.ToDictionary(s => s.SerialNumber, s => s);
 
-            // Parse Excel file
+            // Parse CSV file
             List<TransitRowDto> csvRows;
             try
             {
@@ -242,7 +257,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             if (csvRows.Count == 0)
             {
                 result.IsValid = false;
-                result.Errors.Add("File Excel không có d? li?u");
+                result.Errors.Add("CSV file contains no data");
                 return result;
             }
 
@@ -290,7 +305,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                         Model = row.Model,
                         SerialNumber = row.SerialNumber,
                         ErrorType = "Duplicate",
-                        Message = $"Serial {row.SerialNumber} b? trùng l?p trong file"
+                        Message = $"Serial {row.SerialNumber} is duplicated in the file"
                     });
                     continue;
                 }
@@ -305,7 +320,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                         Model = row.Model,
                         SerialNumber = row.SerialNumber,
                         ErrorType = "NotShipped",
-                        Message = $"Serial {row.SerialNumber} không có trong danh sách ?ã g?i"
+                        Message = $"Serial {row.SerialNumber} was not in the shipped list"
                     });
                     continue;
                 }
@@ -320,7 +335,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                         Model = row.Model,
                         SerialNumber = row.SerialNumber,
                         ErrorType = "WrongModel",
-                        Message = $"Serial {row.SerialNumber} ???c g?i v?i model {shippedItem.Model}, không ph?i {row.Model}"
+                        Message = $"Serial {row.SerialNumber} was shipped with model {shippedItem.Model}, not {row.Model}"
                     });
                 }
             }
@@ -343,9 +358,7 @@ namespace OEMEVWarrantyManagement.Application.Services
 
                 await _receiptRepository.AddRangeAsync(receipts);
 
-                // Update order status to ReturnInspection
-                order.Status = PartOrderStatus.ReturnInspection.GetPartOrderStatus();
-                await _partOrderRepository.UpdateAsync(order);
+                // Note: Status remains ReturnInspection until confirm is called
             }
 
             return result;
@@ -391,13 +404,13 @@ namespace OEMEVWarrantyManagement.Application.Services
                     throw new ApiException(ResponseError.InvalidImage);
                 }
 
-                // Validate: s? l??ng ?nh ph?i b?ng s? l??ng damaged parts
+                // Validate: number of images must match number of damaged parts
                 if (images.Count != damagedPartInfos.Count)
                 {
                     throw new ApiException(ResponseError.InvalidImage);
                 }
 
-                // Upload t?ng ?nh và gán URL
+                // Upload each image and assign URL
                 for (int i = 0; i < damagedPartInfos.Count; i++)
                 {
                     var damagedPart = damagedPartInfos[i];
@@ -431,8 +444,10 @@ namespace OEMEVWarrantyManagement.Application.Services
                 var partHistory = await _vehiclePartHistoryRepository.GetBySerialNumberAsync(receipt.SerialNumber);
                 if (partHistory != null)
                 {
-                    // Already has correct ServiceCenterId (EVM), just ensure status
+                    // IMPORTANT: Update ServiceCenterId back to EVM (current user's org)
+                    partHistory.ServiceCenterId = evmOrgId;
                     partHistory.Status = VehiclePartCurrentStatus.InStock.GetCurrentStatus();
+                    await _vehiclePartHistoryRepository.UpdateAsync(partHistory);
                 }
             }
 
@@ -739,6 +754,66 @@ namespace OEMEVWarrantyManagement.Application.Services
             }
 
             return order.OrderId;
+        }
+
+        /// <summary>
+        /// L?y danh sách các part model ?ã ???c g?i trong ??n v?n chuy?n cho return receipt
+        /// </summary>
+        public async Task<IEnumerable<string>> GetReturnShipmentPartModelsAsync(Guid orderId)
+        {
+            // Validate order exists
+            var order = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
+            if (order == null)
+                throw new ApiException(ResponseError.InvalidOrderId);
+
+            // Validate order is in Returning or ReturnInspection status
+            if (order.Status != PartOrderStatus.Returning.GetPartOrderStatus() && 
+                order.Status != PartOrderStatus.ReturnInspection.GetPartOrderStatus())
+                throw new ApiException(ResponseError.CannotReturnOrder);
+
+            // Get all shipments for this order
+            var shipments = await _shipmentRepository.GetByOrderIdAsync(orderId);
+            
+            // Get distinct models from shipments
+            var models = shipments
+                .Select(s => s.Model)
+                .Distinct()
+                .OrderBy(m => m)
+                .ToList();
+
+            return models;
+        }
+
+        /// <summary>
+        /// L?y danh sách serial number c?a m?t part model c? th? trong ??n v?n chuy?n cho return receipt
+        /// </summary>
+        public async Task<IEnumerable<string>> GetReturnShipmentSerialsByModelAsync(Guid orderId, string model)
+        {
+            // Validate order exists
+            var order = await _partOrderRepository.GetPartOrderByIdAsync(orderId);
+            if (order == null)
+                throw new ApiException(ResponseError.InvalidOrderId);
+
+            // Validate order is in Returning or ReturnInspection status
+            if (order.Status != PartOrderStatus.Returning.GetPartOrderStatus() && 
+                order.Status != PartOrderStatus.ReturnInspection.GetPartOrderStatus())
+                throw new ApiException(ResponseError.CannotReturnOrder);
+
+            // Validate model parameter
+            if (string.IsNullOrWhiteSpace(model))
+                throw new ApiException(ResponseError.InvalidPartModel);
+
+            // Get all shipments for this order and model
+            var shipments = await _shipmentRepository.GetByOrderIdAsync(orderId);
+            
+            // Filter by model and get serial numbers
+            var serialNumbers = shipments
+                .Where(s => string.Equals(s.Model, model.Trim(), StringComparison.OrdinalIgnoreCase))
+                .Select(s => s.SerialNumber)
+                .OrderBy(sn => sn)
+                .ToList();
+
+            return serialNumbers;
         }
 
         private async Task<List<TransitRowDto>> ParseTransitModelCsvAsync(IFormFile file)

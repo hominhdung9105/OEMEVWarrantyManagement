@@ -14,13 +14,24 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IVehiclePartHistoryRepository _repository;
         private readonly IVehicleRepository _vehicleRepository;
         private readonly ICustomerRepository _customerRepository;
+        private readonly ICurrentUserService _currentUserService;
         private readonly IMapper _mapper;
-        public VehiclePartHistoryService(IVehiclePartHistoryRepository repository, IMapper mapper, IVehicleRepository vehicleRepository, ICustomerRepository customerRepository)
+        private readonly IOrganizationRepository _organizationRepository;
+        
+        public VehiclePartHistoryService(
+            IVehiclePartHistoryRepository repository, 
+            IMapper mapper, 
+            IVehicleRepository vehicleRepository, 
+            ICustomerRepository customerRepository,
+            ICurrentUserService currentUserService,
+            IOrganizationRepository organizationRepository)
         {
             _repository = repository;
             _mapper = mapper;
             _vehicleRepository = vehicleRepository;
             _customerRepository = customerRepository;
+            _currentUserService = currentUserService;
+            _organizationRepository = organizationRepository;
         }
         public async Task<IEnumerable<VehiclePartHistoryDto>> GetHistoryByVinAsync(string vin)
         {
@@ -66,10 +77,29 @@ namespace OEMEVWarrantyManagement.Application.Services
             return parts.Select(p => p.SerialNumber);
         }
 
-        // Updated: pass through condition & status filters
-        public async Task<PagedResult<ResponseVehiclePartHistoryDto>> GetPagedAsync(PaginationRequest request, string? vin = null, string? model = null, string? condition = null, string? status = null)
+        public async Task<PagedResult<ResponseVehiclePartHistoryDto>> GetPagedAsync(PaginationRequest request, string? search = null, string? condition = null, string? status = null)
         {
-            var (data, totalRecords) = await _repository.GetPagedAsync(request.Page, request.Size, vin, model, condition, status);
+            // Role-based access: Admin and EVM Staff can see all; SC Staff can only see their org's parts
+            var role = _currentUserService.GetRole();
+            Guid? orgId = null;
+
+            if (role == RoleIdEnum.ScStaff.GetRoleId())
+            {
+                // SC Staff: only see parts in their organization
+                orgId = await _currentUserService.GetOrgId();
+            }
+            else if (role == RoleIdEnum.EvmStaff.GetRoleId() || role == RoleIdEnum.Admin.GetRoleId())
+            {
+                // Admin and EVM Staff: can see all (orgId remains null)
+                orgId = null;
+            }
+            else
+            {
+                // Other roles (e.g., Technician) are forbidden
+                throw new ApiException(ResponseError.Forbidden);
+            }
+
+            var (data, totalRecords) = await _repository.GetPagedAsync(request.Page, request.Size, search, condition, status, orgId);
 
             var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
             var items = new List<ResponseVehiclePartHistoryDto>();
@@ -91,6 +121,12 @@ namespace OEMEVWarrantyManagement.Application.Services
                     dto.CustomerEmail = customer.Email;
                 }
 
+                // Get organization name for ServiceCenterId
+                var organization = await _organizationRepository.GetOrganizationById(item.ServiceCenterId);
+                if (organization != null)
+                {
+                    dto.ServiceCenterName = organization.Name;
+                }
 
                 items.Add(dto);
             }
@@ -103,6 +139,56 @@ namespace OEMEVWarrantyManagement.Application.Services
                 TotalPages = totalPages,
                 Items = items
             };
+        }
+
+        public async Task<IEnumerable<string>> GetAvailableSerialsByModelAsync(string model)
+        {
+            // Validate model
+            if (!PartModel.IsValidModel(model))
+                throw new ApiException(ResponseError.InvalidPartModel);
+            
+            // Get current user's org
+            var orgId = await _currentUserService.GetOrgId();
+            
+            // Get available serials from inventory
+            return await _repository.GetAvailableSerialsByOrgAndModelAsync(orgId, model);
+        }
+
+        public async Task ValidateSerialForRepairAsync(string model, string serialNumber)
+        {
+            // Validate model
+            if (!PartModel.IsValidModel(model))
+                throw new ApiException(ResponseError.InvalidPartModel);
+            
+            if (string.IsNullOrWhiteSpace(serialNumber))
+                throw new ApiException(ResponseError.InvalidJsonFormat);
+            
+            // Get current user's org
+            var orgId = await _currentUserService.GetOrgId();
+            
+            // Check if serial is in stock at this org
+            var isInStock = await _repository.ValidateSerialInOrgStockAsync(orgId, model, serialNumber);
+            if (!isInStock)
+            {
+                throw new ApiException(ResponseError.SerialNotInOrgStock);
+            }
+        }
+
+        public async Task<IEnumerable<VehiclePartHistoryDto>> GetInTransitPartsAsync()
+        {
+            // Get current user's org
+            var orgId = await _currentUserService.GetOrgId();
+            
+            // Get parts in transit to this organization
+            var entities = await _repository.GetInTransitToOrgAsync(orgId);
+            return _mapper.Map<IEnumerable<VehiclePartHistoryDto>>(entities);
+        }
+
+        public async Task<IEnumerable<VehiclePartHistoryDto>> GetInTransitPartsByOrderAsync(Guid orderId)
+        {
+            // Get parts in transit for specific order
+            var entities = await _repository.GetInTransitByOrderAsync(orderId);
+            return _mapper.Map<IEnumerable<VehiclePartHistoryDto>>(entities);
         }
     }
 }

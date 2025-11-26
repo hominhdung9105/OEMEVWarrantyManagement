@@ -95,6 +95,8 @@ namespace OEMEVWarrantyManagement.Application.Mapping
                 .ForMember(d => d.Type, opt => opt.MapFrom(src => src.Campaign != null ? src.Campaign.Type : null))
                 .ForMember(d => d.StartDate, opt => opt.MapFrom(src => src.Campaign != null ? (DateOnly?)src.Campaign.StartDate : null))
                 .ForMember(d => d.EndDate, opt => opt.MapFrom(src => src.Campaign != null ? (DateOnly?)src.Campaign.EndDate : null))
+                .ForMember(d => d.PartModel, opt => opt.MapFrom(src => src.Campaign != null ? src.Campaign.PartModel : null))
+                .ForMember(d => d.ReplacementPartModel, opt => opt.MapFrom(src => src.Campaign != null ? src.Campaign.ReplacementPartModel : null))
                 .ReverseMap()
                 .ForMember(s => s.NewSerial, opt => opt.MapFrom(d => SerializeNewSerials(d.NewSerials)));
 

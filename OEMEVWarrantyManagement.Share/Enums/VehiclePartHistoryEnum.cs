@@ -23,6 +23,7 @@ namespace OEMEVWarrantyManagement.Share.Enums
     public enum VehiclePartCurrentStatus
     {
         [Description("InStock")] InStock,
+        [Description("InTransit")] InTransit, // Part ?ang ???c v?n chuy?n t? EVM ??n SC
         [Description("OnVehicle")] OnVehicle,
         //[Description("UnderRepair")] UnderRepair,
         [Description("Returned")] Returned //Thuu hoi

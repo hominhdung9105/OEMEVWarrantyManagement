@@ -258,6 +258,15 @@
 
         [ResponseErrorAttr("Part order is not deliveried.", 400, 83)]
         OrderNotDeliveried,
+
+        [ResponseErrorAttr("Serial number is not in stock at this organization.", 400, 84)]
+        SerialNotInOrgStock,
+
+        [ResponseErrorAttr("Serial number is not available for use (already installed or not in stock).", 400, 85)]
+        SerialNotAvailable,
+
+        [ResponseErrorAttr("Serial number does not match the required part model for repair.", 400, 86)]
+        SerialModelMismatchForRepair,
     }
 
     public class ApiResponse<T>

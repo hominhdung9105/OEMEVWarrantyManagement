@@ -58,9 +58,13 @@ namespace OEMEVWarrantyManagement.Application.Services
                 var vehicles = await _vehicleRepository.GetAllAsync();
                 var affectedVehicles = new List<string>();
 
+                // Ch? thêm vào danh sách n?u xe có part ?ang OnVehicle
                 foreach (var vehicle in vehicles)
                 {
-                    if (await _vehiclePartHistoryRepository.ExistsByVinAndModelAsync(vehicle.Vin, campaign.PartModel))
+                    var parts = await _vehiclePartHistoryRepository.GetByVinAndModelAsync(vehicle.Vin, campaign.PartModel);
+                    var hasOnVehiclePart = parts.Any(p => p.Status == VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus());
+                    
+                    if (hasOnVehiclePart)
                     {
                         affectedVehicles.Add(vehicle.Vin);
                     }
@@ -101,8 +105,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                         notifications.Count, campaignId);
                 }
 
-                // Send initial emails asynchronously (fire-and-forget)
-                //_ = Task.Run(async () => await SendInitialEmailsAsync(campaignId, campaign));
+                // Send initial emails
                 await SendInitialEmailsAsync(campaignId, campaign);
             }
             catch (Exception ex)

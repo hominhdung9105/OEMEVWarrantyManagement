@@ -55,7 +55,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         /// <summary>
         /// Ghi chú chung cho toàn b? ??n hàng
         /// </summary>
-        public string? OverallNote { get; set; }
+        public string OverallNote { get; set; }
     }
 
     /// <summary>

@@ -11,6 +11,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public int WarrantyPeriodMonths { get; set; }
         public DateTime WarrantyEndDate { get; set; }
         public Guid ServiceCenterId { get; set; }
+        public string? ServiceCenterName { get; set; } // Tên t? ch?c ?ang gi?/s? nh?n part
         public string Condition { get; set; }
         public string Status { get; set; }
         public string? Note { get; set; }
@@ -32,6 +33,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public int WarrantyPeriodMonths { get; set; }
         public DateTime WarrantyEndDate { get; set; }
         public Guid ServiceCenterId { get; set; }
+        public string? ServiceCenterName { get; set; } // Tên t? ch?c ?ang gi?/s? nh?n part
         public string Condition { get; set; }
         public string Status { get; set; }
         public string? Note { get; set; }

@@ -104,8 +104,9 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             foreach (var v in vehicles)
             {
-                // existence check instead of loading list
-                if (await _vehiclePartHistoryRepository.ExistsByVinAndModelAsync(v.Vin, partModel))
+                // Check if vehicle has this part model currently installed (OnVehicle status)
+                var parts = await _vehiclePartHistoryRepository.GetByVinAndModelAsync(v.Vin, partModel);
+                if (parts.Any(p => p.Status == VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus()))
                 {
                     count++;
                 }

@@ -15,26 +15,26 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IMapper _mapper;
         private readonly IPartRepository _partRepository;
         private readonly IWarrantyClaimRepository _warrantyClaimRepository;
-        //private readonly IVehiclePartRepository _vehiclePartRepository;
         private readonly IWorkOrderRepository _workOrderRepository;
-        private readonly IVehiclePartHistoryRepository _vehiclePartHistoryRepository; // added
+        private readonly IVehiclePartHistoryRepository _vehiclePartHistoryRepository;
+        private readonly IVehiclePartHistoryService _vehiclePartHistoryService;
 
         public ClaimPartService(
             IClaimPartRepository claimPartRepository, 
             IMapper mapper, 
             IPartRepository partRepository,
             IWarrantyClaimRepository warrantyClaimRepository,
-            //IVehiclePartRepository vehiclePartRepository,
             IWorkOrderRepository workOrderRepository,
-            IVehiclePartHistoryRepository vehiclePartHistoryRepository)
+            IVehiclePartHistoryRepository vehiclePartHistoryRepository,
+            IVehiclePartHistoryService vehiclePartHistoryService)
         {
             _claimPartRepository = claimPartRepository;
             _mapper = mapper;
             _partRepository = partRepository;
             _warrantyClaimRepository = warrantyClaimRepository;
-            //_vehiclePartRepository = vehiclePartRepository;
             _workOrderRepository = workOrderRepository;
-            _vehiclePartHistoryRepository = vehiclePartHistoryRepository; // added
+            _vehiclePartHistoryRepository = vehiclePartHistoryRepository;
+            _vehiclePartHistoryService = vehiclePartHistoryService;
         }
 
         public async Task<List<RequestClaimPart>> CreateManyClaimPartsAsync(Guid claimId, List<PartsInClaimPartDto> dto)
@@ -79,12 +79,39 @@ namespace OEMEVWarrantyManagement.Application.Services
         {
             var claim = await _warrantyClaimRepository.GetWarrantyClaimByIdAsync((Guid) dto.ClaimId);
 
+            // First validate all serials before making any changes
             foreach (var part in dto.Parts)
             {
                 if(Guid.TryParse(part.ClaimPartId, out var claimPartId) == false)
                 {
                     throw new ApiException(ResponseError.InvalidClaimPartId);
                 }
+                var claimPart = await _claimPartRepository.GetByIdAsync(claimPartId);
+
+                if (claimPart == null)
+                {
+                    throw new ApiException(ResponseError.NotFoundClaimPart);
+                }
+
+                if (claimPart.Action == ClaimPartAction.Replace.GetClaimPartAction())
+                {
+                    // Validate new serial is in stock at current org and matches model
+                    await _vehiclePartHistoryService.ValidateSerialForRepairAsync(claimPart.Model, part.SerialNumber);
+                    
+                    // Validate old serial exists on vehicle
+                    var vehicleParts = await _vehiclePartHistoryRepository.GetByVinAndModelAsync(claim.Vin, claimPart.Model);
+                    var vehiclePart = vehicleParts.FirstOrDefault(vp => vp.SerialNumber == claimPart.SerialNumberOld);
+                    if (vehiclePart == null)
+                    {
+                        throw new ApiException(ResponseError.NotFoundVehiclePart);
+                    }
+                }
+            }
+
+            // Now process the replacements
+            foreach (var part in dto.Parts)
+            {
+                Guid.TryParse(part.ClaimPartId, out var claimPartId);
                 var claimPart = await _claimPartRepository.GetByIdAsync(claimPartId);
 
                 if (claimPart != null && claimPart.Action == ClaimPartAction.Replace.GetClaimPartAction())
@@ -105,9 +132,9 @@ namespace OEMEVWarrantyManagement.Application.Services
                         if (existingHistoryOld != null)
                         {
                             existingHistoryOld.UninstalledAt = vehiclePart.UninstalledAt;
-                            existingHistoryOld.Status = VehiclePartCurrentStatus.InStock.GetCurrentStatus();//TODO: BAo hanh ve thi la return hay instock
-                            existingHistoryOld.Condition = VehiclePartCondition.Used.GetCondition();//TODO: Chua xu ly viec bao hanh chon condition cho part(hard code = used)
-                            existingHistoryOld.Note = "Updated due to warranty replacement (uninstall)";//TODO
+                            existingHistoryOld.Status = VehiclePartCurrentStatus.InStock.GetCurrentStatus();
+                            existingHistoryOld.Condition = VehiclePartCondition.Used.GetCondition();
+                            existingHistoryOld.Note = "Updated due to warranty replacement (uninstall)";
                             await _vehiclePartHistoryRepository.UpdateAsync(existingHistoryOld);
                         }
 
@@ -124,24 +151,15 @@ namespace OEMEVWarrantyManagement.Application.Services
 
                         // update history for install new (use enums)
                         var existingHistoryNew = await _vehiclePartHistoryRepository.GetByModelAndSerialAsync(newvehiclePart.Model, newvehiclePart.SerialNumber, VehiclePartCondition.New.GetCondition()) ?? throw new ApiException(ResponseError.NotFoundThatPart);
-                        //TODO: Chua xu ly viec bao hanh chon condition cho part(hard code = new)
                         if (existingHistoryNew != null)
                         {
                             existingHistoryNew.InstalledAt = newvehiclePart.InstalledAt;
                             existingHistoryNew.Status = VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus();
                             existingHistoryNew.WarrantyEndDate = DateTime.UtcNow.AddMonths(existingHistoryNew.WarrantyPeriodMonths);
-                            existingHistoryNew.Note = "Updated as replacement part installed";//TODO
+                            existingHistoryNew.Note = "Updated as replacement part installed";
                             await _vehiclePartHistoryRepository.UpdateAsync(existingHistoryNew);
                         }
                     }
-                    else
-                    {
-                        throw new ApiException(ResponseError.NotFoundVehiclePart);
-                    }
-                }
-                else
-                {
-                    throw new ApiException(ResponseError.NotFoundClaimPart);
                 }
             }
 
@@ -167,7 +185,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             claim.Status = WarrantyClaimStatus.Repaired.GetWarrantyClaimStatus();
 
             await _warrantyClaimRepository.UpdateAsync(claim);
-            await _claimPartRepository.UpdateRangeAsync(claimParts); // goi context.SaveChangesAsync(); nen tat ca deu luu, dang le can UnitOfWork hon
+            await _claimPartRepository.UpdateRangeAsync(claimParts);
         }
     }
 }
