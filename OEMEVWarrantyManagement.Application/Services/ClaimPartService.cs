@@ -40,31 +40,75 @@ namespace OEMEVWarrantyManagement.Application.Services
         public async Task<List<RequestClaimPart>> CreateManyClaimPartsAsync(Guid claimId, List<PartsInClaimPartDto> dto)
         {
             var list = await _claimPartRepository.GetClaimPartByClaimIdAsync(claimId);
-
-            if (dto != null && dto.Any())
+            if (!list.Any())
             {
-                if (list != null && list.Any())
+                if (dto != null && dto.Any())
                 {
-                    foreach (var item in list)
+                    if (list != null && list.Any())
                     {
-                        dto.RemoveAll(p => p.Model == item.Model && p.SerialNumber == item.SerialNumberOld);
+                        foreach (var item in list)
+                        {
+                            dto.RemoveAll(p => p.Model == item.Model && p.SerialNumber == item.SerialNumberOld);
+                        }
                     }
+
+                    var entities = dto.Select(p => new ClaimPart
+                    {
+                        ClaimId = claimId,
+                        Model = p.Model,
+                        SerialNumberOld = p.SerialNumber,
+                        Action = p.Action,
+                        Status = p.Status,
+                        Cost = 0 // TODO - chưa xử lí
+                    }).ToList();
+
+                    await _claimPartRepository.CreateManyClaimPartsAsync(entities);
                 }
+                list = await _claimPartRepository.GetClaimPartByClaimIdAsync(claimId);
+            }
+            else
+            {
+                var toDelete = list
+                    .Where(db => !dto.Any(x => x.Model == db.Model && x.SerialNumber == db.SerialNumberOld))
+                    .ToList();
 
-                var entities = dto.Select(p => new ClaimPart
+                var toAdd = dto
+                    .Where(x => !list.Any(db => db.Model == x.Model && db.SerialNumberOld == x.SerialNumber))
+                    .Select(p => new ClaimPart
+                    {
+                        ClaimId = claimId,
+                        Model = p.Model,
+                        SerialNumberOld = p.SerialNumber,
+                        Action = p.Action,
+                        Status = p.Status,
+                        Cost = 0
+                    })
+                    .ToList();
+
+                var toUpdate = list
+                    .Where(db => dto.Any(x => x.Model == db.Model && x.SerialNumber == db.SerialNumberOld))
+                    .ToList();
+
+                //Xóa part không còn trong DTO
+                if (toDelete.Any())
+                    await _claimPartRepository.DeleteManyClaimPartsAsync(toDelete);
+
+                //Update part trùng
+                foreach (var part in toUpdate)
                 {
-                    ClaimId = claimId,
-                    Model = p.Model,
-                    SerialNumberOld = p.SerialNumber,
-                    Action = p.Action,
-                    Status = p.Status,
-                    Cost = 0 // TODO - chưa xử lí
-                }).ToList();
+                    var newData = dto.First(x => x.Model == part.Model && x.SerialNumber == part.SerialNumberOld);
+                    part.Action = newData.Action;
+                    part.Status = newData.Status;
+                }
+                if (toUpdate.Any())
+                    await _claimPartRepository.UpdateRangeAsync(toUpdate);
 
-                await _claimPartRepository.CreateManyClaimPartsAsync(entities);
+                //Thêm mới các part chưa có
+                if (toAdd.Any())
+                    await _claimPartRepository.CreateManyClaimPartsAsync(toAdd);
             }
 
-            list = await _claimPartRepository.GetClaimPartByClaimIdAsync(claimId);
+
 
             return _mapper.Map<List<RequestClaimPart>>(list);
         }

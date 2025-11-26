@@ -35,5 +35,15 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         {
             return await _context.ClaimParts.FirstOrDefaultAsync(cp => cp.ClaimPartId == id);
         }
+
+        public async Task DeleteManyClaimPartsAsync(List<ClaimPart> entities)
+        {
+            if (entities == null || !entities.Any())
+                return;
+
+            _context.ClaimParts.RemoveRange(entities);
+            await _context.SaveChangesAsync();
+        }
+
     }
 }
