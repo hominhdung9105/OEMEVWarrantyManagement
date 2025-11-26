@@ -9,8 +9,8 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<IEnumerable<VehiclePartHistoryDto>> GetHistoryByVinAndModelAsync(string vin, string model);
         Task<VehicleWithHistoryDto> GetVehicleWithHistoryAsync(string vin, string? model = null); // new method
         Task<IEnumerable<string>> GetSerialsByVinAndPartModelAsync(string vin, string partModel);
-        // Updated: use 'search' parameter to filter across both VIN and model fields, plus condition & status filters
-        Task<PagedResult<ResponseVehiclePartHistoryDto>> GetPagedAsync(PaginationRequest request, string? search = null, string? condition = null, string? status = null);
+        // Updated: use 'search' parameter to filter across both VIN and model fields, plus condition, status & serviceCenterId filters
+        Task<PagedResult<ResponseVehiclePartHistoryDto>> GetPagedAsync(PaginationRequest request, string? search = null, string? condition = null, string? status = null, Guid? serviceCenterId = null);
         
         // New: Get available serials in stock for current user's org by model
         Task<IEnumerable<string>> GetAvailableSerialsByModelAsync(string model);

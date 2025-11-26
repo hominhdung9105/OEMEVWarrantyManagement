@@ -87,14 +87,20 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return _context.VehiclePartHistories.AsQueryable();
         }
 
-        // Updated: use 'search' parameter to filter across VIN, model, and serial number (Contains), plus condition, status, and orgId filters
-        public async Task<(IEnumerable<VehiclePartHistory> data, long totalRecords)> GetPagedUnifiedAsync(PaginationRequest request, Guid? orgId, string? search, string? condition, string? status)
+        // Updated: use 'search' parameter to filter across VIN, model, and serial number (Contains), plus condition, status, and serviceCenterId filters
+        public async Task<(IEnumerable<VehiclePartHistory> data, long totalRecords)> GetPagedUnifiedAsync(PaginationRequest request, Guid? orgId, string? search, string? condition, string? status, Guid? serviceCenterId)
         {
             var query = _context.VehiclePartHistories.AsQueryable();
 
             if (orgId.HasValue)
             {
                 query = query.Where(h => h.ServiceCenterId == orgId.Value);
+            }
+
+            // Additional filter for serviceCenterId (for admin/EVM staff to filter by specific service center)
+            if (serviceCenterId.HasValue)
+            {
+                query = query.Where(h => h.ServiceCenterId == serviceCenterId.Value);
             }
 
             if (!string.IsNullOrWhiteSpace(condition))

@@ -227,6 +227,9 @@ namespace OEMEVWarrantyManagement.Application.Services
             // If valid, save shipments temporarily (not yet confirmed)
             if (result.IsValid)
             {
+                // Delete old pending shipments for this order before saving new ones
+                await _shipmentRepository.DeleteByOrderIdAsync(orderId);
+                
                 var shipments = csvRows.Select(r => new PartOrderShipment
                 {
                     ShipmentId = Guid.NewGuid(),
@@ -437,9 +440,12 @@ namespace OEMEVWarrantyManagement.Application.Services
                 }
             }
 
-            // If valid, save receipts temporarily
-            if (result.IsValid)
-            {
+            //// If valid, save receipts temporarily
+            //if (result.IsValid)
+            //{
+                // Delete old receipts for this order before saving new ones
+                await _receiptRepository.DeleteByOrderIdAsync(orderId);
+                
                 var receipts = csvRows.Select(r => new PartOrderReceipt
                 {
                     ReceiptId = Guid.NewGuid(),
@@ -451,7 +457,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                 }).ToList();
 
                 await _receiptRepository.AddRangeAsync(receipts);
-            }
+            //}
 
             return result;
         }
@@ -660,12 +666,18 @@ namespace OEMEVWarrantyManagement.Application.Services
             if (order == null)
                 throw new ApiException(ResponseError.InvalidOrderId);
 
-            // Get all shipments for this order
-            var shipments = await _shipmentRepository.GetByOrderIdAsync(orderId);
+            // Validate order is in Delivery status or later (after validate receipt)
+            if (order.Status != PartOrderStatus.Delivery.GetPartOrderStatus() && 
+                order.Status != PartOrderStatus.Done.GetPartOrderStatus() &&
+                order.Status != PartOrderStatus.DiscrepancyReview.GetPartOrderStatus())
+                throw new ApiException(ResponseError.ReceiptNotValidated);
+
+            // Get all receipts for this order (validated receipt file)
+            var receipts = await _receiptRepository.GetByOrderIdAsync(orderId);
             
-            // Get distinct models from shipments
-            var models = shipments
-                .Select(s => s.Model)
+            // Get distinct models from receipts
+            var models = receipts
+                .Select(r => r.Model)
                 .Distinct()
                 .OrderBy(m => m)
                 .ToList();
@@ -683,17 +695,23 @@ namespace OEMEVWarrantyManagement.Application.Services
             if (order == null)
                 throw new ApiException(ResponseError.InvalidOrderId);
 
+            // Validate order is in Delivery status or later (after validate receipt)
+            if (order.Status != PartOrderStatus.Delivery.GetPartOrderStatus() && 
+                order.Status != PartOrderStatus.Done.GetPartOrderStatus() &&
+                order.Status != PartOrderStatus.DiscrepancyReview.GetPartOrderStatus())
+                throw new ApiException(ResponseError.ReceiptNotValidated);
+
             // Validate model parameter
             if (string.IsNullOrWhiteSpace(model))
                 throw new ApiException(ResponseError.InvalidPartModel);
 
-            // Get all shipments for this order and model
-            var shipments = await _shipmentRepository.GetByOrderIdAsync(orderId);
+            // Get all receipts for this order and model (validated receipt file)
+            var receipts = await _receiptRepository.GetByOrderIdAsync(orderId);
             
             // Filter by model and get serial numbers
-            var serialNumbers = shipments
-                .Where(s => string.Equals(s.Model, model.Trim(), StringComparison.OrdinalIgnoreCase))
-                .Select(s => s.SerialNumber)
+            var serialNumbers = receipts
+                .Where(r => string.Equals(r.Model, model.Trim(), StringComparison.OrdinalIgnoreCase))
+                .Select(r => r.SerialNumber)
                 .OrderBy(sn => sn)
                 .ToList();
 

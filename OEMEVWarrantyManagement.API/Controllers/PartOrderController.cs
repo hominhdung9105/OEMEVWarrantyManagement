@@ -390,7 +390,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         #region Shipment Information
 
         /// <summary>
-        /// Lấy danh sách các part model đã được gửi trong đơn vận chuyển (cho SC Staff)
+        /// Lấy danh sách các part model từ file nhận hàng đã validate (cho SC Staff khi confirm receipt)
         /// </summary>
         [HttpGet("{orderID}/shipment-models")]
         [Authorize]
@@ -404,7 +404,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         }
 
         /// <summary>
-        /// Lấy danh sách serial number của một part model cụ thể trong đơn vận chuyển (cho SC Staff)
+        /// Lấy danh sách serial number của một part model cụ thể từ file nhận hàng đã validate (cho SC Staff khi confirm receipt)
         /// </summary>
         [HttpGet("{orderID}/shipment-serials")]
         [Authorize]
@@ -421,7 +421,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         }
 
         /// <summary>
-        /// Lấy danh sách các part model đã được gửi trong đơn vận chuyển (cho EVM Staff - return receipt)
+        /// Lấy danh sách các part model từ file nhận hàng trả về đã validate (cho EVM Staff khi confirm return receipt)
         /// </summary>
         [HttpGet("{orderID}/return-shipment-models")]
         [Authorize(policy: "RequireEvmStaff")]
@@ -435,7 +435,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         }
 
         /// <summary>
-        /// Lấy danh sách serial number của một part model cụ thể trong đơn vận chuyển (cho EVM Staff - return receipt)
+        /// Lấy danh sách serial number của một part model cụ thể từ file nhận hàng trả về đã validate (cho EVM Staff khi confirm return receipt)
         /// </summary>
         [HttpGet("{orderID}/return-shipment-serials")]
         [Authorize(policy: "RequireEvmStaff")]

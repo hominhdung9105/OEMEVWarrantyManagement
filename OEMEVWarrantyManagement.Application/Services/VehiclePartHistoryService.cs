@@ -79,8 +79,8 @@ namespace OEMEVWarrantyManagement.Application.Services
             return parts.Select(p => p.SerialNumber);
         }
 
-        // Updated: accept unified search parameter and use DB-side unified paging similar to WarrantyClaimService
-        public async Task<PagedResult<ResponseVehiclePartHistoryDto>> GetPagedAsync(PaginationRequest request, string? search = null, string? condition = null, string? status = null)
+        // Updated: accept unified search parameter and serviceCenterId filter, use DB-side unified paging similar to WarrantyClaimService
+        public async Task<PagedResult<ResponseVehiclePartHistoryDto>> GetPagedAsync(PaginationRequest request, string? search = null, string? condition = null, string? status = null, Guid? serviceCenterId = null)
         {
             // Role-based access: evm + admin => all; sc staff => org only; tech => forbidden
             var role = _currentUserService.GetRole();
@@ -93,10 +93,11 @@ namespace OEMEVWarrantyManagement.Application.Services
             else if (role == RoleIdEnum.ScStaff.GetRoleId())
             {
                 orgId = await _currentUserService.GetOrgId();
+                serviceCenterId = null;
             }
-            // Admin or EvmStaff: orgId remains null (no restriction)
+            // Admin or EvmStaff: orgId remains null (no restriction), but can use serviceCenterId filter
 
-            var (entities, totalRecords) = await _repository.GetPagedUnifiedAsync(request, orgId, search, condition, status);
+            var (entities, totalRecords) = await _repository.GetPagedUnifiedAsync(request, orgId, search, condition, status, serviceCenterId);
 
             var totalPages = (int)Math.Ceiling(totalRecords / (double)request.Size);
 
@@ -111,9 +112,20 @@ namespace OEMEVWarrantyManagement.Application.Services
             var customers = await _customerRepository.GetCustomersByIdsAsync(customerIds);
             var customerDict = customers.ToDictionary(c => c.CustomerId);
 
+            // Batch load organizations to populate ServiceCenterName
+            var serviceCenterIds = entities.Select(e => e.ServiceCenterId).Distinct().ToList();
+            var organizations = await _organizationRepository.GetOrganizationsByIdsAsync(serviceCenterIds);
+            var organizationDict = organizations.ToDictionary(o => o.OrgId);
+
             foreach (var item in entities)
             {
                 var dto = _mapper.Map<ResponseVehiclePartHistoryDto>(item);
+
+                // Populate ServiceCenterName
+                if (organizationDict.TryGetValue(item.ServiceCenterId, out var org))
+                {
+                    dto.ServiceCenterName = org.Name;
+                }
 
                 if (!string.IsNullOrWhiteSpace(item.Vin) && vehicleDict.TryGetValue(item.Vin, out var veh))
                 {

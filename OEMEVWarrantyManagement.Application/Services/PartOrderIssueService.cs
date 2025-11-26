@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using Microsoft.AspNetCore.Http;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
@@ -343,9 +343,9 @@ namespace OEMEVWarrantyManagement.Application.Services
             // Delete old return receipts if any
             await _receiptRepository.DeleteByOrderIdAsync(orderId);
 
-            // If valid, save return receipts
-            if (result.IsValid)
-            {
+            //// If valid, save return receipts
+            //if (result.IsValid)
+            //{
                 var receipts = csvRows.Select(r => new PartOrderReceipt
                 {
                     ReceiptId = Guid.NewGuid(),
@@ -359,7 +359,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                 await _receiptRepository.AddRangeAsync(receipts);
 
                 // Note: Status remains ReturnInspection until confirm is called
-            }
+            //}
 
             return result;
         }
@@ -757,7 +757,7 @@ namespace OEMEVWarrantyManagement.Application.Services
         }
 
         /// <summary>
-        /// L?y danh s�ch c�c part model ?� ???c g?i trong ??n v?n chuy?n cho return receipt
+        /// Lấy danh sách các part model đã được gửi trong đơn vận chuyển cho return receipt (từ file nhận được sau khi validate)
         /// </summary>
         public async Task<IEnumerable<string>> GetReturnShipmentPartModelsAsync(Guid orderId)
         {
@@ -766,17 +766,18 @@ namespace OEMEVWarrantyManagement.Application.Services
             if (order == null)
                 throw new ApiException(ResponseError.InvalidOrderId);
 
-            // Validate order is in Returning or ReturnInspection status
-            if (order.Status != PartOrderStatus.Returning.GetPartOrderStatus() && 
-                order.Status != PartOrderStatus.ReturnInspection.GetPartOrderStatus())
-                throw new ApiException(ResponseError.CannotReturnOrder);
+            // Validate order is in ReturnInspection status or later (after validate return receipt)
+            if (order.Status != PartOrderStatus.ReturnInspection.GetPartOrderStatus() &&
+                order.Status != PartOrderStatus.Done.GetPartOrderStatus() &&
+                order.Status != PartOrderStatus.DiscrepancyReview.GetPartOrderStatus())
+                throw new ApiException(ResponseError.ReceiptNotValidated);
 
-            // Get all shipments for this order
-            var shipments = await _shipmentRepository.GetByOrderIdAsync(orderId);
+            // Get all receipts for this order (validated return receipt file)
+            var receipts = await _receiptRepository.GetByOrderIdAsync(orderId);
             
-            // Get distinct models from shipments
-            var models = shipments
-                .Select(s => s.Model)
+            // Get distinct models from receipts
+            var models = receipts
+                .Select(r => r.Model)
                 .Distinct()
                 .OrderBy(m => m)
                 .ToList();
@@ -785,7 +786,7 @@ namespace OEMEVWarrantyManagement.Application.Services
         }
 
         /// <summary>
-        /// L?y danh s�ch serial number c?a m?t part model c? th? trong ??n v?n chuy?n cho return receipt
+        /// Lấy danh sách serial number của một part model cụ thể trong đơn vận chuyển cho return receipt (từ file nhận được sau khi validate)
         /// </summary>
         public async Task<IEnumerable<string>> GetReturnShipmentSerialsByModelAsync(Guid orderId, string model)
         {
@@ -794,22 +795,23 @@ namespace OEMEVWarrantyManagement.Application.Services
             if (order == null)
                 throw new ApiException(ResponseError.InvalidOrderId);
 
-            // Validate order is in Returning or ReturnInspection status
-            if (order.Status != PartOrderStatus.Returning.GetPartOrderStatus() && 
-                order.Status != PartOrderStatus.ReturnInspection.GetPartOrderStatus())
-                throw new ApiException(ResponseError.CannotReturnOrder);
+            // Validate order is in ReturnInspection status or later (after validate return receipt)
+            if (order.Status != PartOrderStatus.ReturnInspection.GetPartOrderStatus() &&
+                order.Status != PartOrderStatus.Done.GetPartOrderStatus() &&
+                order.Status != PartOrderStatus.DiscrepancyReview.GetPartOrderStatus())
+                throw new ApiException(ResponseError.ReceiptNotValidated);
 
             // Validate model parameter
             if (string.IsNullOrWhiteSpace(model))
                 throw new ApiException(ResponseError.InvalidPartModel);
 
-            // Get all shipments for this order and model
-            var shipments = await _shipmentRepository.GetByOrderIdAsync(orderId);
+            // Get all receipts for this order and model (validated return receipt file)
+            var receipts = await _receiptRepository.GetByOrderIdAsync(orderId);
             
             // Filter by model and get serial numbers
-            var serialNumbers = shipments
-                .Where(s => string.Equals(s.Model, model.Trim(), StringComparison.OrdinalIgnoreCase))
-                .Select(s => s.SerialNumber)
+            var serialNumbers = receipts
+                .Where(r => string.Equals(r.Model, model.Trim(), StringComparison.OrdinalIgnoreCase))
+                .Select(r => r.SerialNumber)
                 .OrderBy(sn => sn)
                 .ToList();
 

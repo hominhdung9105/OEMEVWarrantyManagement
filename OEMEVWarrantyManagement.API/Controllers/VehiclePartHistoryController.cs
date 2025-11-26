@@ -25,9 +25,10 @@ namespace OEMEVWarrantyManagement.API.Controllers
             [FromQuery] PaginationRequest request,
             [FromQuery] string? search = null,
             [FromQuery] string? condition = null,
-            [FromQuery] string? status = null)
+            [FromQuery] string? status = null,
+            [FromQuery] Guid? serviceCenterId = null)
         {
-            var result = await _vehiclePartHistoryService.GetPagedAsync(request, search, condition, status);
+            var result = await _vehiclePartHistoryService.GetPagedAsync(request, search, condition, status, serviceCenterId);
             return Ok(ApiResponse<PagedResult<ResponseVehiclePartHistoryDto>>.Ok(result, "Get paged vehicle part histories successfully"));
         }
 

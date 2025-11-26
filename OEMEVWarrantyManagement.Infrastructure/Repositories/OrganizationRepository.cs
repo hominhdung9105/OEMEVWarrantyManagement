@@ -23,5 +23,12 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         {
             return await _context.Organizations.FindAsync(orgId);
         }
+
+        public async Task<List<Organization>> GetOrganizationsByIdsAsync(List<Guid> orgIds)
+        {
+            return await _context.Organizations
+                .Where(o => orgIds.Contains(o.OrgId))
+                .ToListAsync();
+        }
     }
 }

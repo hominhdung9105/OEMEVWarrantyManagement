@@ -352,6 +352,20 @@ namespace OEMEVWarrantyManagement.Application.Services
                         var resolver = await _employeeRepository.GetEmployeeByIdAsync(resolution.ResolvedBy.Value);
                         result.DiscrepancyResolution.ResolvedByName = resolver?.Name;
                     }
+                    
+                    // Get details for this resolution
+                    var details = await _resolutionRepository.GetDetailsByResolutionIdAsync(resolution.ResolutionId);
+                    result.DiscrepancyResolution.PartResolutions = details.Select(d => new PartDiscrepancyDetailDto
+                    {
+                        DetailId = d.DetailId,
+                        ResolutionId = d.ResolutionId,
+                        SerialNumber = d.SerialNumber,
+                        Model = d.Model,
+                        DiscrepancyType = d.DiscrepancyType,
+                        ResponsibleParty = d.ResponsibleParty,
+                        Action = d.Action,
+                        Note = d.Note
+                    }).ToList();
                 }
             }
 
