@@ -13,8 +13,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             const int recordCount = 200;
             const int customerCount = 50;
             const int vehicleCount = 150;
-            const int campaignCount = 100;
-            const int claimCount = 100;
+            const int campaignCount = 3;
+            const int claimCount = 40;
             Randomizer.Seed = new Random(12345);
 
             if (context.Organizations.Any()) return;
@@ -22,14 +22,44 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var reportLines = new List<string>();
 
             // === Organizations ===
-            var baseOrgFaker = new Faker<Organization>("en")
-                .RuleFor(o => o.OrgId, f => f.Database.Random.Guid())
-                .RuleFor(o => o.Name, f => f.Company.CompanyName())
-                .RuleFor(o => o.Region, f => f.Address.State())
-                .RuleFor(o => o.ContactInfo, f => f.Phone.PhoneNumber());
-
-            var oems = baseOrgFaker.Clone().RuleFor(o => o.Type, _ => "OEM").Generate(1);
-            var serviceCenters = baseOrgFaker.Clone().RuleFor(o => o.Type, _ => "ServiceCenter").Generate(3);
+            var oems = new List<Organization>
+            {
+                new Organization
+                {
+                    OrgId = Guid.NewGuid(),
+                    Name = "Vietnam",
+                    Region = "Asia",
+                    Type = "OEM",
+                    ContactInfo = "123-456-7890"
+                }
+            };
+            var serviceCenters = new List<Organization>
+            {
+                new Organization
+                {
+                    OrgId = Guid.NewGuid(),
+                    Name = "Japan",
+                    Region = "Asia",
+                    Type = "ServiceCenter",
+                    ContactInfo = "123-456-7891"
+                },
+                new Organization
+                {
+                    OrgId = Guid.NewGuid(),
+                    Name = "Pizza",
+                    Region = "Europe",
+                    Type = "ServiceCenter",
+                    ContactInfo = "123-456-7892"
+                },
+                new Organization
+                {
+                    OrgId = Guid.NewGuid(),
+                    Name = "Black",
+                    Region = "Africa",
+                    Type = "ServiceCenter",
+                    ContactInfo = "123-456-7893"
+                }
+            };
             var organizations = new List<Organization>();
             organizations.AddRange(oems);
             organizations.AddRange(serviceCenters);
@@ -40,19 +70,71 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
 
             // === Employees ===
             var passwordHasher = new PasswordHasher<Employee>();
-            var baseEmployeeFaker = new Faker<Employee>("en")
-                .RuleFor(e => e.UserId, f => f.Database.Random.Guid())
-                .RuleFor(e => e.Email, (f, u) => f.Internet.Email(f.Name.FirstName(), f.Name.LastName()))
-                .RuleFor(e => e.Name, f => f.Name.FullName())
-                .RuleFor(e => e.PasswordHash, (f, emp) => passwordHasher.HashPassword(emp, "P@ssW0rd"));
-
             var employees = new List<Employee>();
-            employees.Add(baseEmployeeFaker.Clone().RuleFor(e => e.Role, _ => "ADMIN").RuleFor(e => e.OrgId, _ => singleOem.OrgId).Generate());
-            employees.AddRange(baseEmployeeFaker.Clone().RuleFor(e => e.Role, _ => "EVM_STAFF").RuleFor(e => e.OrgId, _ => singleOem.OrgId).Generate(2));
+            // ADMIN for Vietnam
+            employees.Add(new Employee
+            {
+                UserId = Guid.NewGuid(),
+                Email = "VietnamAD1@gmail.com",
+                Name = "Admin User",
+                PasswordHash = passwordHasher.HashPassword(new Employee(), "P@ssW0rd"),
+                Role = "ADMIN",
+                OrgId = singleOem.OrgId
+            });
+            // EVM_STAFF for Vietnam
+            employees.Add(new Employee
+            {
+                UserId = Guid.NewGuid(),
+                Email = "VietnamEVM1@gmail.com",
+                Name = "EVM Staff 1",
+                PasswordHash = passwordHasher.HashPassword(new Employee(), "P@ssW0rd"),
+                Role = "EVM_STAFF",
+                OrgId = singleOem.OrgId
+            });
+            employees.Add(new Employee
+            {
+                UserId = Guid.NewGuid(),
+                Email = "VietnamEVM2@gmail.com",
+                Name = "EVM Staff 2",
+                PasswordHash = passwordHasher.HashPassword(new Employee(), "P@ssW0rd"),
+                Role = "EVM_STAFF",
+                OrgId = singleOem.OrgId
+            });
+            // For each SC
             foreach (var sc in serviceCenters)
             {
-                employees.AddRange(baseEmployeeFaker.Clone().RuleFor(e => e.Role, _ => "SC_STAFF").RuleFor(e => e.OrgId, _ => sc.OrgId).Generate(2));
-                employees.AddRange(baseEmployeeFaker.Clone().RuleFor(e => e.Role, _ => "SC_TECH").RuleFor(e => e.OrgId, _ => sc.OrgId).Generate(5));
+                // SC_STAFF: 2
+                employees.Add(new Employee
+                {
+                    UserId = Guid.NewGuid(),
+                    Email = $"{sc.Name}SC1@gmail.com",
+                    Name = $"{sc.Name} SC Staff 1",
+                    PasswordHash = passwordHasher.HashPassword(new Employee(), "P@ssW0rd"),
+                    Role = "SC_STAFF",
+                    OrgId = sc.OrgId
+                });
+                employees.Add(new Employee
+                {
+                    UserId = Guid.NewGuid(),
+                    Email = $"{sc.Name}SC2@gmail.com",
+                    Name = $"{sc.Name} SC Staff 2",
+                    PasswordHash = passwordHasher.HashPassword(new Employee(), "P@ssW0rd"),
+                    Role = "SC_STAFF",
+                    OrgId = sc.OrgId
+                });
+                // SC_TECH: 5
+                for (int i = 1; i <= 5; i++)
+                {
+                    employees.Add(new Employee
+                    {
+                        UserId = Guid.NewGuid(),
+                        Email = $"{sc.Name}TECH{i}@gmail.com",
+                        Name = $"{sc.Name} SC Tech {i}",
+                        PasswordHash = passwordHasher.HashPassword(new Employee(), "P@ssW0rd"),
+                        Role = "SC_TECH",
+                        OrgId = sc.OrgId
+                    });
+                }
             }
             context.Employees.AddRange(employees);
 
@@ -371,7 +453,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var scEmployeeUserIds = employees.Where(e => e.Role == "SC_STAFF" || e.Role == "SC_TECH").Select(e => e.UserId).ToList();
             var partOrders = new List<PartOrder>();
             var partOrderItems = new List<PartOrderItem>();
-            int ordersPerSc = recordCount / scOrgs.Count;
+            int ordersPerSc = 10;
             foreach (var sc in scOrgs)
             {
                 var scStaff = employees.Where(e => e.Role == "SC_STAFF" && e.OrgId == sc.OrgId).ToList();
@@ -581,7 +663,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 var sc = scOrgs[scIdx];
                 var scStaff = employees.Where(e => e.Role == "SC_STAFF" && e.OrgId == sc.OrgId).ToList();
                 var scTech = employees.Where(e => e.Role == "SC_TECH" && e.OrgId == sc.OrgId).ToList();
-                int claimsForThisSc = basePerSc + (scIdx < remainder ? 1 : 0);
+                int claimsForThisSc = 10;
                 for (int i = 0; i < claimsForThisSc; i++)
                 {
                     var veh = vehicles[rng.Next(vehicles.Count)];
