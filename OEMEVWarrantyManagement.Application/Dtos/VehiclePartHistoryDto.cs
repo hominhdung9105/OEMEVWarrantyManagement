@@ -8,8 +8,8 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string SerialNumber { get; set; }
         public DateTime InstalledAt { get; set; }
         public DateTime ProductionDate { get; set; }
-        public int WarrantyPeriodMonths { get; set; }
-        public DateTime WarrantyEndDate { get; set; }
+        //public int WarrantyPeriodMonths { get; set; }
+        //public DateTime WarrantyEndDate { get; set; }
         public Guid ServiceCenterId { get; set; }
         public string? ServiceCenterName { get; set; } // Tên t? ch?c ?ang gi?/s? nh?n part
         public string Condition { get; set; }
@@ -31,8 +31,8 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public DateTime InstalledAt { get; set; }
         public DateTime UninstalledAt { get; set; }
         public DateTime ProductionDate { get; set; }
-        public int WarrantyPeriodMonths { get; set; }
-        public DateTime WarrantyEndDate { get; set; }
+        //public int WarrantyPeriodMonths { get; set; }
+        //public DateTime WarrantyEndDate { get; set; }
         public Guid ServiceCenterId { get; set; }
         public string? ServiceCenterName { get; set; } // Tên t? ch?c ?ang gi?/s? nh?n part
         public string Condition { get; set; }

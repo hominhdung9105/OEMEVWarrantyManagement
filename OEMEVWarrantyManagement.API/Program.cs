@@ -150,6 +150,9 @@ namespace OEMEVWarrantyManagement.API
 
                 options.AddPolicy("RequireScStaffOrEvmStaff", policy =>
                     policy.RequireRole(RoleIdEnum.EvmStaff.GetRoleId(), RoleIdEnum.ScStaff.GetRoleId()));
+
+                options.AddPolicy("RequireAdminOrEvmStaff", policy =>
+                   policy.RequireRole(RoleIdEnum.EvmStaff.GetRoleId(), RoleIdEnum.Admin.GetRoleId()));
             });
 
             builder.Services.AddSingleton<IAuthorizationHandler, RoleHandler>();

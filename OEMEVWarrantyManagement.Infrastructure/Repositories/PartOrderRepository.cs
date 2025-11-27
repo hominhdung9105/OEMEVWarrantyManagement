@@ -23,7 +23,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         public async Task<IEnumerable<PartOrder>> GetAll()
         {
-            return await _context.PartOrders.OrderBy(po => po.RequestDate).Where(po => po.Status != PartOrderStatus.Done.GetPartOrderStatus()).ToListAsync();
+            return await _context.PartOrders.OrderBy(po => po.RequestDate).ToListAsync();
         }
 
         public async Task<PartOrder> GetPartOrderByIdAsync(Guid id)

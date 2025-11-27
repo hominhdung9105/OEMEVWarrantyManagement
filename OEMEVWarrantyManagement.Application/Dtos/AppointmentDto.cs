@@ -44,9 +44,7 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string? Status { get; set; }
         public string Slot { get; set; }
         public string Vin { get; set; }
-        public string Model { get; set; }
         public DateTime? CreatedAt { get; set; }
-        public int Year { get; set; }
     }
 
     public class ResponseAppointmentDto

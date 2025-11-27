@@ -19,11 +19,16 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
             return await _context.Organizations.ToListAsync();
         }
 
+        public async Task<IEnumerable<Organization>> GetOrganizationsAsync()
+        {
+            return await _context.Organizations.Where(o => o.Type != "OEM").ToListAsync();
+        }
+
         public async Task<Organization> GetOrganizationById(Guid orgId)
         {
             return await _context.Organizations.FindAsync(orgId);
         }
-
+        
         public async Task<List<Organization>> GetOrganizationsByIdsAsync(List<Guid> orgIds)
         {
             return await _context.Organizations

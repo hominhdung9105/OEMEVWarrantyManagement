@@ -239,6 +239,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                         var histOld = await _vehiclePartHistoryRepository.GetByVinAndSerialAsync(entity.Vin, vp.SerialNumber);
                         if (histOld != null)
                         {
+                            histOld.Vin = null;
                             histOld.UninstalledAt = DateTime.UtcNow;
                             histOld.Status = VehiclePartCurrentStatus.Returned.GetCurrentStatus();
                             histOld.Condition = VehiclePartCondition.Defective.GetCondition();
@@ -264,7 +265,7 @@ namespace OEMEVWarrantyManagement.Application.Services
                         if (histNew != null)
                         {
                             histNew.Vin = newVp.Vin;
-                            histNew.InstalledAt = newVp.InstalledAt;
+                            histNew.InstalledAt = DateTime.UtcNow;
                             histNew.Status = VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus();
                             histNew.WarrantyEndDate = DateTime.UtcNow.AddMonths(histNew.WarrantyPeriodMonths);
                             histNew.Note = "Updated after campaign replacement (install)";

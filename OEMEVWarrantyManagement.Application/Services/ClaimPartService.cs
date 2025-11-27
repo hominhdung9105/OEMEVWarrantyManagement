@@ -175,7 +175,8 @@ namespace OEMEVWarrantyManagement.Application.Services
                         var existingHistoryOld = await _vehiclePartHistoryRepository.GetByVinAndSerialAsync(claim.Vin, vehiclePart.SerialNumber);
                         if (existingHistoryOld != null)
                         {
-                            existingHistoryOld.UninstalledAt = vehiclePart.UninstalledAt; // DateTime.UtcNow; ??
+                            existingHistoryOld.UninstalledAt = DateTime.UtcNow;
+                            existingHistoryOld.Vin = null;
                             existingHistoryOld.Status = VehiclePartCurrentStatus.InStock.GetCurrentStatus();//TODO: BAo hanh ve thi la return hay instock
                             existingHistoryOld.Condition = VehiclePartCondition.Used.GetCondition();//TODO: Chua xu ly viec bao hanh chon condition cho part(hard code = used)
                             existingHistoryOld.Note = "Updated due to warranty replacement (uninstall)";//TODO

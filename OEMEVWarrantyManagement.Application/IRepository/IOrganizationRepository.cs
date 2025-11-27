@@ -6,6 +6,7 @@ namespace OEMEVWarrantyManagement.Application.IRepository
     {
         Task<Organization> GetOrganizationById(Guid orgId);
         Task<IEnumerable<Organization>> GetAllOrganizationsAsync();
+        Task<IEnumerable<Organization>> GetOrganizationsAsync();
         Task<List<Organization>> GetOrganizationsByIdsAsync(List<Guid> orgIds);
     }
 }

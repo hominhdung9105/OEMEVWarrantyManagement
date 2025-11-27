@@ -555,6 +555,20 @@ namespace OEMEVWarrantyManagement.Application.Services
                     await _vehiclePartHistoryRepository.UpdateAsync(partHistory);
                 }
             }
+            if (damagedPartInfos != null)
+            {
+                foreach (var part in damagedPartInfos)
+                {
+                    var partHistory = await _vehiclePartHistoryRepository.GetBySerialNumberAsync(part.SerialNumber);
+                    if (partHistory != null)
+                    {
+                        // ServiceCenterId was already set to SC during confirm shipment
+                        // Now update status from InTransit to InStock
+                        partHistory.Status = VehiclePartCurrentStatus.InStock.GetCurrentStatus();
+                        await _vehiclePartHistoryRepository.UpdateAsync(partHistory);
+                    }
+                }
+            }
 
             // Update SC Part stock (increase for good parts only)
             var goodReceipts = receipts.Where(r => r.Status == "Received").ToList();

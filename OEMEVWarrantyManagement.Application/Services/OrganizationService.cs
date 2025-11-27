@@ -19,5 +19,14 @@ namespace OEMEVWarrantyManagement.Application.Services
             var entities = await _organizationRepository.GetAllOrganizationsAsync();
             return _mapper.Map<IEnumerable<OrganizationDto>>(entities);
         }
+
+        public async Task<IEnumerable<OrganizationDto>> GetOrganizationsByAsync()
+        {
+            var entities = await _organizationRepository.GetOrganizationsAsync();
+            
+            return _mapper.Map<IEnumerable<OrganizationDto>>(entities);
+        }
+
+        
     }
 }
