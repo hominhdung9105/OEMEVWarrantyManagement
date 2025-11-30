@@ -1,5 +1,7 @@
 # OEM EV Warranty Management — Backend (ASP.NET)
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 ## Overview
 Backend service for OEM EV Warranty Management. Provides APIs for: warranty requests, campaign management, spare‑parts logistics, customer appointments, authentication & image/email integrations, etc.
 Serves for Service Center / Manufacturer and connects to Frontend to provide API for web application.
@@ -148,26 +150,3 @@ Create `appsettings.json` at repository root with the following template and rep
 - Keep API versioning and DTOs in sync between FE and BE.
 - Image upload uses ImageKit — configure keys in `appsettings.json`.
 - Email templates and confirmation URLs are configured under `EmailUrlSettings`.
-
-## License
-MIT License
-
-Copyright (c) 2025
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is furnished
-to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
