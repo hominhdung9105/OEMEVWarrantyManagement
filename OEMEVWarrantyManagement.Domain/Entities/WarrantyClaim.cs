@@ -15,6 +15,10 @@ namespace OEMEVWarrantyManagement.Domain.Entities
         public DateTime? ConfirmDate { get; set; }
         public Guid? VehicleWarrantyId { get; set; }
         public string failureDesc { get; set; }
+        
+        // Denial reason fields
+        public string? DenialReason { get; set; }
+        public string? DenialReasonDetail { get; set; }
 
         // Navigation Properties
         [JsonIgnore]

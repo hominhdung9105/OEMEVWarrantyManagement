@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.Dtos.Request;
 using OEMEVWarrantyManagement.Application.IServices;
-using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Response;
 
 namespace OEMEVWarrantyManagement.API.Controllers
@@ -38,7 +37,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<TokenResponseDto>.Ok(result, "Refresh Token successfully"));
         }
 
-        [AllowAnonymous]
         [HttpPost("google-login")]
         public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequestDto request)
         {
@@ -47,7 +45,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
                 // Validate Google token
                 var payload = await GoogleJsonWebSignature.ValidateAsync(request.Credential);
                 
-                // Kiểm tra và tạo/lấy thông tin user
+                // Kiểm tra lấy thông tin user
                 var result = await _authService.GoogleLoginAsync(payload.Email, payload.Name);
                 
                 return Ok(ApiResponse<TokenResponseDto>.Ok(result, "Google login successfully"));

@@ -57,4 +57,74 @@ namespace OEMEVWarrantyManagement.Share.Enums
             return statusList;
         }
     }
+
+    /// <summary>
+    /// Lý do từ chối bảo hành
+    /// </summary>
+    public enum WarrantyClaimDenialReason
+    {
+        [Description("Warranty Expired")]
+        WarrantyExpired,
+
+        [Description("Not Covered Under Warranty")]
+        NotCovered,
+
+        [Description("Improper Use or Maintenance")]
+        ImproperUse,
+
+        [Description("Unauthorized Modifications")]
+        UnauthorizedModifications,
+
+        [Description("Accident or Collision Damage")]
+        AccidentDamage,
+
+        [Description("Missing Required Documentation")]
+        MissingDocumentation,
+
+        [Description("Other")]
+        Other
+    }
+
+    public static class WarrantyClaimDenialReasonExtensions
+    {
+        public static string GetDenialReason(this WarrantyClaimDenialReason reason)
+        {
+            var memberInfo = typeof(WarrantyClaimDenialReason).GetField(reason.ToString());
+            var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute));
+            return attribute?.Description ?? reason.ToString();
+        }
+
+        public static List<string> GetAllDenialReasons()
+        {
+            var reasons = new List<string>();
+            foreach (var reason in Enum.GetValues<WarrantyClaimDenialReason>())
+            {
+                reasons.Add(reason.GetDenialReason());
+            }
+            return reasons;
+        }
+
+        /// <summary>
+        /// Parse WarrantyClaimDenialReason from description string
+        /// </summary>
+        public static WarrantyClaimDenialReason? FromDescription(string? description)
+        {
+            if (string.IsNullOrWhiteSpace(description))
+                return null;
+
+            foreach (WarrantyClaimDenialReason reason in Enum.GetValues(typeof(WarrantyClaimDenialReason)))
+            {
+                var memberInfo = typeof(WarrantyClaimDenialReason).GetField(reason.ToString());
+                var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute));
+                
+                if (attribute?.Description != null && 
+                    string.Equals(attribute.Description, description, StringComparison.OrdinalIgnoreCase))
+                {
+                    return reason;
+                }
+            }
+
+            return null;
+        }
+    }
 }

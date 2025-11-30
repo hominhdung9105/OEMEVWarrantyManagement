@@ -12,7 +12,8 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly ICampaignNotificationRepository _notificationRepository;
         private readonly ICampaignRepository _campaignRepository;
         private readonly IVehicleRepository _vehicleRepository;
-        private readonly IVehiclePartRepository _vehiclePartRepository;
+        //private readonly IVehiclePartRepository _vehiclePartRepository;
+        private readonly IVehiclePartHistoryRepository _vehiclePartHistoryRepository;
         private readonly ICustomerRepository _customerRepository;
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly ICampaignVehicleRepository _campaignVehicleRepository;
@@ -23,20 +24,22 @@ namespace OEMEVWarrantyManagement.Application.Services
             ICampaignNotificationRepository notificationRepository,
             ICampaignRepository campaignRepository,
             IVehicleRepository vehicleRepository,
-            IVehiclePartRepository vehiclePartRepository,
+            //IVehiclePartRepository vehiclePartRepository,
             ICustomerRepository customerRepository,
             IAppointmentRepository appointmentRepository,
             ICampaignVehicleRepository campaignVehicleRepository,
             IEmailService emailService,
+            IVehiclePartHistoryRepository vehiclePartHistoryRepository,
             ILogger<CampaignNotificationService> logger)
         {
             _notificationRepository = notificationRepository;
             _campaignRepository = campaignRepository;
             _vehicleRepository = vehicleRepository;
-            _vehiclePartRepository = vehiclePartRepository;
+            //_vehiclePartRepository = vehiclePartRepository;
             _customerRepository = customerRepository;
             _appointmentRepository = appointmentRepository;
             _campaignVehicleRepository = campaignVehicleRepository;
+            _vehiclePartHistoryRepository = vehiclePartHistoryRepository;
             _emailService = emailService;
             _logger = logger;
         }
@@ -55,9 +58,13 @@ namespace OEMEVWarrantyManagement.Application.Services
                 var vehicles = await _vehicleRepository.GetAllAsync();
                 var affectedVehicles = new List<string>();
 
+                // Ch? thêm vào danh sách n?u xe có part ?ang OnVehicle
                 foreach (var vehicle in vehicles)
                 {
-                    if (await _vehiclePartRepository.ExistsByVinAndModelAsync(vehicle.Vin, campaign.PartModel))
+                    var parts = await _vehiclePartHistoryRepository.GetByVinAndModelAsync(vehicle.Vin, campaign.PartModel);
+                    var hasOnVehiclePart = parts.Any(p => p.Status == VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus());
+                    
+                    if (hasOnVehiclePart)
                     {
                         affectedVehicles.Add(vehicle.Vin);
                     }
@@ -98,8 +105,8 @@ namespace OEMEVWarrantyManagement.Application.Services
                         notifications.Count, campaignId);
                 }
 
-                // Send initial emails asynchronously (fire-and-forget)
-                _ = Task.Run(async () => await SendInitialEmailsAsync(campaignId, campaign));
+                // Send initial emails
+                await SendInitialEmailsAsync(campaignId, campaign);
             }
             catch (Exception ex)
             {

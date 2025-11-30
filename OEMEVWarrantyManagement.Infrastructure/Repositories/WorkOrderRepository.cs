@@ -24,7 +24,13 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         public async Task<IEnumerable<WorkOrder>> GetWorkOrders(Guid targetId, string type, string target)
         {
-            var entities = await _context.WorkOrders.Where(wo => wo.TargetId == targetId && wo.Target == target && wo.Type == type && wo.Status != WorkOrderStatus.Completed.GetWorkOrderStatus()).ToListAsync();
+            var entities = await _context.WorkOrders
+                .Where(wo => wo.TargetId == targetId 
+                    && wo.Target == target 
+                    && wo.Type == type 
+                    && wo.Status != WorkOrderStatus.Completed.GetWorkOrderStatus()
+                    && wo.Status != WorkOrderStatus.Cancelled.GetWorkOrderStatus())
+                .ToListAsync();
             return entities;
         }
 
@@ -37,7 +43,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
 
         public async Task<IEnumerable<WorkOrder>> GetWorkOrderByTech(Guid techId)
         {
-            var entity = await _context.WorkOrders.Where(wo => wo.AssignedTo == techId && wo.Status != WorkOrderStatus.Completed.GetWorkOrderStatus()).ToListAsync();
+            var entity = await _context.WorkOrders
+                .Where(wo => wo.AssignedTo == techId 
+                    && wo.Status != WorkOrderStatus.Completed.GetWorkOrderStatus()
+                    && wo.Status != WorkOrderStatus.Cancelled.GetWorkOrderStatus())
+                .ToListAsync();
             return entity;
         }
 
@@ -52,7 +62,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         public async Task<int> CountByTechIdAsync(Guid techId)
         {
             return await _context.WorkOrders
-                .Where(wo => wo.AssignedTo == techId && wo.Status != WorkOrderStatus.Completed.GetWorkOrderStatus())
+                .Where(wo => wo.AssignedTo == techId 
+                    && wo.Status != WorkOrderStatus.Completed.GetWorkOrderStatus()
+                    && wo.Status != WorkOrderStatus.Cancelled.GetWorkOrderStatus())
                 .CountAsync();
         }
 
@@ -60,14 +72,16 @@ namespace OEMEVWarrantyManagement.Infrastructure.Repositories
         {
             return await _context.WorkOrders
                 .Include(wo => wo.AssignedToEmployee)
-                .Where(wo => wo.AssignedToEmployee.OrgId == orgId && wo.Status != WorkOrderStatus.Completed.GetWorkOrderStatus())
+                .Where(wo => wo.AssignedToEmployee.OrgId == orgId 
+                    && wo.Status != WorkOrderStatus.Completed.GetWorkOrderStatus()
+                    && wo.Status != WorkOrderStatus.Cancelled.GetWorkOrderStatus())
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<WorkOrder>> GetWorkOrdersByTechAndRangeAsync(Guid techId, DateTime from, DateTime to)
+        public async Task<IEnumerable<WorkOrder>> GetWorkOrdersByTechAndRangeAsync(Guid techId)
         {
             return await _context.WorkOrders
-                .Where(wo => wo.AssignedTo == techId && wo.StartDate >= from && wo.StartDate < to)
+                .Where(wo => wo.AssignedTo == techId && (wo.Status == WorkOrderStatus.InProgress.GetWorkOrderStatus() || DateOnly.FromDateTime((DateTime)wo.EndDate) == DateOnly.FromDateTime(DateTime.Today)))
                 .ToListAsync();
         }
 

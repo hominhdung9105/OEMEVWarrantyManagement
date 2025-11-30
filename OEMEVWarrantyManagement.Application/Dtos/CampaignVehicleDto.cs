@@ -10,7 +10,6 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string Status { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
-        // Changed: store list of new serials for replaced parts (API surface)
         public List<string>? NewSerials { get; set; }
         // Include related data
         public VehicleDto? Vehicle { get; set; }
@@ -22,8 +21,11 @@ namespace OEMEVWarrantyManagement.Application.Dtos
         public string? Type { get; set; }
         public DateOnly? StartDate { get; set; }
         public DateOnly? EndDate { get; set; }
-        // New: expose detailed replacements (old/new)
         public List<SerialReplacementDto>? Replacements { get; set; }
+        
+        // Part model information from campaign
+        public string? PartModel { get; set; }
+        public string? ReplacementPartModel { get; set; }
     }
 
     public class RequestAddCampaignVehicleDto
@@ -54,7 +56,6 @@ namespace OEMEVWarrantyManagement.Application.Dtos
 
     public class MarkDoneRequest { }
 
-    // New request DTO to assign technicians to a campaign vehicle
     public class AssignTechsRequest
     {
         public List<string>? AssignedTo { get; set; }

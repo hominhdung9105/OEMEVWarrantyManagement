@@ -11,7 +11,7 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<IEnumerable<WorkOrder>> CreateRangeAsync(List<WorkOrder> workOrders);
         Task<int> CountByTechIdAsync(Guid techId);
         Task<IEnumerable<WorkOrder>> GetWorkOrdersByOrgIdAsync(Guid orgId);
-        Task<IEnumerable<WorkOrder>> GetWorkOrdersByTechAndRangeAsync(Guid techId, DateTime from, DateTime to);
+        Task<IEnumerable<WorkOrder>> GetWorkOrdersByTechAndRangeAsync(Guid techId);
         Task<IEnumerable<WorkOrder>> GetWorkOrdersByTechMonthlyAsync(Guid techId, DateTime from, DateTime to);
     }
 }

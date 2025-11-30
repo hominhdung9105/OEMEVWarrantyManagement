@@ -2,88 +2,143 @@
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Share.Enums;
 using System.Text.Json;
+using Microsoft.AspNetCore.Identity;
 
 namespace OEMEVWarrantyManagement.Infrastructure.Persistence
 {
     public static class DataSeeder
     {
-        // Larger dataset with 200 records per table
         public static void SeedDatabase(AppDbContext context)
         {
-            // configuration
             const int recordCount = 200;
+            const int customerCount = 50;
+            const int vehicleCount = 150;
+            const int campaignCount = 3;
+            const int claimCount = 40;
             Randomizer.Seed = new Random(12345);
 
-            if (context.Organizations.Any())
-            {
-                return; // DB already seeded
-            }
+            if (context.Organizations.Any()) return;
 
-            // We'll gather a small report to aid testing
             var reportLines = new List<string>();
 
-            // === LEVEL 1: base tables ===
-            // Organizations: 1 OEM + 3 Service Centers (changed from 2 to 3)
-            var baseOrgFaker = new Faker<Organization>("en")
-                .RuleFor(o => o.OrgId, f => f.Database.Random.Guid())
-                .RuleFor(o => o.Name, f => f.Company.CompanyName())
-                .RuleFor(o => o.Region, f => f.Address.State())
-                .RuleFor(o => o.ContactInfo, f => f.Phone.PhoneNumber());
-
-            var oems = baseOrgFaker.Clone()
-                .RuleFor(o => o.Type, _ => "OEM")
-                .Generate(1);
-
-            var serviceCenters = baseOrgFaker.Clone()
-                .RuleFor(o => o.Type, _ => "ServiceCenter")
-                .Generate(3); // Changed from 2 to 3
-
+            // === Organizations ===
+            var oems = new List<Organization>
+            {
+                new Organization
+                {
+                    OrgId = Guid.NewGuid(),
+                    Name = "Vietnam",
+                    Region = "Asia",
+                    Type = "OEM",
+                    ContactInfo = "123-456-7890"
+                }
+            };
+            var serviceCenters = new List<Organization>
+            {
+                new Organization
+                {
+                    OrgId = Guid.NewGuid(),
+                    Name = "Japan",
+                    Region = "Asia",
+                    Type = "ServiceCenter",
+                    ContactInfo = "123-456-7891"
+                },
+                new Organization
+                {
+                    OrgId = Guid.NewGuid(),
+                    Name = "Pizza",
+                    Region = "Europe",
+                    Type = "ServiceCenter",
+                    ContactInfo = "123-456-7892"
+                },
+                new Organization
+                {
+                    OrgId = Guid.NewGuid(),
+                    Name = "Black",
+                    Region = "Africa",
+                    Type = "ServiceCenter",
+                    ContactInfo = "123-456-7893"
+                }
+            };
             var organizations = new List<Organization>();
             organizations.AddRange(oems);
             organizations.AddRange(serviceCenters);
-
             context.Organizations.AddRange(organizations);
             context.SaveChanges();
 
-            // Employees: 1 ADMIN, 2 EVM_STAFF, 6 SC_STAFF (2 per org), 15 SC_TECH (5 per org)
             var singleOem = oems.First();
-            var baseEmployeeFaker = new Faker<Employee>("en")
-                .RuleFor(e => e.UserId, f => f.Database.Random.Guid())
-                .RuleFor(e => e.Email, (f, u) => f.Internet.Email(f.Name.FirstName(), f.Name.LastName()))
-                .RuleFor(e => e.Name, f => f.Name.FullName())
-                .RuleFor(e => e.PasswordHash, f => "pass123");
 
+            // === Employees ===
+            var passwordHasher = new PasswordHasher<Employee>();
             var employees = new List<Employee>();
-
-            // 1 ADMIN under OEM
-            employees.Add(baseEmployeeFaker.Clone()
-                .RuleFor(e => e.Role, _ => "ADMIN")
-                .RuleFor(e => e.OrgId, _ => singleOem.OrgId)
-                .Generate());
-
-            // 2 EVM_STAFF under OEM
-            employees.AddRange(baseEmployeeFaker.Clone()
-                .RuleFor(e => e.Role, _ => "EVM_STAFF")
-                .RuleFor(e => e.OrgId, _ => singleOem.OrgId)
-                .Generate(2));
-
-            // For each SC: 2 SC_STAFF and 5 SC_TECH
+            // ADMIN for Vietnam
+            employees.Add(new Employee
+            {
+                UserId = Guid.NewGuid(),
+                Email = "VietnamAD1@gmail.com",
+                Name = "Admin User",
+                PasswordHash = passwordHasher.HashPassword(new Employee(), "P@ssW0rd"),
+                Role = "ADMIN",
+                OrgId = singleOem.OrgId
+            });
+            // EVM_STAFF for Vietnam
+            employees.Add(new Employee
+            {
+                UserId = Guid.NewGuid(),
+                Email = "VietnamEVM1@gmail.com",
+                Name = "EVM Staff 1",
+                PasswordHash = passwordHasher.HashPassword(new Employee(), "P@ssW0rd"),
+                Role = "EVM_STAFF",
+                OrgId = singleOem.OrgId
+            });
+            employees.Add(new Employee
+            {
+                UserId = Guid.NewGuid(),
+                Email = "VietnamEVM2@gmail.com",
+                Name = "EVM Staff 2",
+                PasswordHash = passwordHasher.HashPassword(new Employee(), "P@ssW0rd"),
+                Role = "EVM_STAFF",
+                OrgId = singleOem.OrgId
+            });
+            // For each SC
             foreach (var sc in serviceCenters)
             {
-                employees.AddRange(baseEmployeeFaker.Clone()
-                    .RuleFor(e => e.Role, _ => "SC_STAFF")
-                    .RuleFor(e => e.OrgId, _ => sc.OrgId)
-                    .Generate(2));
-
-                employees.AddRange(baseEmployeeFaker.Clone()
-                    .RuleFor(e => e.Role, _ => "SC_TECH")
-                    .RuleFor(e => e.OrgId, _ => sc.OrgId)
-                    .Generate(5));
+                // SC_STAFF: 2
+                employees.Add(new Employee
+                {
+                    UserId = Guid.NewGuid(),
+                    Email = $"{sc.Name}SC1@gmail.com",
+                    Name = $"{sc.Name} SC Staff 1",
+                    PasswordHash = passwordHasher.HashPassword(new Employee(), "P@ssW0rd"),
+                    Role = "SC_STAFF",
+                    OrgId = sc.OrgId
+                });
+                employees.Add(new Employee
+                {
+                    UserId = Guid.NewGuid(),
+                    Email = $"{sc.Name}SC2@gmail.com",
+                    Name = $"{sc.Name} SC Staff 2",
+                    PasswordHash = passwordHasher.HashPassword(new Employee(), "P@ssW0rd"),
+                    Role = "SC_STAFF",
+                    OrgId = sc.OrgId
+                });
+                // SC_TECH: 5
+                for (int i = 1; i <= 5; i++)
+                {
+                    employees.Add(new Employee
+                    {
+                        UserId = Guid.NewGuid(),
+                        Email = $"{sc.Name}TECH{i}@gmail.com",
+                        Name = $"{sc.Name} SC Tech {i}",
+                        PasswordHash = passwordHasher.HashPassword(new Employee(), "P@ssW0rd"),
+                        Role = "SC_TECH",
+                        OrgId = sc.OrgId
+                    });
+                }
             }
-
             context.Employees.AddRange(employees);
 
-            // Customers - 200 records
+            // === Customers ===
             var customerFaker = new Faker<Customer>("en")
                 .RuleFor(c => c.CustomerId, f => f.Database.Random.Guid())
                 .RuleFor(c => c.Name, f => f.Name.FullName())
@@ -91,19 +146,16 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 .RuleFor(c => c.Email, (f, u) => f.Internet.Email(u.Name))
                 .RuleFor(c => c.Address, f => f.Address.FullAddress())
                 .RuleFor(c => c.OrganizationOrgId, _ => singleOem.OrgId);
-            var customers = customerFaker.Generate(recordCount);
+            var customers = customerFaker.Generate(customerCount);
             context.Customers.AddRange(customers);
 
-            // Parts: OEM has all models, SCs have varying stock - 200 records total
-            // NOTE: There's a unique index on (OrgId, Model), so each org can only have ONE part per model
+            // === Parts ===
             var allModels = PartModel.ModelsByCategory.SelectMany(kvp => kvp.Value).Distinct().ToList();
             var rng = new Random(777);
             var parts = new List<Part>();
-
-            // OEM gets all unique models (one per model) with high stock
             foreach (var model in allModels)
             {
-                var category = PartModel.GetCategoryByModel(model) ?? PartCategory.Other.GetPartCategory();
+                var category = PartModel.GetCategoryByModel(model) ?? "Unknown";
                 parts.Add(new Part
                 {
                     PartId = Guid.NewGuid(),
@@ -114,14 +166,11 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                     OrgId = singleOem.OrgId
                 });
             }
-
-            // Each SC gets all unique models (one per model) with low stock
-            // This ensures we reach 200 parts: 1 OEM * allModels + 3 SCs * allModels = 4 * allModels
             foreach (var sc in serviceCenters)
             {
                 foreach (var model in allModels)
                 {
-                    var category = PartModel.GetCategoryByModel(model) ?? PartCategory.Other.GetPartCategory();
+                    var category = PartModel.GetCategoryByModel(model) ?? "Unknown";
                     parts.Add(new Part
                     {
                         PartId = Guid.NewGuid(),
@@ -133,10 +182,9 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                     });
                 }
             }
-
             context.Parts.AddRange(parts);
 
-            // Policies - 200 records
+            // === Policies ===
             var policyFaker = new Faker<WarrantyPolicy>("en")
                 .RuleFor(p => p.PolicyId, f => f.Database.Random.Guid())
                 .RuleFor(p => p.Name, f => f.Commerce.ProductName() + " Warranty")
@@ -147,7 +195,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             var policies = policyFaker.Generate(recordCount);
             context.WarrantyPolicies.AddRange(policies);
 
-            // Campaigns - 200 records
+            // === Campaigns ===
             var scTechs = employees.Where(e => e.Role == "SC_TECH").ToList();
             var campaignFaker = new Faker<Campaign>("en")
                 .RuleFor(c => c.CampaignId, f => f.Database.Random.Guid())
@@ -165,91 +213,250 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                     var candidates = allModels.Where(m => !string.Equals(m, c.PartModel, StringComparison.OrdinalIgnoreCase)).ToList();
                     return f.PickRandom(candidates);
                 });
-            var campaigns = campaignFaker.Generate(recordCount);
+            var campaigns = campaignFaker.Generate(campaignCount);
             context.Campaigns.AddRange(campaigns);
-
             context.SaveChanges();
 
-            // Record basic campaign info for first few
             foreach (var c in campaigns.Take(5))
-            {
                 reportLines.Add($"Campaign: {c.Title} | PartModel: {c.PartModel} | Replacement: {c.ReplacementPartModel}");
-            }
 
-            // === LEVEL 2: dependent on base ===
-            // Vehicles - 200 records
+            Guid PickServiceCenterId(Random r) => serviceCenters[r.Next(serviceCenters.Count)].OrgId;
+
+            // === Vehicles ===
+            var vinfastEvModels = new[] { "VF e34", "VF 3", "VF 5", "VF 6", "VF 7", "VF 8", "VF 9" };
             var vehicleFaker = new Faker<Vehicle>("en")
                 .RuleFor(v => v.Vin, f => f.Random.AlphaNumeric(17).ToUpper())
-                .RuleFor(v => v.Model, f => f.Vehicle.Model())
-                .RuleFor(v => v.Year, f => f.Random.Int(2020, 2025))
+                .RuleFor(v => v.Model, f => f.PickRandom(vinfastEvModels))
+                .RuleFor(v => v.Year, f => f.Random.Int(2022, 2025))
                 .RuleFor(v => v.CustomerId, f => f.PickRandom(customers).CustomerId);
-            var vehicles = vehicleFaker.Generate(recordCount);
+            var vehicles = vehicleFaker.Generate(vehicleCount);
             context.Vehicles.AddRange(vehicles);
 
-            // Vehicle parts: multiple parts per vehicle - aim for 200+ records
-            var vehicleParts = new List<VehiclePart>();
+            // === VehiclePartHistory Seeding (Adjusted Requirements) ===
+            var vehiclePartHistories = new List<VehiclePartHistory>();
             var rng2 = new Random(999);
-            foreach (var v in vehicles)
+
+            // add for evm
+            var evmParts = parts.Where(p => p.OrgId == oems[0].OrgId).ToList();
+            foreach (var part in evmParts)
             {
-                // 1-2 distinct models per vehicle
-                var modelsForVehicle = allModels.OrderBy(_ => rng2.Next()).Take(rng2.Next(1, 3)).ToList();
-                foreach (var m in modelsForVehicle)
+                if (part.StockQuantity <= 0) continue;
+                for (int i = 0; i < part.StockQuantity; i++)
                 {
-                    var installed = DateTime.UtcNow.AddDays(-rng2.Next(60, 600));
-                    vehicleParts.Add(new VehiclePart
+                    var productionDate = DateTime.UtcNow.AddDays(-rng2.Next(30, 180));
+                    var warrantyMonths = rng2.Next(12, 49);
+                    vehiclePartHistories.Add(new VehiclePartHistory
                     {
-                        VehiclePartId = Guid.NewGuid(),
-                        Vin = v.Vin,
-                        Model = m,
+                        VehiclePartHistoryId = Guid.NewGuid(),
+                        Vin = null, // inventory item
+                        Model = part.Model,
                         SerialNumber = $"SN{Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper()}",
-                        InstalledDate = installed,
-                        UninstalledDate = DateTime.MinValue,
-                        Status = VehiclePartStatus.Installed.GetVehiclePartStatus()
+                        InstalledAt = DateTime.MinValue, // not installed
+                        UninstalledAt = DateTime.MinValue,
+                        ProductionDate = productionDate,
+                        WarrantyPeriodMonths = warrantyMonths,
+                        WarrantyEndDate = productionDate.AddMonths(warrantyMonths),
+                        ServiceCenterId = oems[0].OrgId,
+                        Condition = VehiclePartCondition.New.GetCondition(),
+                        Status = VehiclePartCurrentStatus.InStock.GetCurrentStatus(),
+                        Note = "Seed new inventory"
                     });
                 }
             }
-            context.VehicleParts.AddRange(vehicleParts);
 
-            // Ensure vehicles have campaign PartModel installed for first 10 campaigns
+            // 1. Inventory: For each SC part, create New condition InStock entries equal to StockQuantity (VIN null)
+            foreach (var sc in serviceCenters)
+            {
+                var scParts = parts.Where(p => p.OrgId == sc.OrgId).ToList();
+                foreach (var part in scParts)
+                {
+                    if (part.StockQuantity <= 0) continue;
+                    for (int i = 0; i < part.StockQuantity; i++)
+                    {
+                        var productionDate = DateTime.UtcNow.AddDays(-rng2.Next(30, 180));
+                        var warrantyMonths = rng2.Next(12, 49);
+                        vehiclePartHistories.Add(new VehiclePartHistory
+                        {
+                            VehiclePartHistoryId = Guid.NewGuid(),
+                            Vin = null, // inventory item
+                            Model = part.Model,
+                            SerialNumber = $"SN{Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper()}",
+                            InstalledAt = DateTime.MinValue, // not installed
+                            UninstalledAt = DateTime.MinValue,
+                            ProductionDate = productionDate,
+                            WarrantyPeriodMonths = warrantyMonths,
+                            WarrantyEndDate = productionDate.AddMonths(warrantyMonths),
+                            ServiceCenterId = sc.OrgId,
+                            Condition = VehiclePartCondition.New.GetCondition(),
+                            Status = VehiclePartCurrentStatus.InStock.GetCurrentStatus(),
+                            Note = "Seed new inventory"
+                        });
+                    }
+                }
+            }
+
+            // 2. Each SC: some Defective InStock (inventory defective)
+            foreach (var sc in serviceCenters)
+            {
+                var scModels = parts.Where(p => p.OrgId == sc.OrgId && p.StockQuantity > 0).Select(p => p.Model).OrderBy(_ => rng2.Next()).Take(5).ToList();
+                foreach (var model in scModels)
+                {
+                    vehiclePartHistories.Add(new VehiclePartHistory
+                    {
+                        VehiclePartHistoryId = Guid.NewGuid(),
+                        Vin = null,
+                        Model = model,
+                        SerialNumber = $"SN{Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper()}",
+                        InstalledAt = DateTime.MinValue,
+                        UninstalledAt = DateTime.MinValue,
+                        ProductionDate = DateTime.UtcNow.AddDays(-rng2.Next(60, 360)),
+                        WarrantyPeriodMonths = 0,
+                        WarrantyEndDate = DateTime.UtcNow,
+                        ServiceCenterId = sc.OrgId,
+                        Condition = VehiclePartCondition.Defective.GetCondition(),
+                        Status = VehiclePartCurrentStatus.InStock.GetCurrentStatus(),
+                        Note = "Defective inventory"
+                    });
+                }
+            }
+
+            // 3. Each SC: some Refurbished (half InStock, half OnVehicle)
+            foreach (var sc in serviceCenters)
+            {
+                var refurbModels = parts.Where(p => p.OrgId == sc.OrgId).Select(p => p.Model).OrderBy(_ => rng2.Next()).Take(6).ToList();
+                for (int i = 0; i < refurbModels.Count; i++)
+                {
+                    bool onVehicle = i % 2 == 1; // half on vehicle
+                    string? vin = onVehicle ? vehicles[rng2.Next(vehicles.Count)].Vin : null;
+                    DateTime installedAt = onVehicle ? DateTime.UtcNow.AddDays(-rng2.Next(5, 120)) : DateTime.MinValue;
+                    int warrantyMonths = rng2.Next(6, 25);
+                    vehiclePartHistories.Add(new VehiclePartHistory
+                    {
+                        VehiclePartHistoryId = Guid.NewGuid(),
+                        Vin = vin,
+                        Model = refurbModels[i],
+                        SerialNumber = $"SN{Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper()}",
+                        InstalledAt = installedAt,
+                        UninstalledAt = DateTime.MinValue,
+                        ProductionDate = installedAt == DateTime.MinValue ? DateTime.UtcNow.AddDays(-rng2.Next(60, 300)) : installedAt.AddDays(-rng2.Next(30, 180)),
+                        WarrantyPeriodMonths = warrantyMonths,
+                        WarrantyEndDate = (installedAt == DateTime.MinValue ? DateTime.UtcNow : installedAt).AddMonths(warrantyMonths),
+                        ServiceCenterId = sc.OrgId,
+                        Condition = VehiclePartCondition.Refurbished.GetCondition(),
+                        Status = onVehicle ? VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus() : VehiclePartCurrentStatus.InStock.GetCurrentStatus(),
+                        Note = onVehicle ? "Refurbished installed" : "Refurbished inventory"
+                    });
+                }
+            }
+
+            // 4. Each SC: some Used InStock
+            foreach (var sc in serviceCenters)
+            {
+                var usedModels = parts.Where(p => p.OrgId == sc.OrgId).Select(p => p.Model).OrderBy(_ => rng2.Next()).Take(5).ToList();
+                foreach (var model in usedModels)
+                {
+                    int warrantyMonths = rng2.Next(3, 13);
+                    var productionDate = DateTime.UtcNow.AddDays(-rng2.Next(180, 720));
+                    vehiclePartHistories.Add(new VehiclePartHistory
+                    {
+                        VehiclePartHistoryId = Guid.NewGuid(),
+                        Vin = null,
+                        Model = model,
+                        SerialNumber = $"SN{Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper()}",
+                        InstalledAt = DateTime.MinValue,
+                        UninstalledAt = DateTime.MinValue,
+                        ProductionDate = productionDate,
+                        WarrantyPeriodMonths = warrantyMonths,
+                        WarrantyEndDate = productionDate.AddMonths(warrantyMonths),
+                        ServiceCenterId = sc.OrgId,
+                        Condition = VehiclePartCondition.Used.GetCondition(),
+                        Status = VehiclePartCurrentStatus.InStock.GetCurrentStatus(),
+                        Note = "Used inventory"
+                    });
+                }
+            }
+
+            // 5. Around 500 Used OnVehicle entries (~3-4 per vehicle)
+            int targetUsedOnVehicle = 500;
+            int perVehicle = (int)Math.Ceiling(targetUsedOnVehicle / (double)vehicles.Count); // ~4
+            var modelsPool = allModels.ToList();
+            foreach (var v in vehicles)
+            {
+                for (int i = 0; i < perVehicle; i++)
+                {
+                    if (vehiclePartHistories.Count(h => h.Status == VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus() && h.Condition == VehiclePartCondition.Used.GetCondition()) >= targetUsedOnVehicle)
+                        break;
+
+                    var model = modelsPool[rng2.Next(modelsPool.Count)];
+                    var installedAt = DateTime.UtcNow.AddDays(-rng2.Next(30, 600));
+                    int warrantyMonths = rng2.Next(3, 25);
+                    vehiclePartHistories.Add(new VehiclePartHistory
+                    {
+                        VehiclePartHistoryId = Guid.NewGuid(),
+                        Vin = v.Vin,
+                        Model = model,
+                        SerialNumber = $"SN{Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper()}",
+                        InstalledAt = installedAt,
+                        UninstalledAt = DateTime.MinValue,
+                        ProductionDate = installedAt.AddDays(-rng2.Next(60, 360)),
+                        WarrantyPeriodMonths = warrantyMonths,
+                        WarrantyEndDate = installedAt.AddMonths(warrantyMonths),
+                        ServiceCenterId = PickServiceCenterId(rng2),
+                        Condition = VehiclePartCondition.Used.GetCondition(),
+                        Status = VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus(),
+                        Note = "Used installed part"
+                    });
+                }
+            }
+
+            // 6. Ensure first 10 campaigns have their PartModel installed (if missing) using Refurbished or Used randomly
             foreach (var c in campaigns.Take(10))
             {
                 var model = c.PartModel;
-                var ensuredVins = new List<string>();
-                // pick 5 vehicles, ensure model installed
                 var ensureVehicles = vehicles.OrderBy(_ => rng.Next()).Take(5).ToList();
                 foreach (var v in ensureVehicles)
                 {
-                    var hasModel = vehicleParts.Any(vp => vp.Vin == v.Vin && vp.Model == model && vp.Status == VehiclePartStatus.Installed.GetVehiclePartStatus());
+                    var hasModel = vehiclePartHistories.Any(vp => vp.Vin == v.Vin && vp.Model == model && vp.Status == VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus());
                     if (!hasModel)
                     {
-                        vehicleParts.Add(new VehiclePart
+                        bool refurb = rng.NextDouble() < 0.5;
+                        var installedAt = DateTime.UtcNow.AddDays(-rng.Next(30, 180));
+                        int warrantyMonths = rng.Next(6, 25);
+                        vehiclePartHistories.Add(new VehiclePartHistory
                         {
-                            VehiclePartId = Guid.NewGuid(),
+                            VehiclePartHistoryId = Guid.NewGuid(),
                             Vin = v.Vin,
                             Model = model!,
                             SerialNumber = $"SN{Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper()}",
-                            InstalledDate = DateTime.UtcNow.AddDays(-rng.Next(30, 120)),
-                            UninstalledDate = DateTime.MinValue,
-                            Status = VehiclePartStatus.Installed.GetVehiclePartStatus()
+                            InstalledAt = installedAt,
+                            UninstalledAt = DateTime.MinValue,
+                            ProductionDate = installedAt.AddDays(-rng.Next(30, 180)),
+                            WarrantyPeriodMonths = warrantyMonths,
+                            WarrantyEndDate = installedAt.AddMonths(warrantyMonths),
+                            ServiceCenterId = PickServiceCenterId(rng),
+                            Condition = refurb ? VehiclePartCondition.Refurbished.GetCondition() : VehiclePartCondition.Used.GetCondition(),
+                            Status = VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus(),
+                            Note = "Campaign ensured part"
                         });
                     }
-                    ensuredVins.Add(v.Vin);
                 }
-                reportLines.Add($"Campaign Part prepared on VINs (may include pre-existing): {string.Join(", ", ensuredVins)}");
             }
+
+            context.VehiclePartHistories.AddRange(vehiclePartHistories);
             context.SaveChanges();
 
-            // Part Orders - 200 records
+            reportLines.Add($"Total VehiclePartHistory inventory (New InStock): {vehiclePartHistories.Count(vp => vp.Condition == VehiclePartCondition.New.GetCondition() && vp.Status == VehiclePartCurrentStatus.InStock.GetCurrentStatus())}");
+            reportLines.Add($"Total VehiclePartHistory Used OnVehicle: {vehiclePartHistories.Count(vp => vp.Condition == VehiclePartCondition.Used.GetCondition() && vp.Status == VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus())}");
+
+            // === Part Orders (unchanged) ===
             var scOrgs = serviceCenters.ToList();
-            var scEmployeeIds = employees.Where(e => e.Role == "SC_STAFF" || e.Role == "SC_TECH").Select(e => e.UserId).ToList();
+            var scEmployeeUserIds = employees.Where(e => e.Role == "SC_STAFF" || e.Role == "SC_TECH").Select(e => e.UserId).ToList();
             var partOrders = new List<PartOrder>();
             var partOrderItems = new List<PartOrderItem>();
-            
-            int ordersPerSc = recordCount / scOrgs.Count;
+            int ordersPerSc = 10;
             foreach (var sc in scOrgs)
             {
                 var scStaff = employees.Where(e => e.Role == "SC_STAFF" && e.OrgId == sc.OrgId).ToList();
-                
                 for (int i = 0; i < ordersPerSc; i++)
                 {
                     var order = new PartOrder
@@ -261,8 +468,6 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                         CreatedBy = scStaff[rng.Next(scStaff.Count)].UserId,
                         ExpectedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(rng.Next(5, 15)))
                     };
-
-                    // Randomly progress status
                     if (rng.NextDouble() < 0.6)
                     {
                         order.ApprovedDate = DateTime.UtcNow.AddDays(-rng.Next(1, 5));
@@ -274,10 +479,7 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                         order.Status = PartOrderStatus.Delivery.GetPartOrderStatus();
                         order.PartDelivery = DateTime.UtcNow.AddDays(rng.Next(0, 4));
                     }
-
                     partOrders.Add(order);
-
-                    // 1-3 items per order
                     var orderModels = allModels.OrderBy(_ => rng.Next()).Take(rng.Next(1, 4)).ToList();
                     foreach (var model in orderModels)
                     {
@@ -294,26 +496,19 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             }
             context.PartOrders.AddRange(partOrders);
             context.PartOrderItems.AddRange(partOrderItems);
-
             context.SaveChanges();
 
-            // === LEVEL 3: Campaign Vehicles & replacements - 200 records ===
+            // === Campaign Vehicles & replacements (adjust replacement condition to Refurbished) ===
             var campaignVehicles = new List<CampaignVehicle>();
             int vehiclesPerCampaign = Math.Max(1, recordCount / campaigns.Count);
-            
             foreach (var c in campaigns)
             {
                 var model = c.PartModel;
-                // find vehicles that have this model installed
                 var vehiclesWithModel = vehicles
-                    .Where(v => vehicleParts.Any(vp => vp.Vin == v.Vin && vp.Model == model && vp.Status == VehiclePartStatus.Installed.GetVehiclePartStatus()))
-                    .OrderBy(_ => rng.Next())
-                    .Take(vehiclesPerCampaign)
-                    .ToList();
-
+                    .Where(v => vehiclePartHistories.Any(vp => vp.Vin == v.Vin && vp.Model == model && vp.Status == VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus()))
+                    .OrderBy(_ => rng.Next()).Take(vehiclesPerCampaign).ToList();
                 foreach (var v in vehiclesWithModel)
                 {
-                    // Status scenario: waiting, under repair, repaired
                     var statusPick = rng.Next(0, 3);
                     var cv = new CampaignVehicle
                     {
@@ -321,30 +516,23 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                         CampaignId = c.CampaignId,
                         Vin = v.Vin,
                         CreatedAt = DateTime.UtcNow.AddDays(-rng.Next(5, 50)),
-                        Status = statusPick == 0
-                            ? CampaignVehicleStatus.WaitingForUnassignedRepair.GetCampaignVehicleStatus()
-                            : statusPick == 1
-                                ? CampaignVehicleStatus.UnderRepair.GetCampaignVehicleStatus()
-                                : CampaignVehicleStatus.Repaired.GetCampaignVehicleStatus(),
+                        Status = statusPick == 0 ? CampaignVehicleStatus.WaitingForUnassignedRepair.GetCampaignVehicleStatus() :
+                                 statusPick == 1 ? CampaignVehicleStatus.UnderRepair.GetCampaignVehicleStatus() :
+                                                  CampaignVehicleStatus.Repaired.GetCampaignVehicleStatus(),
                     };
-
                     if (cv.Status == CampaignVehicleStatus.Repaired.GetCampaignVehicleStatus())
-                    {
                         cv.CompletedAt = DateTime.UtcNow.AddDays(-rng.Next(1, 5));
-                    }
-
                     campaignVehicles.Add(cv);
                 }
             }
             context.CampaignVehicles.AddRange(campaignVehicles);
             context.SaveChanges();
 
-            // Assign work orders for CampaignVehicle if UnderRepair
             var campaignUnderRepair = campaignVehicles.Where(x => x.Status == CampaignVehicleStatus.UnderRepair.GetCampaignVehicleStatus()).ToList();
             foreach (var cv in campaignUnderRepair)
             {
                 var anySc = scTechs.OrderBy(_ => rng.Next()).First();
-                var wo = new WorkOrder
+                context.WorkOrders.Add(new WorkOrder
                 {
                     WorkOrderId = Guid.NewGuid(),
                     AssignedTo = anySc.UserId,
@@ -353,46 +541,46 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                     TargetId = cv.CampaignVehicleId,
                     Status = WorkOrderStatus.InProgress.GetWorkOrderStatus(),
                     StartDate = DateTime.UtcNow.AddDays(-rng.Next(1, 7))
-                };
-                context.WorkOrders.Add(wo);
+                });
             }
 
-            // Create replacements for Repaired/Done
             var replacements = new List<CampaignVehicleReplacement>();
             foreach (var cv in campaignVehicles.Where(cv => cv.Status == CampaignVehicleStatus.Repaired.GetCampaignVehicleStatus() || cv.Status == CampaignVehicleStatus.Done.GetCampaignVehicleStatus()))
             {
                 var campaign = campaigns.First(c => c.CampaignId == cv.CampaignId);
                 var partModel = campaign.PartModel;
                 var replacementModel = campaign.ReplacementPartModel;
-
-                var vpInstalled = vehicleParts.Where(vp => vp.Vin == cv.Vin && vp.Status == VehiclePartStatus.Installed.GetVehiclePartStatus() && vp.Model == partModel).ToList();
+                var vpInstalled = vehiclePartHistories.Where(vp => vp.Vin == cv.Vin && vp.Status == VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus() && vp.Model == partModel).ToList();
                 if (!vpInstalled.Any()) continue;
-
                 var toReplace = vpInstalled.OrderBy(_ => rng.Next()).Take(1).ToList();
                 var newSerials = new List<string>();
                 var replacedAt = cv.CompletedAt ?? DateTime.UtcNow.AddDays(-rng.Next(1, 10));
-
                 foreach (var oldPart in toReplace)
                 {
-                    // mark old uninstalled
-                    oldPart.Status = VehiclePartStatus.UnInstalled.GetVehiclePartStatus();
-                    oldPart.UninstalledDate = replacedAt;
-
-                    // add new with replacement model
+                    oldPart.Status = VehiclePartCurrentStatus.Returned.GetCurrentStatus();
+                    oldPart.UninstalledAt = replacedAt;
+                    oldPart.Condition = VehiclePartCondition.Defective.GetCondition();
+                    oldPart.Note = "Replaced by campaign";
                     var newSerial = $"SN{Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper()}";
-                    var newPart = new VehiclePart
+                    int warrantyMonths = rng.Next(6, 25);
+                    var newPartHistory = new VehiclePartHistory
                     {
-                        VehiclePartId = Guid.NewGuid(),
+                        VehiclePartHistoryId = Guid.NewGuid(),
                         Vin = cv.Vin,
                         Model = replacementModel!,
                         SerialNumber = newSerial,
-                        InstalledDate = replacedAt,
-                        UninstalledDate = DateTime.MinValue,
-                        Status = VehiclePartStatus.Installed.GetVehiclePartStatus()
+                        InstalledAt = replacedAt,
+                        UninstalledAt = DateTime.MinValue,
+                        ProductionDate = replacedAt.AddDays(-rng.Next(10, 60)),
+                        WarrantyPeriodMonths = warrantyMonths,
+                        WarrantyEndDate = replacedAt.AddMonths(warrantyMonths),
+                        ServiceCenterId = PickServiceCenterId(rng),
+                        Condition = VehiclePartCondition.Refurbished.GetCondition(), // adjusted
+                        Status = VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus(),
+                        Note = "Replacement refurbished part installed"
                     };
-                    context.VehicleParts.Add(newPart);
-                    vehicleParts.Add(newPart);
-
+                    context.VehiclePartHistories.Add(newPartHistory);
+                    vehiclePartHistories.Add(newPartHistory);
                     replacements.Add(new CampaignVehicleReplacement
                     {
                         CampaignVehicleReplacementId = Guid.NewGuid(),
@@ -403,19 +591,41 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                     });
                     newSerials.Add(newSerial);
                 }
-
                 cv.NewSerial = JsonSerializer.Serialize(newSerials, (JsonSerializerOptions?)null);
                 cv.CompletedAt = replacedAt;
             }
-            if (replacements.Count > 0)
-            {
-                context.CampaignVehicleReplacements.AddRange(replacements);
-            }
-
+            if (replacements.Count > 0) context.CampaignVehicleReplacements.AddRange(replacements);
             context.SaveChanges();
 
-            // === LEVEL 4: Warranty Claims + related - 200 records ===
-            // Create vehicle warranty policies - 200 records
+            // === Campaign Notifications === (unchanged logic except counts)
+            var campaignNotifications = new List<CampaignNotification>();
+            var now = DateTime.UtcNow;
+            var activeCampaigns = campaigns.Where(c => c.Status == "Active").Take(20).ToList();
+            foreach (var campaign in activeCampaigns)
+            {
+                var affectedVins = vehiclePartHistories.Where(vp => vp.Model == campaign.PartModel && vp.Status == VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus()).Select(vp => vp.Vin).Where(v => v != null).Distinct().Take(10).ToList();
+                foreach (var vin in affectedVins)
+                {
+                    var notificationScenario = rng.Next(0, 5);
+                    CampaignNotification notification = notificationScenario switch
+                    {
+                        0 => new CampaignNotification { CampaignNotificationId = Guid.NewGuid(), CampaignId = campaign.CampaignId, Vin = vin!, EmailSentCount = 0, FirstEmailSentAt = null, LastEmailSentAt = null, IsCompleted = false, CreatedAt = now.AddDays(-rng.Next(1, 10)), UpdatedAt = null },
+                        1 => new CampaignNotification { CampaignNotificationId = Guid.NewGuid(), CampaignId = campaign.CampaignId, Vin = vin!, EmailSentCount = 1, FirstEmailSentAt = now.AddDays(-rng.Next(1, 5)), LastEmailSentAt = now.AddDays(-rng.Next(1, 5)), IsCompleted = false, CreatedAt = now.AddDays(-rng.Next(5, 15)), UpdatedAt = now.AddDays(-rng.Next(1, 5)) },
+                        2 => new CampaignNotification { CampaignNotificationId = Guid.NewGuid(), CampaignId = campaign.CampaignId, Vin = vin!, EmailSentCount = 2, FirstEmailSentAt = now.AddDays(-rng.Next(15, 30)), LastEmailSentAt = now.AddDays(-rng.Next(8, 14)), IsCompleted = false, CreatedAt = now.AddDays(-rng.Next(20, 35)), UpdatedAt = now.AddDays(-rng.Next(8, 14)) },
+                        3 => new CampaignNotification { CampaignNotificationId = Guid.NewGuid(), CampaignId = campaign.CampaignId, Vin = vin!, EmailSentCount = rng.Next(1, 3), FirstEmailSentAt = now.AddDays(-rng.Next(20, 40)), LastEmailSentAt = now.AddDays(-rng.Next(1, 7)), IsCompleted = true, CreatedAt = now.AddDays(-rng.Next(25, 45)), UpdatedAt = now.AddDays(-rng.Next(1, 5)) },
+                        _ => new CampaignNotification { CampaignNotificationId = Guid.NewGuid(), CampaignId = campaign.CampaignId, Vin = vin!, EmailSentCount = 3, FirstEmailSentAt = now.AddDays(-rng.Next(30, 50)), LastEmailSentAt = now.AddDays(-rng.Next(1, 7)), IsCompleted = false, CreatedAt = now.AddDays(-rng.Next(35, 55)), UpdatedAt = now.AddDays(-rng.Next(1, 7)) }
+                    };
+                    campaignNotifications.Add(notification);
+                    if (campaignNotifications.Count >= recordCount) break;
+                }
+                if (campaignNotifications.Count >= recordCount) break;
+            }
+            context.CampaignNotifications.AddRange(campaignNotifications);
+            context.SaveChanges();
+
+            reportLines.Add($"Campaign Notifications created: {campaignNotifications.Count}");
+
+            // === Warranty Policies on Vehicles ===
             var vehicleWarrantyPolicies = new List<VehicleWarrantyPolicy>();
             for (int i = 0; i < recordCount; i++)
             {
@@ -434,17 +644,10 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
             context.VehicleWarrantyPolicies.AddRange(vehicleWarrantyPolicies);
             context.SaveChanges();
 
-            // Build warranty claims - 200 records with consistent statuses
+            // === Warranty Claims === (unchanged)
             var claims = new List<WarrantyClaim>();
             var evmStaffs = employees.Where(e => e.Role == "EVM_STAFF").ToList();
-
-            // Helper to pick installed part model on a vehicle
-            string PickInstalledModel(string vin)
-            {
-                var vp = vehicleParts.FirstOrDefault(vp => vp.Vin == vin && vp.Status == VehiclePartStatus.Installed.GetVehiclePartStatus());
-                return vp?.Model ?? allModels[rng.Next(allModels.Count)];
-            }
-
+            string PickInstalledModel(string vin) => vehiclePartHistories.FirstOrDefault(vp => vp.Vin == vin && vp.Status == VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus())?.Model ?? allModels[rng.Next(allModels.Count)];
             var claimStatuses = new[]
             {
                 WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyClaimStatus(),
@@ -453,19 +656,19 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 WarrantyClaimStatus.UnderRepair.GetWarrantyClaimStatus(),
                 WarrantyClaimStatus.Repaired.GetWarrantyClaimStatus()
             };
-
-            int claimsPerSc = recordCount / scOrgs.Count;
-            foreach (var sc in scOrgs)
+            int basePerSc = Math.Max(0, claimCount / scOrgs.Count);
+            int remainder = claimCount % scOrgs.Count;
+            for (int scIdx = 0; scIdx < scOrgs.Count; scIdx++)
             {
+                var sc = scOrgs[scIdx];
                 var scStaff = employees.Where(e => e.Role == "SC_STAFF" && e.OrgId == sc.OrgId).ToList();
                 var scTech = employees.Where(e => e.Role == "SC_TECH" && e.OrgId == sc.OrgId).ToList();
-                
-                for (int i = 0; i < claimsPerSc; i++)
+                int claimsForThisSc = 10;
+                for (int i = 0; i < claimsForThisSc; i++)
                 {
                     var veh = vehicles[rng.Next(vehicles.Count)];
                     var status = claimStatuses[rng.Next(claimStatuses.Length)];
                     var evmStaff = evmStaffs[rng.Next(evmStaffs.Count)];
-                    
                     var c = new WarrantyClaim
                     {
                         ClaimId = Guid.NewGuid(),
@@ -477,45 +680,27 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                         Description = "Customer reports issue",
                         failureDesc = "Component failure"
                     };
-
-                    // Set additional fields based on status
                     if (status != WarrantyClaimStatus.WaitingForUnassigned.GetWarrantyClaimStatus())
-                    {
                         c.VehicleWarrantyId = vehicleWarrantyPolicies[rng.Next(vehicleWarrantyPolicies.Count)].VehicleWarrantyId;
-                    }
-
-                    if (status == WarrantyClaimStatus.Approved.GetWarrantyClaimStatus() || 
-                        status == WarrantyClaimStatus.UnderRepair.GetWarrantyClaimStatus() ||
-                        status == WarrantyClaimStatus.Repaired.GetWarrantyClaimStatus())
+                    if (status == WarrantyClaimStatus.Approved.GetWarrantyClaimStatus() || status == WarrantyClaimStatus.UnderRepair.GetWarrantyClaimStatus() || status == WarrantyClaimStatus.Repaired.GetWarrantyClaimStatus())
                     {
                         c.ConfirmBy = evmStaff.UserId;
                         c.ConfirmDate = DateTime.UtcNow.AddDays(-rng.Next(1, 10));
                     }
-
                     claims.Add(c);
-
-                    // Add claim parts
-                    var claimPartStatus = status == WarrantyClaimStatus.Approved.GetWarrantyClaimStatus() || 
-                                          status == WarrantyClaimStatus.UnderRepair.GetWarrantyClaimStatus() ||
-                                          status == WarrantyClaimStatus.Repaired.GetWarrantyClaimStatus()
-                        ? ClaimPartStatus.Enough.GetClaimPartStatus()
-                        : ClaimPartStatus.Pending.GetClaimPartStatus();
-
+                    var claimPartStatus = (status == WarrantyClaimStatus.Approved.GetWarrantyClaimStatus() || status == WarrantyClaimStatus.UnderRepair.GetWarrantyClaimStatus() || status == WarrantyClaimStatus.Repaired.GetWarrantyClaimStatus())
+                        ? ClaimPartStatus.Enough.GetClaimPartStatus() : ClaimPartStatus.Pending.GetClaimPartStatus();
                     context.ClaimParts.Add(new ClaimPart
                     {
                         ClaimPartId = Guid.NewGuid(),
                         ClaimId = c.ClaimId,
                         Model = PickInstalledModel(veh.Vin),
-                        SerialNumberOld = vehicleParts.FirstOrDefault(vp => vp.Vin == veh.Vin)?.SerialNumber ?? "UNKNOWN",
-                        SerialNumberNew = claimPartStatus == ClaimPartStatus.Enough.GetClaimPartStatus() 
-                            ? $"SN{Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper()}" 
-                            : null,
+                        SerialNumberOld = vehiclePartHistories.FirstOrDefault(vp => vp.Vin == veh.Vin)?.SerialNumber ?? "UNKNOWN",
+                        SerialNumberNew = claimPartStatus == ClaimPartStatus.Enough.GetClaimPartStatus() ? $"SN{Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper()}" : null,
                         Action = ClaimPartAction.Replace.GetClaimPartAction(),
                         Status = claimPartStatus,
                         Cost = rng.Next(100, 1000)
                     });
-
-                    // Create work orders for under inspection and under repair
                     if (status == WarrantyClaimStatus.UnderInspection.GetWarrantyClaimStatus())
                     {
                         context.WorkOrders.Add(new WorkOrder
@@ -544,29 +729,25 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                     }
                 }
             }
-
             context.WarrantyClaims.AddRange(claims);
             context.SaveChanges();
 
-            // Attachments - 200 records
+            // === Attachments, BackClaims, Appointments === (unchanged)
+            // reuse earlier scEmployeeUserIds list
             var attachments = new Faker<ClaimAttachment>("en")
                 .RuleFor(a => a.AttachmentId, f => f.Database.Random.Guid().ToString())
                 .RuleFor(a => a.ClaimId, f => f.PickRandom(claims).ClaimId)
                 .RuleFor(a => a.URL, f => f.Image.PicsumUrl())
-                .RuleFor(a => a.UploadedBy, f => f.PickRandom(scEmployeeIds))
+                .RuleFor(a => a.UploadedBy, f => f.PickRandom(scEmployeeUserIds))
                 .Generate(recordCount);
             context.ClaimAttachments.AddRange(attachments);
-
-            // Back warranty claims - 200 records
             var backClaims = new Faker<BackWarrantyClaim>("en")
                 .RuleFor(b => b.WarrantyClaimId, f => f.PickRandom(claims).ClaimId)
                 .RuleFor(b => b.CreatedDate, f => f.Date.Recent(30))
                 .RuleFor(b => b.Description, f => f.Lorem.Sentence(6))
-                .RuleFor(b => b.CreatedByEmployeeId, f => f.PickRandom(scEmployeeIds))
+                .RuleFor(b => b.CreatedByEmployeeId, f => f.PickRandom(scEmployeeUserIds))
                 .Generate(recordCount);
             context.BackWarrantyClaims.AddRange(backClaims);
-
-            // Appointments - 200 records
             var appointments = new Faker<Appointment>("en")
                 .RuleFor(a => a.AppointmentId, f => f.Database.Random.Guid())
                 .RuleFor(a => a.AppointmentType, f => f.PickRandom(new[] { "Warranty", "Campaign" }))
@@ -579,33 +760,26 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence
                 .RuleFor(a => a.Note, f => f.Random.Bool(0.4f) ? f.Lorem.Sentence() : null)
                 .Generate(recordCount);
             context.Appointments.AddRange(appointments);
-
             context.SaveChanges();
 
-            // Emit report lines to console and file to help testers
+            // === Report ===
             try
             {
-                Console.WriteLine("==== Seed Report (for quick testing) ====");
-                Console.WriteLine($"Total Organizations: {organizations.Count} (1 OEM + 3 Service Centers)");
-                Console.WriteLine($"Total Employees: {employees.Count} (1 Admin, 2 EVM Staff, 6 SC Staff, 15 SC Tech)");
+                Console.WriteLine("==== Seed Report (Adjusted) ====");
+                Console.WriteLine($"Total Organizations: {organizations.Count}");
+                Console.WriteLine($"Total Employees: {employees.Count}");
                 Console.WriteLine($"Total Customers: {customers.Count}");
                 Console.WriteLine($"Total Vehicles: {vehicles.Count}");
                 Console.WriteLine($"Total Parts: {parts.Count}");
-                Console.WriteLine($"Total Policies: {policies.Count}");
                 Console.WriteLine($"Total Campaigns: {campaigns.Count}");
-                Console.WriteLine($"Total Campaign Vehicles: {campaignVehicles.Count}");
-                Console.WriteLine($"Total Part Orders: {partOrders.Count}");
-                Console.WriteLine($"Total Warranty Claims: {claims.Count}");
-                Console.WriteLine($"Total Appointments: {appointments.Count}");
-                foreach (var line in reportLines)
-                {
-                    Console.WriteLine(line);
-                }
+                Console.WriteLine($"Total VehiclePartHistories: {vehiclePartHistories.Count}");
+                Console.WriteLine($"New InStock: {vehiclePartHistories.Count(vp => vp.Condition == VehiclePartCondition.New.GetCondition() && vp.Status == VehiclePartCurrentStatus.InStock.GetCurrentStatus())}");
+                Console.WriteLine($"Used OnVehicle: {vehiclePartHistories.Count(vp => vp.Condition == VehiclePartCondition.Used.GetCondition() && vp.Status == VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus())}");
+                foreach (var line in reportLines) Console.WriteLine(line);
                 var path = Path.Combine(AppContext.BaseDirectory, "SeedReport.txt");
                 File.WriteAllLines(path, reportLines);
-                Console.WriteLine($"Seed report written to: {path}");
             }
-            catch { /* ignore diagnostics write failures */ }
+            catch { }
         }
     }
 }

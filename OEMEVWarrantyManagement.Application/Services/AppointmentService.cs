@@ -7,11 +7,7 @@ using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
 using OEMEVWarrantyManagement.Share.Models.Response;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using OEMEVWarrantyManagement.Share.Configs;
 using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
@@ -29,9 +25,19 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly ICustomerRepository _customerRepository;
         private readonly IEmailService _emailService;
         private readonly AppSettings _appSettings;
+        private readonly EmailUrlSettings _emailUrlSettings;
         private readonly IBackgroundJobClient _backgroundJobClient;
 
-        public AppointmentService(IAppointmentRepository appointmentRepository, IVehicleRepository vehicleRepository, IMapper mapper, ICurrentUserService currentUserService, ICustomerRepository customerRepository, IEmailService emailService, IOptions<AppSettings> appSettings, IBackgroundJobClient backgroundJobClient)
+        public AppointmentService(
+            IAppointmentRepository appointmentRepository, 
+            IVehicleRepository vehicleRepository, 
+            IMapper mapper, 
+            ICurrentUserService currentUserService, 
+            ICustomerRepository customerRepository, 
+            IEmailService emailService, 
+            IOptions<AppSettings> appSettings,
+            IOptions<EmailUrlSettings> emailUrlSettings,
+            IBackgroundJobClient backgroundJobClient)
         {
             _appointmentRepository = appointmentRepository;
             _vehicleRepository = vehicleRepository;
@@ -40,6 +46,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             _customerRepository = customerRepository;
             _emailService = emailService;
             _appSettings = appSettings.Value;
+            _emailUrlSettings = emailUrlSettings.Value;
             _backgroundJobClient = backgroundJobClient;
         }
 
@@ -84,7 +91,6 @@ namespace OEMEVWarrantyManagement.Application.Services
                 throw new ApiException(ResponseError.InvalidJsonFormat);
             }
 
-            // Validate vehicle exists by VIN
             var vehicle = await _vehicleRepository.GetVehicleByVinAsync(request.Vin);
             if (vehicle == null)
             {
@@ -246,7 +252,6 @@ namespace OEMEVWarrantyManagement.Application.Services
             };
         }
 
-        // New: Generic status update with email notification
         public async Task<AppointmentDto> UpdateStatusAsync(Guid appointmentId, string status)
         {
             var entity = await _appointmentRepository.GetAppointmentByIdAsync(appointmentId) ?? throw new ApiException(ResponseError.NotFoundAppointment);
@@ -263,7 +268,6 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<AppointmentDto>(updated);
         }
 
-        // New: Reschedule with availability check and email notification
         public async Task<AppointmentDto> RescheduleAsync(Guid appointmentId, DateOnly newDate, string newSlot)
         {
             var entity = await _appointmentRepository.GetAppointmentByIdAsync(appointmentId) ?? throw new ApiException(ResponseError.NotFoundAppointment);
@@ -334,7 +338,7 @@ namespace OEMEVWarrantyManagement.Application.Services
             uint diff = (uint)aBytes.Length ^ (uint)bBytes.Length;
             for (int i = 0; i < aBytes.Length && i < bBytes.Length; i++)
             {
-                diff |= (uint)(aBytes[i] ^ bBytes[i]);
+                diff |= (uint)(aBytes[i] ^ (uint)bBytes[i]);
             }
             return diff == 0;
         }
@@ -353,7 +357,15 @@ namespace OEMEVWarrantyManagement.Application.Services
             if (customer == null || string.IsNullOrWhiteSpace(customer.Email)) return;
 
             var token = GenerateConfirmationToken(appointment);
-            var confirmUrl = $"{_appSettings.Issuer?.TrimEnd('/')}?appointmentId={appointment.AppointmentId}&token={token}";
+            
+            // Use EmailUrlSettings for appointment confirmation URL
+            var baseUrl = _emailUrlSettings.AppointmentConfirmationUrl?.TrimEnd('/');
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                return;
+            }
+            
+            var confirmUrl = $"{baseUrl}?appointmentId={appointment.AppointmentId}&token={token}";
 
             var slotInfo = TimeSlotExtensions.GetSlotInfo(appointment.Slot);
             var time = slotInfo?.Time ?? appointment.Slot;
@@ -376,16 +388,16 @@ namespace OEMEVWarrantyManagement.Application.Services
             }
         }
 
-        public async Task<bool> ConfirmAppointmentAsync(Guid appointmentId, string token)
+        public async Task<ConfirmAppointmentResponseDto?> ConfirmAppointmentAsync(Guid appointmentId, string token)
         {
             var entity = await _appointmentRepository.GetAppointmentByIdAsync(appointmentId) ?? throw new ApiException(ResponseError.NotFoundAppointment);
 
             // Only allow confirmation from Pending -> Scheduled
             if (!string.Equals(entity.Status, AppointmentStatus.Pending.GetAppointmentStatus(), StringComparison.OrdinalIgnoreCase))
-                return false;
+                return null;
 
             if (!ValidateConfirmationToken(entity, token))
-                return false;
+                return null;
 
             // Cancel the scheduled Hangfire job since appointment is confirmed
             var jobId = ExtractJobIdFromNote(entity.Note);
@@ -396,10 +408,27 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             entity.Status = AppointmentStatus.Scheduled.GetAppointmentStatus();
             await _appointmentRepository.UpdateAsync(entity);
-            return true;
+
+            // Build confirmation response
+            var vehicle = await _vehicleRepository.GetVehicleByVinAsync(entity.Vin);
+            var customer = vehicle != null ? await _customerRepository.GetCustomerByIdAsync(vehicle.CustomerId) : null;
+            var email = customer?.Email;
+
+            var slotInfo = TimeSlotExtensions.GetSlotInfo(entity.Slot);
+            var time = slotInfo?.Time ?? entity.Slot;
+            var combinedSlot = slotInfo != null ? $"{slotInfo.Slot} - {slotInfo.Time}" : entity.Slot;
+
+            return new ConfirmAppointmentResponseDto
+            {
+                Vin = entity.Vin,
+                AppointmentType = entity.AppointmentType,
+                AppointmentDate = entity.AppointmentDate,
+                Slot = combinedSlot,
+                Time = time,
+                Email = email
+            };
         }
 
-        // New: Send email notification when appointment status updated
         private async Task TrySendStatusChangeEmailAsync(Appointment appointment, string oldStatus, string newStatus)
         {
             try
@@ -441,7 +470,6 @@ namespace OEMEVWarrantyManagement.Application.Services
             }
         }
 
-        // New: Send email notification when appointment is rescheduled
         private async Task TrySendRescheduleEmailAsync(Appointment appointment, DateOnly oldDate, string oldSlot)
         {
             try
@@ -455,7 +483,15 @@ namespace OEMEVWarrantyManagement.Application.Services
 
                 // Generate new confirmation token
                 var token = GenerateConfirmationToken(appointment);
-                var confirmUrl = $"{_appSettings.Issuer?.TrimEnd('/')}?appointmentId={appointment.AppointmentId}&token={token}";
+                
+                // Use EmailUrlSettings for appointment confirmation URL
+                var baseUrl = _emailUrlSettings.AppointmentConfirmationUrl?.TrimEnd('/');
+                if (string.IsNullOrWhiteSpace(baseUrl))
+                {
+                    return;
+                }
+                
+                var confirmUrl = $"{baseUrl}?appointmentId={appointment.AppointmentId}&token={token}";
 
                 var slotInfo = TimeSlotExtensions.GetSlotInfo(appointment.Slot);
                 var time = slotInfo?.Time ?? appointment.Slot;

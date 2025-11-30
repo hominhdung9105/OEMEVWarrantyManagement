@@ -1,5 +1,4 @@
-﻿using OEMEVWarrantyManagement.Application.Dtos;
-using OEMEVWarrantyManagement.Domain.Entities;
+﻿using OEMEVWarrantyManagement.Domain.Entities;
 
 namespace OEMEVWarrantyManagement.Application.IRepository
 {

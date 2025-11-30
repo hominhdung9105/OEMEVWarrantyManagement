@@ -2,9 +2,6 @@
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.Application.Services
 {

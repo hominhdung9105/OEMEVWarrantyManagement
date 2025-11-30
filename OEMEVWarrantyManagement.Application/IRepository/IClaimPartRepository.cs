@@ -1,9 +1,4 @@
 ﻿using OEMEVWarrantyManagement.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.Application.IRepository
 {
@@ -13,5 +8,6 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task UpdateRangeAsync(IEnumerable<ClaimPart> entities);
         Task<ClaimPart> GetByIdAsync(Guid id);
         Task<List<ClaimPart>> CreateManyClaimPartsAsync(List<ClaimPart> requests);
+        Task DeleteManyClaimPartsAsync(List<ClaimPart> entities);
     }
 }

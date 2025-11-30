@@ -5,7 +5,6 @@ using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
-using OEMEVWarrantyManagement.Share.Models.Response;
 
 namespace OEMEVWarrantyManagement.Application.Services
 {

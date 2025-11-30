@@ -12,9 +12,7 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<CampaignVehicle> UpdateAsync(CampaignVehicle entity);
         Task<(IEnumerable<CampaignVehicle> Data, int TotalRecords)> GetAllAsync(PaginationRequest request);
         Task AddReplacementsAsync(IEnumerable<CampaignVehicleReplacement> replacements);
-        // New: query builder for filtering
         IQueryable<CampaignVehicle> Query();
-        // New: check if vehicle exists in campaign
         Task<bool> ExistsByCampaignAndVinAsync(Guid campaignId, string vin);
     }
 }

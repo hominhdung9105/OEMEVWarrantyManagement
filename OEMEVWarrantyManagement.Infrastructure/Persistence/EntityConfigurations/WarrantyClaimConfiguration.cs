@@ -22,6 +22,8 @@ namespace OEMEVWarrantyManagement.Infrastructure.Persistence.EntityConfiguration
             builder.Property(wc => wc.ConfirmDate);
             builder.Property(wc => wc.failureDesc);
             builder.Property(wc => wc.VehicleWarrantyId).HasColumnName("VehicleWarrantyId");
+            builder.Property(wc => wc.DenialReason);
+            builder.Property(wc => wc.DenialReasonDetail);
 
 
             builder.HasOne(wc => wc.Vehicle)

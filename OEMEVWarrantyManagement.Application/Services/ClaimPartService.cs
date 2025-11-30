@@ -15,47 +15,100 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IMapper _mapper;
         private readonly IPartRepository _partRepository;
         private readonly IWarrantyClaimRepository _warrantyClaimRepository;
-        private readonly IVehiclePartRepository _vehiclePartRepository;
         private readonly IWorkOrderRepository _workOrderRepository;
+        private readonly IVehiclePartHistoryRepository _vehiclePartHistoryRepository;
+        private readonly IVehiclePartHistoryService _vehiclePartHistoryService;
 
-        public ClaimPartService(IClaimPartRepository claimPartRepository, IMapper mapper, IPartRepository partRepository, IWarrantyClaimRepository warrantyClaimRepository, IVehiclePartRepository vehiclePartRepository, IWorkOrderRepository workOrderRepository)
+        public ClaimPartService(
+            IClaimPartRepository claimPartRepository, 
+            IMapper mapper, 
+            IPartRepository partRepository,
+            IWarrantyClaimRepository warrantyClaimRepository,
+            IWorkOrderRepository workOrderRepository,
+            IVehiclePartHistoryRepository vehiclePartHistoryRepository,
+            IVehiclePartHistoryService vehiclePartHistoryService)
         {
             _claimPartRepository = claimPartRepository;
             _mapper = mapper;
             _partRepository = partRepository;
             _warrantyClaimRepository = warrantyClaimRepository;
-            _vehiclePartRepository = vehiclePartRepository;
             _workOrderRepository = workOrderRepository;
+            _vehiclePartHistoryRepository = vehiclePartHistoryRepository;
+            _vehiclePartHistoryService = vehiclePartHistoryService;
         }
 
         public async Task<List<RequestClaimPart>> CreateManyClaimPartsAsync(Guid claimId, List<PartsInClaimPartDto> dto)
         {
             var list = await _claimPartRepository.GetClaimPartByClaimIdAsync(claimId);
-
-            if (dto != null && dto.Any())
+            if (!list.Any())
             {
-                if (list != null && list.Any())
+                if (dto != null && dto.Any())
                 {
-                    foreach (var item in list)
+                    if (list != null && list.Any())
                     {
-                        dto.RemoveAll(p => p.Model == item.Model && p.SerialNumber == item.SerialNumberOld);
+                        foreach (var item in list)
+                        {
+                            dto.RemoveAll(p => p.Model == item.Model && p.SerialNumber == item.SerialNumberOld);
+                        }
                     }
+
+                    var entities = dto.Select(p => new ClaimPart
+                    {
+                        ClaimId = claimId,
+                        Model = p.Model,
+                        SerialNumberOld = p.SerialNumber,
+                        Action = p.Action,
+                        Status = p.Status,
+                        Cost = 0 // TODO - chưa xử lí
+                    }).ToList();
+
+                    await _claimPartRepository.CreateManyClaimPartsAsync(entities);
                 }
+                list = await _claimPartRepository.GetClaimPartByClaimIdAsync(claimId);
+            }
+            else
+            {
+                var toDelete = list
+                    .Where(db => !dto.Any(x => x.Model == db.Model && x.SerialNumber == db.SerialNumberOld))
+                    .ToList();
 
-                var entities = dto.Select(p => new ClaimPart
+                var toAdd = dto
+                    .Where(x => !list.Any(db => db.Model == x.Model && db.SerialNumberOld == x.SerialNumber))
+                    .Select(p => new ClaimPart
+                    {
+                        ClaimId = claimId,
+                        Model = p.Model,
+                        SerialNumberOld = p.SerialNumber,
+                        Action = p.Action,
+                        Status = p.Status,
+                        Cost = 0
+                    })
+                    .ToList();
+
+                var toUpdate = list
+                    .Where(db => dto.Any(x => x.Model == db.Model && x.SerialNumber == db.SerialNumberOld))
+                    .ToList();
+
+                //Xóa part không còn trong DTO
+                if (toDelete.Any())
+                    await _claimPartRepository.DeleteManyClaimPartsAsync(toDelete);
+
+                //Update part trùng
+                foreach (var part in toUpdate)
                 {
-                    ClaimId = claimId,
-                    Model = p.Model,
-                    SerialNumberOld = p.SerialNumber,
-                    Action = p.Action,
-                    Status = p.Status,
-                    Cost = 0 // TODO - chưa xử lí
-                }).ToList();
+                    var newData = dto.First(x => x.Model == part.Model && x.SerialNumber == part.SerialNumberOld);
+                    part.Action = newData.Action;
+                    part.Status = newData.Status;
+                }
+                if (toUpdate.Any())
+                    await _claimPartRepository.UpdateRangeAsync(toUpdate);
 
-                await _claimPartRepository.CreateManyClaimPartsAsync(entities);
+                //Thêm mới các part chưa có
+                if (toAdd.Any())
+                    await _claimPartRepository.CreateManyClaimPartsAsync(toAdd);
             }
 
-            list = await _claimPartRepository.GetClaimPartByClaimIdAsync(claimId);
+
 
             return _mapper.Map<List<RequestClaimPart>>(list);
         }
@@ -70,6 +123,7 @@ namespace OEMEVWarrantyManagement.Application.Services
         {
             var claim = await _warrantyClaimRepository.GetWarrantyClaimByIdAsync((Guid) dto.ClaimId);
 
+            // First validate all serials before making any changes
             foreach (var part in dto.Parts)
             {
                 if(Guid.TryParse(part.ClaimPartId, out var claimPartId) == false)
@@ -78,38 +132,80 @@ namespace OEMEVWarrantyManagement.Application.Services
                 }
                 var claimPart = await _claimPartRepository.GetByIdAsync(claimPartId);
 
-                if (claimPart != null && claimPart.Action == ClaimPartAction.Replace.GetClaimPartAction())
+                if (claimPart == null)
                 {
-                    claimPart.SerialNumberNew = part.SerialNumber;
+                    throw new ApiException(ResponseError.NotFoundClaimPart);
+                }
 
-                    var vehicleParts = await _vehiclePartRepository.GetVehiclePartByVinAndModelAsync(claim.Vin, claimPart.Model);
-
+                if (claimPart.Action == ClaimPartAction.Replace.GetClaimPartAction())
+                {
+                    // Validate new serial is in stock at current org and matches model
+                    await _vehiclePartHistoryService.ValidateSerialForRepairAsync(claimPart.Model, part.SerialNumber);
+                    
+                    // Validate old serial exists on vehicle
+                    var vehicleParts = await _vehiclePartHistoryRepository.GetByVinAndModelAsync(claim.Vin, claimPart.Model);
                     var vehiclePart = vehicleParts.FirstOrDefault(vp => vp.SerialNumber == claimPart.SerialNumberOld);
-                    if (vehiclePart != null)
-                    {
-                        vehiclePart.Status = VehiclePartStatus.UnInstalled.GetVehiclePartStatus();
-                        vehiclePart.UninstalledDate = DateTime.UtcNow;
-                        await _vehiclePartRepository.UpdateVehiclePartAsync(vehiclePart);
-
-                        var newvehiclePart = new VehiclePart
-                        {
-                            Vin = claim.Vin,
-                            Model = claimPart.Model,
-                            SerialNumber = claimPart.SerialNumberNew,
-                            InstalledDate = DateTime.UtcNow,
-                            Status = VehiclePartStatus.Installed.GetVehiclePartStatus()
-                        };
-
-                        await _vehiclePartRepository.AddVehiclePartAsync(newvehiclePart);
-                    }
-                    else
+                    if (vehiclePart == null)
                     {
                         throw new ApiException(ResponseError.NotFoundVehiclePart);
                     }
                 }
-                else
+            }
+
+            // Now process the replacements
+            foreach (var part in dto.Parts)
+            {
+                Guid.TryParse(part.ClaimPartId, out var claimPartId);
+                var claimPart = await _claimPartRepository.GetByIdAsync(claimPartId);
+
+                if (claimPart != null && claimPart.Action == ClaimPartAction.Replace.GetClaimPartAction())
                 {
-                    throw new ApiException(ResponseError.NotFoundClaimPart);
+                    claimPart.SerialNumberNew = part.SerialNumber;
+
+                    var vehicleParts = await _vehiclePartHistoryRepository.GetByVinAndModelAsync(claim.Vin, claimPart.Model);
+
+                    var vehiclePart = vehicleParts.FirstOrDefault(vp => vp.SerialNumber == claimPart.SerialNumberOld);
+                    if (vehiclePart != null)
+                    {
+                        //vehiclePart.Status = VehiclePartCurrentStatus.Returned.GetCurrentStatus();
+                        //vehiclePart.UninstalledAt = DateTime.UtcNow;
+                        //await _vehiclePartHistoryRepository.UpdateAsync(vehiclePart);
+
+                        // update history for uninstall
+                        var existingHistoryOld = await _vehiclePartHistoryRepository.GetByVinAndSerialAsync(claim.Vin, vehiclePart.SerialNumber);
+                        if (existingHistoryOld != null)
+                        {
+                            existingHistoryOld.UninstalledAt = DateTime.UtcNow;
+                            existingHistoryOld.Vin = null;
+                            existingHistoryOld.Status = VehiclePartCurrentStatus.InStock.GetCurrentStatus();//TODO: BAo hanh ve thi la return hay instock
+                            existingHistoryOld.Condition = VehiclePartCondition.Used.GetCondition();//TODO: Chua xu ly viec bao hanh chon condition cho part(hard code = used)
+                            existingHistoryOld.Note = "Updated due to warranty replacement (uninstall)";//TODO
+                            await _vehiclePartHistoryRepository.UpdateAsync(existingHistoryOld);
+                        }
+
+                        var newvehiclePart = new VehiclePartHistory
+                        {
+                            Vin = claim.Vin,
+                            Model = claimPart.Model,
+                            SerialNumber = claimPart.SerialNumberNew,
+                            InstalledAt = DateTime.UtcNow,
+                            Status = VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus()
+                        };
+
+                        //await _vehiclePartHistoryRepository.AddAsync(newvehiclePart);
+
+                        // update history for install new (use enums)
+                        var existingHistoryNew = await _vehiclePartHistoryRepository.GetByModelAndSerialAsync(newvehiclePart.Model, newvehiclePart.SerialNumber, VehiclePartCondition.New.GetCondition()) ?? throw new ApiException(ResponseError.NotFoundThatPart);
+                        if (existingHistoryNew != null)
+                        {
+                            existingHistoryNew.Vin = newvehiclePart.Vin;
+                            existingHistoryNew.InstalledAt = newvehiclePart.InstalledAt;
+                            existingHistoryNew.Status = VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus();
+                            existingHistoryNew.WarrantyEndDate = DateTime.UtcNow.AddMonths(existingHistoryNew.WarrantyPeriodMonths);
+                            existingHistoryNew.Note = "Updated as replacement part installed";//TODO??
+                            await _vehiclePartHistoryRepository.UpdateAsync(existingHistoryNew);
+                        }
+                    }
                 }
             }
 

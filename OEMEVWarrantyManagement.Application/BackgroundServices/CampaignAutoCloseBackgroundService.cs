@@ -3,21 +3,21 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OEMEVWarrantyManagement.Application.IServices;
 
-namespace OEMEVWarrantyManagement.API.BackgroundServices
+namespace OEMEVWarrantyManagement.Application.BackgroundServices
 {
     /// <summary>
-    /// Background service that runs daily to check and send campaign email reminders
-    /// Checks every day at a specific time (default: 9:00 AM UTC)
+    /// Background service that runs daily to automatically close expired campaigns
+    /// Runs at 8:00 AM UTC every day
     /// </summary>
-    public class CampaignReminderBackgroundService : BackgroundService
+    public class CampaignAutoCloseBackgroundService : BackgroundService
     {
-        private readonly ILogger<CampaignReminderBackgroundService> _logger;
+        private readonly ILogger<CampaignAutoCloseBackgroundService> _logger;
         private readonly IServiceProvider _serviceProvider;
         private readonly TimeSpan _checkInterval = TimeSpan.FromHours(24); // Check every 24 hours
-        private readonly TimeSpan _dailyRunTime = new TimeSpan(9, 0, 0); // Run at 9:00 AM UTC
+        private readonly TimeSpan _dailyRunTime = new TimeSpan(0, 0, 0); // Run at 8:00 AM UTC
 
-        public CampaignReminderBackgroundService(
-            ILogger<CampaignReminderBackgroundService> logger,
+        public CampaignAutoCloseBackgroundService(
+            ILogger<CampaignAutoCloseBackgroundService> logger,
             IServiceProvider serviceProvider)
         {
             _logger = logger;
@@ -26,7 +26,7 @@ namespace OEMEVWarrantyManagement.API.BackgroundServices
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Campaign Reminder Background Service is starting.");
+            _logger.LogInformation("Campaign Auto-Close Background Service is starting.");
 
             // Wait until the first scheduled run time
             await WaitUntilNextRunTime(stoppingToken);
@@ -35,32 +35,32 @@ namespace OEMEVWarrantyManagement.API.BackgroundServices
             {
                 try
                 {
-                    _logger.LogInformation("Campaign Reminder Background Service is running at {Time}", DateTime.UtcNow);
+                    _logger.LogInformation("Campaign Auto-Close Background Service is running at {Time}", DateTime.UtcNow);
 
                     // Create a scope to resolve scoped services
                     using (var scope = _serviceProvider.CreateScope())
                     {
-                        var notificationService = scope.ServiceProvider.GetRequiredService<ICampaignNotificationService>();
+                        var campaignService = scope.ServiceProvider.GetRequiredService<ICampaignService>();
                         
-                        await notificationService.SendReminderEmailsAsync();
+                        await campaignService.AutoCloseExpiredCampaignsAsync();
                     }
 
-                    _logger.LogInformation("Campaign Reminder Background Service completed successfully at {Time}", DateTime.UtcNow);
+                    _logger.LogInformation("Campaign Auto-Close Background Service completed successfully at {Time}", DateTime.UtcNow);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error occurred while executing Campaign Reminder Background Service at {Time}", DateTime.UtcNow);
+                    _logger.LogError(ex, "Error occurred while executing Campaign Auto-Close Background Service at {Time}", DateTime.UtcNow);
                 }
 
                 // Wait until the next scheduled run time (24 hours from now)
                 await Task.Delay(_checkInterval, stoppingToken);
             }
 
-            _logger.LogInformation("Campaign Reminder Background Service is stopping.");
+            _logger.LogInformation("Campaign Auto-Close Background Service is stopping.");
         }
 
         /// <summary>
-        /// Calculate delay until next run time (9:00 AM UTC)
+        /// Calculate delay until next run time (8:00 AM UTC)
         /// </summary>
         private async Task WaitUntilNextRunTime(CancellationToken stoppingToken)
         {
@@ -75,7 +75,7 @@ namespace OEMEVWarrantyManagement.API.BackgroundServices
 
             var delay = nextRunTime - now;
             
-            _logger.LogInformation("Campaign Reminder Background Service will run in {Delay} at {NextRunTime}", 
+            _logger.LogInformation("Campaign Auto-Close Background Service will run in {Delay} at {NextRunTime}", 
                 delay, nextRunTime);
 
             if (delay.TotalMilliseconds > 0)
@@ -86,7 +86,7 @@ namespace OEMEVWarrantyManagement.API.BackgroundServices
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Campaign Reminder Background Service is stopping gracefully.");
+            _logger.LogInformation("Campaign Auto-Close Background Service is stopping gracefully.");
             await base.StopAsync(cancellationToken);
         }
     }

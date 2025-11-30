@@ -25,7 +25,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
         }
 
         [HttpGet("evm/summary")]
-        [Authorize(policy: "RequireEvmStaff")]
+        [Authorize(policy: "RequireAdminOrEvmStaff")]
         public async Task<IActionResult> GetGlobalSummary()
         {
             var summary = await _dashboardService.GetGlobalSummaryAsync();

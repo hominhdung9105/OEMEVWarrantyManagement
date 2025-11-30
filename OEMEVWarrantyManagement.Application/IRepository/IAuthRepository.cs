@@ -1,5 +1,4 @@
-﻿using OEMEVWarrantyManagement.Application.Dtos;
-using OEMEVWarrantyManagement.Domain.Entities;
+﻿using OEMEVWarrantyManagement.Domain.Entities;
 
 namespace OEMEVWarrantyManagement.Application.IRepository
 {
@@ -11,7 +10,6 @@ namespace OEMEVWarrantyManagement.Application.IRepository
         Task<Employee?> GetEmployeeByUsername(string username);
         Task<Employee?> GetEmployeeById(Guid id);
         Task<Employee?> GetEmployeeByEmail(string email);
-        Task<Employee> CreateGoogleEmployeeAsync(string email, string name);
         Task SaveChangesAsync();
     }
 }

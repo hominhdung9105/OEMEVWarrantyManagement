@@ -1,9 +1,4 @@
 ﻿using OEMEVWarrantyManagement.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.Application.IRepository
 {
@@ -11,5 +6,7 @@ namespace OEMEVWarrantyManagement.Application.IRepository
     {
         Task<Organization> GetOrganizationById(Guid orgId);
         Task<IEnumerable<Organization>> GetAllOrganizationsAsync();
+        Task<IEnumerable<Organization>> GetOrganizationsAsync();
+        Task<List<Organization>> GetOrganizationsByIdsAsync(List<Guid> orgIds);
     }
 }

@@ -163,7 +163,110 @@
 
         // Warranty policy errors
         [ResponseErrorAttr("Warranty policy not found.", 404, 53)]
-        NotFoundWarrantyPolicy
+        NotFoundWarrantyPolicy,
+
+        [ResponseErrorAttr("Not Found that part.", 404, 54)]
+        NotFoundThatPart,
+
+        // Part Order Shipment errors
+        [ResponseErrorAttr("Part order quantity exceeds maximum allowed per part.", 400, 55)]
+        PartOrderQuantityExceedsMax,
+
+        [ResponseErrorAttr("Invalid CSV file format.", 400, 56)]
+        InvalidCsvFormat,
+
+        [ResponseErrorAttr("Shipment validation failed. Check errors for details.", 400, 57)]
+        ShipmentValidationFailed,
+
+        [ResponseErrorAttr("Serial number not found in stock.", 400, 58)]
+        SerialNotInStock,
+
+        [ResponseErrorAttr("Serial number does not match the part model.", 400, 59)]
+        SerialModelMismatch,
+
+        [ResponseErrorAttr("Duplicate serial number in shipment.", 400, 60)]
+        DuplicateSerial,
+
+        [ResponseErrorAttr("Part order has not been confirmed yet.", 400, 61)]
+        OrderNotConfirmed,
+
+        [ResponseErrorAttr("Part order shipment has not been validated yet.", 400, 62)]
+        ShipmentNotValidated,
+
+        [ResponseErrorAttr("Receipt validation failed. Check errors for details.", 400, 63)]
+        ReceiptValidationFailed,
+
+        [ResponseErrorAttr("Serial number was not shipped in this order.", 400, 64)]
+        SerialNotShipped,
+
+        [ResponseErrorAttr("Part order has not been shipped yet.", 400, 65)]
+        OrderNotShipped,
+
+        [ResponseErrorAttr("Receipt has not been validated yet.", 400, 66)]
+        ReceiptNotValidated,
+
+        [ResponseErrorAttr("Part order is not in transit status.", 400, 67)]
+        OrderNotInTransit,
+
+        [ResponseErrorAttr("Shipment file has already been uploaded for this order.", 400, 68)]
+        ShipmentAlreadyUploaded,
+
+        // Part Order Issue errors
+        [ResponseErrorAttr("Invalid issue reason.", 400, 69)]
+        InvalidIssueReason,
+
+        [ResponseErrorAttr("Reason detail is required when reason is 'Other'.", 400, 70)]
+        ReasonDetailRequired,
+
+        [ResponseErrorAttr("Order cannot be cancelled in current status.", 400, 71)]
+        CannotCancelOrder,
+
+        [ResponseErrorAttr("Order cannot be returned in current status.", 400, 72)]
+        CannotReturnOrder,
+
+        [ResponseErrorAttr("Service center not found.", 404, 73)]
+        ServiceCenterNotFound,
+
+        [ResponseErrorAttr("Order has no discrepancy to resolve.", 400, 74)]
+        NoDiscrepancyToResolve,
+
+        [ResponseErrorAttr("Invalid responsible party.", 400, 75)]
+        InvalidResponsibleParty,
+
+        [ResponseErrorAttr("Order is not in return inspection status.", 400, 76)]
+        OrderNotInReturnInspection,
+
+        [ResponseErrorAttr("Cannot create order item. Order must be in Pending status.", 400, 77)]
+        CannotCreateOrderItemInvalidStatus,
+
+        [ResponseErrorAttr("Invalid status value.", 400, 78)]
+        InvalidStatus,
+
+        // Warranty Claim Denial errors
+        [ResponseErrorAttr("Invalid denial reason.", 400, 79)]
+        InvalidDenialReason,
+
+        [ResponseErrorAttr("Reason detail is required when reason is 'Other'.", 400, 80)]
+        DenialReasonDetailRequired,
+
+        // Technician Reassignment errors
+        [ResponseErrorAttr("Technician count must match the current assigned count.", 400, 81)]
+        TechnicianCountMismatch,
+
+        [ResponseErrorAttr("Technician must be from the same service center.", 403, 82)]
+        TechnicianNotInSameServiceCenter,
+
+        [ResponseErrorAttr("Part order is not deliveried.", 400, 83)]
+        OrderNotDeliveried,
+
+        [ResponseErrorAttr("Serial number is not in stock at this organization.", 400, 84)]
+        SerialNotInOrgStock,
+
+        [ResponseErrorAttr("Serial number is not available for use (already installed or not in stock).", 400, 85)]
+        SerialNotAvailable,
+
+        [ResponseErrorAttr("Serial number does not match the required part model for repair.", 400, 86)]
+        SerialModelMismatchForRepair,
     }
 
     public class ApiResponse<T>
@@ -192,6 +295,18 @@
                 Success = false,
                 Code = attr.Code,
                 Message = attr.Message,
+                Data = default
+            };
+        }
+
+        public static ApiResponse<T> Fail(ResponseError error, string customMessage)
+        {
+            var attr = error.GetAttr();
+            return new ApiResponse<T>
+            {
+                Success = false,
+                Code = attr.Code,
+                Message = customMessage,
                 Data = default
             };
         }

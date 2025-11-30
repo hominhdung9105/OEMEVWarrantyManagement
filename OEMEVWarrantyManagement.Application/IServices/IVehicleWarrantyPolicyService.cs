@@ -1,6 +1,4 @@
 ﻿using OEMEVWarrantyManagement.Application.Dtos;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.Application.IServices
 {

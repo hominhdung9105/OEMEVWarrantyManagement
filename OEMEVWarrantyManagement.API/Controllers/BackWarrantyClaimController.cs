@@ -29,7 +29,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
             var role = User.FindFirstValue(ClaimTypes.Role);
 
-            // If client provided assignment info but current user is not SC staff, forbid
             if ((dto.AssignTo != null || (dto.AssignsTo != null && dto.AssignsTo.Count > 0)) && role != RoleIdEnum.ScStaff.GetRoleId())
             {
                 return Unauthorized(ApiResponse<object>.Fail(ResponseError.Forbidden));

@@ -88,7 +88,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<CampaignVehicleDto>.Ok(result, "Marked vehicle done successfully!"));
         }
 
-        // New endpoint to assign technicians if initially unassigned -> change status from waiting for unassigned repair to under repair
         [HttpPost("{id}/assign-techs")]
         [Authorize(policy: "RequireScStaff")]
         public async Task<IActionResult> AssignTechnicians(string id, [FromBody] AssignTechsRequest request)
@@ -98,6 +97,17 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
             var result = await _service.AssignTechniciansAsync(guid, request);
             return Ok(ApiResponse<CampaignVehicleDto>.Ok(result, "Assigned technicians and updated status to Under Repair successfully!"));
+        }
+
+        [HttpGet("{id}/assigned-techs")]
+        [Authorize]
+        public async Task<IActionResult> GetAssignedTechnicians(string id)
+        {
+            if (!Guid.TryParse(id, out var guid))
+                return BadRequest(ApiResponse<object>.Fail(ResponseError.InvalidJsonFormat));
+
+            var result = await _service.GetAssignedTechniciansAsync(guid);
+            return Ok(ApiResponse<IEnumerable<AssignedTechDto>>.Ok(result, "Get assigned technicians successfully!"));
         }
     }
 }

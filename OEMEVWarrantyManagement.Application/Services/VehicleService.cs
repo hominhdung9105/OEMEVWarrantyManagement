@@ -2,12 +2,9 @@
 using OEMEVWarrantyManagement.Application.Dtos;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
-using OEMEVWarrantyManagement.Domain.Entities;
 using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
-using OEMEVWarrantyManagement.Share.Models.Response;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OEMEVWarrantyManagement.Application.Services
 {
@@ -19,7 +16,18 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly IWarrantyPolicyRepository _warrantyPolicyRepository;
         private readonly ICustomerRepository _customerRepository;
         private readonly ICurrentUserService _currentUserService;
-        public VehicleService(IVehicleRepository vehicleRepository, IMapper mapper, IVehicleWarrantyPolicyRepository vehicleWarrantyPolicyRepository, IWarrantyPolicyRepository warrantyPolicyRepository, ICustomerRepository customerRepository, ICurrentUserService currentUserService)
+        private readonly IVehiclePartHistoryRepository _vehiclePartHistoryRepository;
+        private readonly IWarrantyClaimRepository _warrantyClaimRepository;
+        
+        public VehicleService(
+            IVehicleRepository vehicleRepository, 
+            IMapper mapper, 
+            IVehicleWarrantyPolicyRepository vehicleWarrantyPolicyRepository, 
+            IWarrantyPolicyRepository warrantyPolicyRepository, 
+            ICustomerRepository customerRepository, 
+            ICurrentUserService currentUserService,
+            IVehiclePartHistoryRepository vehiclePartHistoryRepository,
+            IWarrantyClaimRepository warrantyClaimRepository)
         {
             _vehicleRepository = vehicleRepository;
             _mapper = mapper;
@@ -27,6 +35,8 @@ namespace OEMEVWarrantyManagement.Application.Services
             _warrantyPolicyRepository = warrantyPolicyRepository;
             _customerRepository = customerRepository;
             _currentUserService = currentUserService;
+            _vehiclePartHistoryRepository = vehiclePartHistoryRepository;
+            _warrantyClaimRepository = warrantyClaimRepository;
         }
      
         public async Task<PagedResult<ResponseVehicleDto>> GetPagedAsync(PaginationRequest request, string? search)
@@ -62,10 +72,29 @@ namespace OEMEVWarrantyManagement.Application.Services
                         });
                     }
                 }
+                
                 var customer = await _customerRepository.GetCustomerByIdAsync(vehicle.CustomerId);
                 vehicle.CustomerName = customer.Name;
                 vehicle.CustomerPhoneNunmber = customer.Phone;
                 vehicle.CustomerId = customer.CustomerId;
+
+                // Get installed parts for this vehicle
+                var installedParts = await _vehiclePartHistoryRepository.GetByVinAsync(vehicle.Vin);
+                var onVehicleParts = installedParts
+                    .Where(p => p.Status == VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus())
+                    .Select(p => new VehicleInstalledPartDto
+                    {
+                        Model = p.Model,
+                        SerialNumber = p.SerialNumber,
+                        InstalledAt = p.InstalledAt,
+                        Status = p.Status
+                    })
+                    .ToList();
+                
+                vehicle.InstalledParts = onVehicleParts;
+
+                // Check if vehicle has active warranty claim (status not "done warranty")
+                vehicle.HasActiveWarrantyClaim = await _warrantyClaimRepository.HasActiveClaimByVinAsync(vehicle.Vin);
             }
 
             return new PagedResult<ResponseVehicleDto>

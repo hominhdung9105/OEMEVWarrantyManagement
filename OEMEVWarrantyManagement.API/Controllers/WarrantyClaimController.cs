@@ -6,8 +6,6 @@ using OEMEVWarrantyManagement.Share.Enums;
 using OEMEVWarrantyManagement.Share.Exceptions;
 using OEMEVWarrantyManagement.Share.Models.Pagination;
 using OEMEVWarrantyManagement.Share.Models.Response;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagement.API.Controllers
 {
@@ -29,7 +27,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             _vehicleWarrantyPolicyService = vehicleWarrantyPolicyService;
         }
 
-        //create : VIN
         [HttpPost]
         [Authorize(policy: "RequireScStaff")]
         public async Task<IActionResult> Create([FromBody] RequestWarrantyClaim request)
@@ -38,7 +35,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<object>.Ok(result, "Create Warranty Claim Successfully!"));
         }
 
-        // Unified GET with filters: search (VIN, customer), status. Role-aware: evm, admin -> all; sc staff -> only their org; tech -> forbidden
+      
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> Get([FromQuery] PaginationRequest request, [FromQuery] string? search, [FromQuery] string? status)
@@ -57,7 +54,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpGet("counts")]
         [Authorize]
-        public async Task<IActionResult> GetCounts([FromQuery] char unit, [FromQuery] int take, [FromQuery] Guid? orgId)
+        public async Task<IActionResult> GetCounts([FromQuery] char? unit, [FromQuery] int? take, [FromQuery] Guid? orgId)
         {
             var counts = await _warrantyClaimService.GetWarrantyClaimCountsAsync(unit, take, orgId);
             return Ok(ApiResponse<IEnumerable<TimeCountDto>>.Ok(counts, "Get counts successfully"));
@@ -71,7 +68,7 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<IEnumerable<PolicyTopDto>>.Ok(data, "Get top policies successfully"));
         }
 
-        // New: Top service centers by warranty claims (month or year). Default take=3
+ 
         [HttpGet("top-service-centers")]
         [Authorize(policy: "RequireEvmStaff")] // only EVM/Admin should see cross-center ranking
         public async Task<IActionResult> GetTopServiceCenters([FromQuery] int? month, [FromQuery] int? year, [FromQuery] int take = 3)
@@ -103,11 +100,30 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
         [HttpPut("{claimId}/deny")]
         [Authorize(policy: "RequireScStaffOrEvmStaff")]
-        public async Task<IActionResult> DenyWarrantyClaim(string claimId)
+        public async Task<IActionResult> DenyWarrantyClaim(string claimId, [FromBody] DenyWarrantyClaimRequestDto request)
         {
             if (!Guid.TryParse(claimId, out var id)) throw new ApiException(ResponseError.InvalidWarrantyClaimId);
 
-            var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.Denied);
+            // Validate reason
+            if (string.IsNullOrWhiteSpace(request.Reason))
+            {
+                throw new ApiException(ResponseError.InvalidDenialReason);
+            }
+
+            // Validate that reason is valid
+            var validReason = WarrantyClaimDenialReasonExtensions.FromDescription(request.Reason);
+            if (validReason == null)
+            {
+                throw new ApiException(ResponseError.InvalidDenialReason);
+            }
+
+            // If reason is "Other", ReasonDetail is required
+            if (validReason == WarrantyClaimDenialReason.Other && string.IsNullOrWhiteSpace(request.ReasonDetail))
+            {
+                throw new ApiException(ResponseError.DenialReasonDetailRequired);
+            }
+
+            var result = await _warrantyClaimService.UpdateStatusAsync(id, WarrantyClaimStatus.Denied, null, request.Reason, request.ReasonDetail);
 
             return Ok(ApiResponse<WarrantyClaimDto>.Ok(result, "Deny Successfully!"));
         }
@@ -206,6 +222,14 @@ namespace OEMEVWarrantyManagement.API.Controllers
 
             var result = await _workOrderService.CreateForWarrantyAsync(id, request.AssignedTo);
             return Ok(ApiResponse<IEnumerable<WorkOrderDto>>.Ok(result, "Assign technicians successfully!"));
+        }
+
+        [HttpGet("denial-reasons")]
+        [Authorize]
+        public async Task<IActionResult> GetDenialReasons()
+        {
+            var reasons = await _warrantyClaimService.GetDenialReasonsAsync();
+            return Ok(ApiResponse<IEnumerable<DenialReasonDto>>.Ok(reasons, "Get denial reasons successfully"));
         }
     }
 }

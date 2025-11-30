@@ -16,7 +16,8 @@ namespace OEMEVWarrantyManagement.Application.Services
         private readonly ICurrentUserService _currentUserService;
         private readonly IMapper _mapper;
         private readonly IVehicleRepository _vehicleRepository;
-        private readonly IVehiclePartRepository _vehiclePartRepository;
+        //private readonly IVehiclePartRepository _vehiclePartRepository;
+        private readonly IVehiclePartHistoryRepository _vehiclePartHistoryRepository;
         private readonly ICampaignNotificationService _notificationService;
         private readonly ICustomerRepository _customerRepository;
 
@@ -25,17 +26,19 @@ namespace OEMEVWarrantyManagement.Application.Services
             ICurrentUserService currentUserService,
             IMapper mapper,
             IVehicleRepository vehicleRepository,
-            IVehiclePartRepository vehiclePartRepository,
+            //IVehiclePartRepository vehiclePartRepository,
             ICampaignNotificationService notificationService,
-            ICustomerRepository customerRepository)
+            ICustomerRepository customerRepository,
+            IVehiclePartHistoryRepository vehiclePartHistoryRepository)
         {
             _campaignRepository = campaignRepository;
             _currentUserService = currentUserService;
             _mapper = mapper;
             _vehicleRepository = vehicleRepository;
-            _vehiclePartRepository = vehiclePartRepository;
+            //_vehiclePartRepository = vehiclePartRepository;
             _notificationService = notificationService;
             _customerRepository = customerRepository;
+            _vehiclePartHistoryRepository = vehiclePartHistoryRepository;
         }
 
         public async Task<CampaignDto> CreateAsync(RequestCampaignDto request)
@@ -86,7 +89,8 @@ namespace OEMEVWarrantyManagement.Application.Services
             var created = await _campaignRepository.CreateAsync(entity);
 
             // Process notifications and send emails asynchronously (fire-and-forget to improve response time)
-            _ = Task.Run(async () => await _notificationService.ProcessCampaignNotificationsAsync(created.CampaignId));
+            //_ = Task.Run(async () => await _notificationService.ProcessCampaignNotificationsAsync(created.CampaignId));
+            await _notificationService.ProcessCampaignNotificationsAsync(created.CampaignId);
 
             return _mapper.Map<CampaignDto>(created);
         }
@@ -100,8 +104,9 @@ namespace OEMEVWarrantyManagement.Application.Services
 
             foreach (var v in vehicles)
             {
-                // existence check instead of loading list
-                if (await _vehiclePartRepository.ExistsByVinAndModelAsync(v.Vin, partModel))
+                // Check if vehicle has this part model currently installed (OnVehicle status)
+                var parts = await _vehiclePartHistoryRepository.GetByVinAndModelAsync(v.Vin, partModel);
+                if (parts.Any(p => p.Status == VehiclePartCurrentStatus.OnVehicle.GetCurrentStatus()))
                 {
                     count++;
                 }
@@ -182,21 +187,18 @@ namespace OEMEVWarrantyManagement.Application.Services
             return _mapper.Map<CampaignDto>(updated);
         }
 
-        // New: count campaigns by status (enum-based)
         public async Task<int> CountByStatusAsync(CampaignStatus status)
         {
             var statusStr = status.GetCampaignStatus();
             return await _campaignRepository.CountByStatusAsync(statusStr);
         }
 
-        // New: aggregate participating vehicles vs affected vehicles across all campaigns
         public async Task<(int participating, int affected)> GetParticipationAggregateAsync()
         {
             var (participatingVehicles, totalAffected) = await _campaignRepository.GetParticipationAggregateAsync();
             return (participatingVehicles, totalAffected);
         }
 
-        // New: latest active campaign summary
         public async Task<CampaignActiveSummaryDto> GetLatestActiveSummaryAsync()
         {
             var entity = await _campaignRepository.GetLatestActiveAsync();

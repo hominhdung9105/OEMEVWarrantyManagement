@@ -14,7 +14,8 @@ public class AppDbContext : DbContext
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Vehicle> Vehicles { get; set; }
     public DbSet<Part> Parts { get; set; }
-    public DbSet<VehiclePart> VehicleParts { get; set; }
+    //public DbSet<VehiclePart> VehicleParts { get; set; }
+    public DbSet<VehiclePartHistory> VehiclePartHistories { get; set; }
     public DbSet<WarrantyPolicy> WarrantyPolicies { get; set; }
     public DbSet<VehicleWarrantyPolicy> VehicleWarrantyPolicies { get; set; }
     public DbSet<WarrantyClaim> WarrantyClaims { get; set; }
@@ -25,6 +26,11 @@ public class AppDbContext : DbContext
     public DbSet<CampaignVehicle> CampaignVehicles { get; set; }
     public DbSet<PartOrder> PartOrders { get; set; }
     public DbSet<PartOrderItem> PartOrderItems { get; set; }
+    public DbSet<PartOrderShipment> PartOrderShipments { get; set; }
+    public DbSet<PartOrderReceipt> PartOrderReceipts { get; set; }
+    public DbSet<PartOrderIssue> PartOrderIssues { get; set; }
+    public DbSet<PartOrderDiscrepancyResolution> PartOrderDiscrepancyResolutions { get; set; }
+    public DbSet<PartOrderDiscrepancyDetail> PartOrderDiscrepancyDetails { get; set; }
     public DbSet<BackWarrantyClaim> BackWarrantyClaims { get; set; }
     public DbSet<Appointment> Appointments { get; set; }
     public DbSet<CampaignVehicleReplacement> CampaignVehicleReplacements { get; set; }

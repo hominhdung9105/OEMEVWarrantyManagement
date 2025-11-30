@@ -52,22 +52,36 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<IEnumerable<AssignedTechDto>>.Ok(assignedTechs, "Get assigned technicians successfully"));
         }
 
-        // New: task counts for current tech (default: day). unit = d (day) | m (month)
+        // task counts for current tech
         [HttpGet("task-counts")]
         [Authorize(policy: "RequireScTech")]
-        public async Task<IActionResult> GetTaskCounts([FromQuery] char unit = 'd')
+        public async Task<IActionResult> GetTaskCounts()
         {
-            var counts = await _workOrderService.GetTaskCountsAsync(unit);
+            var counts = await _workOrderService.GetTaskCountsAsync();
             return Ok(ApiResponse<TaskCountDto>.Ok(counts, "Get task counts successfully"));
         }
 
-        // New: grouped counts by target and type for month/year for current tech. unit = m | y
+        // grouped counts by target and type for month/year for current tech. unit = m | y
         [HttpGet("task-group-counts")]
         [Authorize(policy: "RequireScTech")]
         public async Task<IActionResult> GetTaskGroupCounts([FromQuery] char unit)
         {
             var data = await _workOrderService.GetTaskGroupCountsAsync(unit);
             return Ok(ApiResponse<TaskGroupCountDto>.Ok(data, "Get grouped task counts successfully"));
+        }
+
+        [HttpPost("reassign")]
+        [Authorize(policy: "RequireScStaff")]
+        public async Task<IActionResult> ReassignTechnicians([FromBody] ReassignTechnicianDto request)
+        {
+            if (request == null || request.TechnicianIds == null || !request.TechnicianIds.Any())
+                throw new ApiException(ResponseError.InvalidJsonFormat);
+
+            if (string.IsNullOrWhiteSpace(request.Target))
+                throw new ApiException(ResponseError.InvalidJsonFormat);
+
+            var result = await _workOrderService.ReassignTechniciansAsync(request);
+            return Ok(ApiResponse<IEnumerable<WorkOrderDto>>.Ok(result, "Reassign technicians successfully!"));
         }
     }
 }

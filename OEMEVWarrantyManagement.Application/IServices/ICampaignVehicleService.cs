@@ -12,5 +12,7 @@ namespace OEMEVWarrantyManagement.Application.IServices
         Task<CampaignVehicleDto> AssignTechniciansAsync(Guid campaignVehicleId, AssignTechsRequest request);
         // Get all campaign vehicles with optional filters
         Task<PagedResult<CampaignVehicleDto>> GetAllAsync(PaginationRequest request, string? search = null, string? type = null, string? status = null);
+        // Get assigned technicians for a specific campaign vehicle
+        Task<IEnumerable<AssignedTechDto>> GetAssignedTechniciansAsync(Guid campaignVehicleId);
     }
 }

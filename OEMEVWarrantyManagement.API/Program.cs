@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.Google;
+﻿using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OEMEVWarrantyManagement.API.Policy.Role;
+using OEMEVWarrantyManagement.Application.BackgroundJobs;
+using OEMEVWarrantyManagement.Application.BackgroundServices;
 using OEMEVWarrantyManagement.Application.IRepository;
 using OEMEVWarrantyManagement.Application.IServices;
 using OEMEVWarrantyManagement.Application.Mapping;
@@ -35,6 +35,8 @@ namespace OEMEVWarrantyManagement.API
                 builder.Configuration.GetSection("AppSettings"));
             builder.Services.Configure<EmailSettings>(
                 builder.Configuration.GetSection("EmailSettings"));
+            builder.Services.Configure<EmailUrlSettings>(
+                builder.Configuration.GetSection("EmailUrlSettings"));
 
             // Add Controllers - ignore null value in response
 
@@ -148,6 +150,9 @@ namespace OEMEVWarrantyManagement.API
 
                 options.AddPolicy("RequireScStaffOrEvmStaff", policy =>
                     policy.RequireRole(RoleIdEnum.EvmStaff.GetRoleId(), RoleIdEnum.ScStaff.GetRoleId()));
+
+                options.AddPolicy("RequireAdminOrEvmStaff", policy =>
+                   policy.RequireRole(RoleIdEnum.EvmStaff.GetRoleId(), RoleIdEnum.Admin.GetRoleId()));
             });
 
             builder.Services.AddSingleton<IAuthorizationHandler, RoleHandler>();
@@ -188,6 +193,15 @@ namespace OEMEVWarrantyManagement.API
             //Part Order Item
             builder.Services.AddScoped<IPartOrderItemRepository, PartOrderItemRepository>();
             builder.Services.AddScoped<IPartOrderItemService, PartOrderItemService>();
+            //Part Order Shipment & Receipt
+            builder.Services.AddScoped<IPartOrderShipmentRepository, PartOrderShipmentRepository>();
+            builder.Services.AddScoped<IPartOrderReceiptRepository, PartOrderReceiptRepository>();
+            builder.Services.AddScoped<IPartOrderShipmentService, PartOrderShipmentService>();
+            builder.Services.AddScoped<IPartOrderImageService, PartOrderImageService>();
+            //Part Order Issue & Discrepancy
+            builder.Services.AddScoped<IPartOrderIssueRepository, PartOrderIssueRepository>();
+            builder.Services.AddScoped<IPartOrderDiscrepancyResolutionRepository, PartOrderDiscrepancyResolutionRepository>();
+            builder.Services.AddScoped<IPartOrderIssueService, PartOrderIssueService>();
             //Vehicle Warranty Policy
             builder.Services.AddScoped<IVehicleWarrantyPolicyRepository, VehicleWarrantyPolicyRepository>();
             builder.Services.AddScoped<IVehicleWarrantyPolicyService, VehicleWarrantyPolicyService>();
@@ -198,8 +212,10 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddScoped<IBackWarrantyClaimRepository, BackWarrantyClaimRepository>();
             builder.Services.AddScoped<IBackWarrantyClaimService, BackWarrantyClaimService>();
             //Vehicle Part
-            builder.Services.AddScoped<IVehiclePartRepository, VehiclePartRepository>();
-            builder.Services.AddScoped<IVehiclePartService, VehiclePartService>();
+            //builder.Services.AddScoped<IVehiclePartRepository, VehiclePartRepository>();
+            //builder.Services.AddScoped<IVehiclePartService, VehiclePartService>();
+            builder.Services.AddScoped<IVehiclePartHistoryRepository, VehiclePartHistoryRepository>(); // added
+            builder.Services.AddScoped<IVehiclePartHistoryService, VehiclePartHistoryService>(); // added
             // Attechment
             builder.Services.AddScoped<IImageRepository, ImageRepository>();
             builder.Services.AddScoped<IImageService, ImageService>();
@@ -210,7 +226,7 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
             builder.Services.AddScoped<IAppointmentService, AppointmentService>();
             // Hangfire Jobs
-            builder.Services.AddScoped<OEMEVWarrantyManagement.Application.BackgroundJobs.AppointmentCancellationJob>();
+            builder.Services.AddScoped<AppointmentCancellationJob>();
             // Email
             builder.Services.AddScoped<IEmailService, EmailService>();
             // Dashboard
@@ -227,8 +243,8 @@ namespace OEMEVWarrantyManagement.API
             builder.Services.AddScoped<ICampaignNotificationService, CampaignNotificationService>();
 
             // Background Services
-            builder.Services.AddHostedService<OEMEVWarrantyManagement.API.BackgroundServices.CampaignReminderBackgroundService>();
-            builder.Services.AddHostedService<OEMEVWarrantyManagement.API.BackgroundServices.CampaignAutoCloseBackgroundService>();
+            builder.Services.AddHostedService<CampaignReminderBackgroundService>();
+            builder.Services.AddHostedService<CampaignAutoCloseBackgroundService>();
 
             builder.Services.AddCors(options =>
             {
@@ -241,8 +257,9 @@ namespace OEMEVWarrantyManagement.API
 
             var app = builder.Build();
 
+
             ////// =================================================================
-            ////// KHỐI MÃ SEEDING: Thêm khối này vào | chạy 1 lần nếu muốn lấy data mẫu
+            ////// KH?I M? SEEDING: Thêm kh?i này vào | ch?y 1 l?n n?u mu?n l?y data m?u
             ////// =================================================================
             //using (var scope = app.Services.CreateScope())
             //{
@@ -251,21 +268,21 @@ namespace OEMEVWarrantyManagement.API
             //    {
             //        var dbContext = services.GetRequiredService<AppDbContext>();
 
-            //        // 1. Tự động chạy migration để tạo bảng
+            //        // 1. T? đ?ng ch?y migration đ? t?o b?ng
             //        dbContext.Database.Migrate();
 
-            //        // 2. Gọi Seeder để thêm data (nó sẽ tự kiểm tra nếu DB trống)
+            //        // 2. G?i Seeder đ? thêm data (nó s? t? ki?m tra n?u DB tr?ng)
             //        DataSeeder.SeedDatabase(dbContext);
             //    }
             //    catch (Exception ex)
             //    {
-            //        // Ghi log lỗi nếu có
+            //        // Ghi log l?i n?u có
             //        var logger = services.GetRequiredService<ILogger<Program>>();
-            //        logger.LogError(ex, "Đã xảy ra lỗi khi seeding database.");
+            //        logger.LogError(ex, "Đ? x?y ra l?i khi seeding database.");
             //    }
             //}
             ////// =================================================================
-            ////// KẾT THÚC KHỐI MÃ SEEDING
+            ////// K?T THÚC KH?I M? SEEDING
             ////// =================================================================
 
             // Dev

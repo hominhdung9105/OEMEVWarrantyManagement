@@ -36,14 +36,6 @@
         public required string SerialNumber { get; set; }
     }
 
-    //public class ShowClaimPartDto
-    //{
-    //    public Guid ClaimPartId { get; set; }
-    //    public string SerialNumberOld { get; set; }
-    //    public string SerialNumberNew { get; set; }
-    //    public string Model { get; set; }
-    //}
-
 
     public class ShowClaimPartDto
     {

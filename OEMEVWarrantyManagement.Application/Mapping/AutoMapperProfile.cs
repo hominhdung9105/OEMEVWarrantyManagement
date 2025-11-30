@@ -44,11 +44,25 @@ namespace OEMEVWarrantyManagement.Application.Mapping
             CreateMap<PartOrder, RequestPartOrderDto>().ReverseMap();
             CreateMap<PartOrder, ResponsePartOrderDto>().ReverseMap();
             CreateMap<PartOrder, ResponsePartOrderForScStaffDto>().ReverseMap();
+            CreateMap<PartOrder, ResponsePartOrderDetailDto>().ReverseMap();
 
             CreateMap<PartOrderItem, PartOrderItemDto>().ReverseMap();
             CreateMap<PartOrderItem, RequsetPartOrderItemDto>().ReverseMap();
             CreateMap<PartOrderItem, ResponsePartOrderItemDto>().ReverseMap();
             CreateMap<PartOrderItem, ResponsePartOrderItemForScStaffDto>().ReverseMap();
+            CreateMap<PartOrderItem, ResponsePartOrderItemDetailDto>().ReverseMap();
+
+            // PartOrder Shipment mappings
+            CreateMap<PartOrderShipment, PartOrderShipmentDto>().ReverseMap();
+
+            // PartOrder Receipt mappings
+            CreateMap<PartOrderReceipt, PartOrderReceiptDto>().ReverseMap();
+
+            // PartOrder Issue mappings
+            CreateMap<PartOrderIssue, PartOrderIssueDto>().ReverseMap();
+
+            // PartOrder Discrepancy Resolution mappings
+            CreateMap<PartOrderDiscrepancyResolution, DiscrepancyResolutionDto>().ReverseMap();
 
             CreateMap<Vehicle, VehicleDto>().ReverseMap();
             CreateMap<Vehicle, ResponseVehicleDto>().ReverseMap();
@@ -81,8 +95,17 @@ namespace OEMEVWarrantyManagement.Application.Mapping
                 .ForMember(d => d.Type, opt => opt.MapFrom(src => src.Campaign != null ? src.Campaign.Type : null))
                 .ForMember(d => d.StartDate, opt => opt.MapFrom(src => src.Campaign != null ? (DateOnly?)src.Campaign.StartDate : null))
                 .ForMember(d => d.EndDate, opt => opt.MapFrom(src => src.Campaign != null ? (DateOnly?)src.Campaign.EndDate : null))
+                .ForMember(d => d.PartModel, opt => opt.MapFrom(src => src.Campaign != null ? src.Campaign.PartModel : null))
+                .ForMember(d => d.ReplacementPartModel, opt => opt.MapFrom(src => src.Campaign != null ? src.Campaign.ReplacementPartModel : null))
                 .ReverseMap()
                 .ForMember(s => s.NewSerial, opt => opt.MapFrom(d => SerializeNewSerials(d.NewSerials)));
+
+            // map history
+            CreateMap<VehiclePartHistory, VehiclePartHistoryDto>().ReverseMap();
+            CreateMap<VehiclePartHistory, ResponseVehiclePartHistoryDto>().ReverseMap();
+
+            // vehicle with history composite
+            CreateMap<Vehicle, VehicleWithHistoryDto>();
         }
 
         private static List<string>? ParseNewSerials(string? newSerialField)

@@ -14,6 +14,8 @@
         public Guid? AssignTo { get; set; }
         public Guid? WorkOrderId { get; set; } //tra ve từ bảng workorder
         public string FailureDesc { get; set; }
+        public string? DenialReason { get; set; }
+        public string? DenialReasonDetail { get; set; }
     }
 
     public class RequestWarrantyClaim
@@ -62,19 +64,33 @@
         public Guid? VehicleWarrantyId { get; set; }
         public string? PolicyName { get; set; }
         public string? Notes { get; set; }
+        public string? DenialReason { get; set; }
+        public string? DenialReasonDetail { get; set; }
         public List<ShowClaimPartDto> ShowClaimParts { get; set; }
         public List<PolicyInformationDto> ShowPolicy { get; set; }
         public List<ImageDto> Attachments { get; set; } // Added: image URLs for the claim
     }
+    
     public class RepairRequestDto
     {
         public Guid? ClaimId { get; set; }
         public List<UpdateClaimPartDto> Parts { get; set; }
     }
 
-    // New: request for assigning technicians to a warranty claim
     public class AssignTechRequestDto
     {
         public List<Guid> AssignedTo { get; set; }
+    }
+
+    public class DenyWarrantyClaimRequestDto
+    {
+        public string Reason { get; set; }
+        public string? ReasonDetail { get; set; }
+    }
+
+    public class DenialReasonDto
+    {
+        public string Value { get; set; }
+        public string Description { get; set; }
     }
 }

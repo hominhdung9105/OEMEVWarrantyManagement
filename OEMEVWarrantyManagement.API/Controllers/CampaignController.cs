@@ -45,7 +45,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<PagedResult<CampaignDto>>.Ok(result, "Get campaigns successfully!"));
         }
 
-        // New: count campaigns by status (default Active)
         [HttpGet("count")]
         [Authorize]
         public async Task<IActionResult> CountCampaigns([FromQuery] CampaignStatus status = CampaignStatus.Active)
@@ -54,7 +53,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<int>.Ok(count, "Get campaign count successfully"));
         }
 
-        // New: aggregate participation across all campaigns
         [HttpGet("participation-aggregate")]
         [Authorize]
         public async Task<IActionResult> GetParticipationAggregate()
@@ -63,7 +61,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<object>.Ok(new { participating, affected }, "Get participation aggregate successfully"));
         }
 
-        // New: latest active campaign summary
         [HttpGet("latest-active")]
         [Authorize]
         public async Task<IActionResult> GetLatestActiveCampaign()
@@ -104,7 +101,6 @@ namespace OEMEVWarrantyManagement.API.Controllers
             return Ok(ApiResponse<CampaignDto>.Ok(result, "Update campaign successfully!"));
         }
 
-        // New: Get detailed status of all vehicles in campaign
         [HttpGet("{id}/vehicle-statuses")]
         [Authorize]
         public async Task<IActionResult> GetVehicleStatuses(string id)
